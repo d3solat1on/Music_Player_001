@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>icon\icon.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="asimov-azimov-skin-cs-go.jpg" />
+    <None Remove="Resources\add_music.png" />
+    <None Remove="Resources\add_new_folder.png" />
+    <None Remove="Resources\delete_playlist.png" />
+    <None Remove="Resources\fast_forward.png" />
+    <None Remove="Resources\fast_rewind.png" />
+    <None Remove="Resources\loop.png" />
+    <None Remove="Resources\pause.png" />
+    <None Remove="Resources\play.png" />
+    <None Remove="Resources\play_pause.png" />
+    <None Remove="Resources\settings.png" />
+    <None Remove="Resources\shuffle.png" />
+    <None Remove="Resources\stop.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="icon\icon.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="asimov-azimov-skin-cs-go.jpg" />
+    <Resource Include="Resources\add_music.png" />
+    <Resource Include="Resources\add_new_folder.png" />
+    <Resource Include="Resources\delete_playlist.png" />
+    <Resource Include="Resources\fast_forward.png" />
+    <Resource Include="Resources\fast_rewind.png" />
+    <Resource Include="Resources\loop.png" />
+    <Resource Include="Resources\pause.png" />
+    <Resource Include="Resources\play.png" />
+    <Resource Include="Resources\play_pause.png" />
+    <Resource Include="Resources\settings.png" />
+    <Resource Include="Resources\shuffle.png" />
+    <Resource Include="Resources\stop.png" />
+  </ItemGroup>
+
+</Project>
