@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="asimov-azimov-skin-cs-go.jpg" />
+ 
     <None Remove="Resources\add_music.png" />
     <None Remove="Resources\add_new_folder.png" />
     <None Remove="Resources\delete_playlist.png" />
@@ -35,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="asimov-azimov-skin-cs-go.jpg" />
+
     <Resource Include="Resources\add_music.png" />
     <Resource Include="Resources\add_new_folder.png" />
     <Resource Include="Resources\delete_playlist.png" />
