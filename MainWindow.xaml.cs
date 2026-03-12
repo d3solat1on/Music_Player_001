@@ -67,11 +67,43 @@ namespace MusicPlayer_by_d3solat1on
             Dispatcher.Invoke(() =>
             {
                 UpdateNowPlayingInfo(track);
-                UpdatePlayPauseIcon(true); // Playing
-                TotalTimeText.Text = FormatTime(Player.Duration);
+                UpdatePlayPauseIcon(true);
+
+                // Обновляем длительность
+                string totalTime = "0:00";
+                if (Player.Duration > 0)
+                {
+                    totalTime = FormatTime(Player.Duration);
+                }
+                else
+                {
+                    // Если длительность еще не загружена, показываем "загрузка"
+                    totalTime = "загрузка...";
+
+                    // Планируем повторную проверку через небольшие интервалы
+                    CheckDurationAsync();
+                }
+
+                TotalTimeText.Text = totalTime;
             });
         }
+        private async void CheckDurationAsync()
+        {
+            // Проверяем длительность несколько раз с задержкой
+            for (int i = 0; i < 10; i++)
+            {
+                await Task.Delay(100);
 
+                if (Player.Duration > 0)
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        TotalTimeText.Text = FormatTime(Player.Duration);
+                    });
+                    break;
+                }
+            }
+        }
         private void OnPositionChanged(double position)
         {
             Dispatcher.Invoke(() =>
@@ -318,8 +350,8 @@ namespace MusicPlayer_by_d3solat1on
 
         private void UpdateNowPlayingInfo(Track track)
         {
-            
-            var CurrentTrackGenre = track.GenreDisplay;
+
+    
             LastTrackName.Text = track.Name;
             LastTrackExecutor.Text = track.Executor;
             LastTrackAlbum.Text = track.Album;
@@ -328,9 +360,8 @@ namespace MusicPlayer_by_d3solat1on
             CurrentTrackName.Text = track.Name;
             CurrentTrackExecutor.Text = track.Executor;
             CurrentTrackAlbum.Text = track.Album;
-            CurrentTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, JOINT STEREO";
-            CurrentTrackAlbum.Text = track.AlbumDisplay;
-            // CurrentTrackGenre.Text = track.GenreDisplay;
+            CurrentTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
+           
 
             Library.LastPlayedTrack = track;
         }

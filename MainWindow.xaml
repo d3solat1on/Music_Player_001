@@ -60,7 +60,7 @@
                         Background="#0A0A0A"
                         BorderBrush="#333333"
                         BorderThickness="0,1,0,0"
-                        Padding="10">
+                        Padding="8">
                         <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="YOUR LAST PLAYED TRACK :"
                                            Foreground="#CCCCCC"
@@ -79,9 +79,9 @@
                                                 Style="{StaticResource IconButton}"
                                                 Click="ShuffleButton_Click"
                                                 ToolTip="Перемешивать">
-                                        <Image Source ="Resources/shuffle.png"
-                                                Stretch="Uniform"
-                                                Margin="5"/>
+                                                <Image Source="Resources/shuffle.png"
+                                                       Stretch="Uniform"
+                                                       Margin="5"/>
                                         </Button>
                                         <Button x:Name="RepeatButton"
                                                 Width="35"
@@ -90,9 +90,9 @@
                                                 Style="{StaticResource IconButton}"
                                                 Click="RepeatButton_Click"
                                                 ToolTip="Повтор">
-                                        <Image Source = "Resources/loop.png"
-                                                Stretch="Uniform"
-                                                Margin="5"/>
+                                                <Image Source="Resources/loop.png"
+                                                       Stretch="Uniform"
+                                                       Margin="5"/>
                                         </Button>
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal"
@@ -557,6 +557,18 @@
                                                         </Style>
                                                 </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
+                                        <DataGridTextColumn Header="GENRE"
+                                                            Binding="{Binding Genre}"
+                                                            Width="1*">
+                                                <DataGridTextColumn.ElementStyle>
+                                                        <Style>
+                                                                <Setter Property="TextBlock.Foreground"
+                                                                                Value="#999999"/>
+                                                                <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                        </Style>
+                                                </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>
                                 </DataGrid.Columns>
 
                                 <DataGrid.ContextMenu>
@@ -627,6 +639,7 @@
                                                    Foreground="DarkGray"
                                                    TextWrapping="Wrap"
                                                    Margin="0,20,0,0"/>
+
                                 </StackPanel>
                         </Border>
                 </Grid>

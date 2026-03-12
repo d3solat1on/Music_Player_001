@@ -22,7 +22,8 @@ namespace MusicPlayer_by_d3solat1on.Services
                     Album = file.Tag.Album ?? "Неизвестный альбом",
                     Duration = file.Properties.Duration.ToString(@"mm\:ss"),
                     Bitrate = file.Properties.AudioBitrate,
-                    SampleRate = file.Properties.AudioSampleRate
+                    SampleRate = file.Properties.AudioSampleRate,
+                    Genre = file.Tag.FirstGenre ?? "Неизвестный жанр"
                 };
 
                 // Читаем обложку, если есть
@@ -60,5 +61,6 @@ namespace MusicPlayer_by_d3solat1on.Services
             var files = Directory.GetFiles(folderPath, searchPattern, SearchOption.AllDirectories);
             return ReadTracksFromFiles(files);
         }
+        
     }
 }

@@ -3,6 +3,7 @@ using System.Windows.Threading;
 using System.Windows;
 using MusicPlayer_by_d3solat1on.Models;
 using MusicPlayer_by_d3solat1on.ViewModels;
+using System.Windows.Media;
 
 namespace MusicPlayer_by_d3solat1on.Services
 {
@@ -48,7 +49,7 @@ namespace MusicPlayer_by_d3solat1on.Services
 
         // Для MP3 нам понадобится более мощная библиотека
         // Пока используем MediaPlayer из WPF
-        private readonly System.Windows.Media.MediaPlayer _mediaPlayer = new();
+        private readonly MediaPlayer _mediaPlayer = new();
 
         public void PlayTrack(Track track)
         {
@@ -57,27 +58,57 @@ namespace MusicPlayer_by_d3solat1on.Services
                 Stop();
 
                 CurrentTrack = track;
+
+                // Сбрасываем длительность до загрузки
+                Duration = 0;
+
+                // Подписываемся на событие открытия медиа
+                _mediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+                _mediaPlayer.MediaFailed += MediaPlayer_MediaFailed;
+
                 _mediaPlayer.Open(new Uri(track.Path));
                 _mediaPlayer.Play();
 
                 IsPlaying = true;
                 _positionTimer.Start();
 
-                // Получаем длительность
-                if (_mediaPlayer.NaturalDuration.HasTimeSpan)
-                {
-                    Duration = _mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds;
-                }
-
-                TrackChanged?.Invoke(track);
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"Ошибка воспроизведения: {ex.Message}");
                 MessageBox.Show($"Ошибка воспроизведения: {ex.Message}", "Ошибка",
                                MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 
+        private void MediaPlayer_MediaOpened(object sender, EventArgs e)
+        {
+            // Отписываемся, чтобы не вызвать повторно
+            _mediaPlayer.MediaOpened -= MediaPlayer_MediaOpened;
+
+            // Получаем длительность
+            if (_mediaPlayer.NaturalDuration.HasTimeSpan)
+            {
+                Duration = _mediaPlayer.NaturalDuration.TimeSpan.TotalSeconds;
+            }
+
+            // Теперь вызываем событие с правильной длительностью
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                TrackChanged?.Invoke(CurrentTrack);
+            });
+        }
+
+        private void MediaPlayer_MediaFailed(object sender, ExceptionEventArgs e)
+        {
+            _mediaPlayer.MediaFailed -= MediaPlayer_MediaFailed;
+
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                MessageBox.Show($"Ошибка загрузки медиафайла: {e.ErrorException.Message}",
+                               "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            });
+        }
         public void Pause()
         {
             if (IsPlaying)
