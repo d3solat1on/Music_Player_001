@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
@@ -24,7 +25,7 @@ namespace MusicPlayer_by_d3solat1on
         public MainWindow()
         {
             InitializeComponent();
-
+            DataContext = MusicLibrary.Instance;
             TracksDataGrid.ItemsSource = Library.CurrentTracks;
             PlaylistsListBox.ItemsSource = Library.Playlists;
 
@@ -68,7 +69,10 @@ namespace MusicPlayer_by_d3solat1on
             {
                 UpdateNowPlayingInfo(track);
                 UpdatePlayPauseIcon(true);
-
+                CurrentTrackName.Text = track.Name;
+                CurrentTrackExecutor.Text = track.Executor;
+                CurrentTrackAlbum.Text = track.Album;
+                CurrentTrackData.Text = $"{track.Genre} | {track.Duration:mm\\:ss}";
                 // Обновляем длительность
                 string totalTime = "0:00";
                 if (Player.Duration > 0)
@@ -82,6 +86,15 @@ namespace MusicPlayer_by_d3solat1on
 
                     // Планируем повторную проверку через небольшие интервалы
                     CheckDurationAsync();
+                }
+                if (track != null)
+                {
+                    var favorites = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
+                    bool isFavorite = favorites?.Tracks.Any(t => t.Path == track.Path) ?? false;
+
+                    FavoriteIcon.Source = new BitmapImage(new Uri(isFavorite
+                        ? "pack://application:,,,/Resources/remove_favorites.png"
+                        : "pack://application:,,,/Resources/add_favorites.png"));
                 }
 
                 TotalTimeText.Text = totalTime;
@@ -351,17 +364,17 @@ namespace MusicPlayer_by_d3solat1on
         private void UpdateNowPlayingInfo(Track track)
         {
 
-    
+
             LastTrackName.Text = track.Name;
             LastTrackExecutor.Text = track.Executor;
-            LastTrackAlbum.Text = track.Album;
-            LastTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, JOINT STEREO";
+            // LastTrackAlbum.Text = track.Album;
+            // LastTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
 
             CurrentTrackName.Text = track.Name;
             CurrentTrackExecutor.Text = track.Executor;
             CurrentTrackAlbum.Text = track.Album;
             CurrentTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
-           
+
 
             Library.LastPlayedTrack = track;
         }
@@ -457,29 +470,106 @@ namespace MusicPlayer_by_d3solat1on
         }
         private void ShuffleButton_Click(object sender, RoutedEventArgs e)
         {
-            Player.IsShuffle = !Player.IsShuffle;
-            ShuffleButton.Background = Player.IsShuffle ?
-                new SolidColorBrush(Color.FromRgb(0, 122, 204)) :
-                new SolidColorBrush(Color.FromRgb(64, 64, 64));
-        }
+            if (Library.CurrentTracks == null || Library.CurrentTracks.Count < 2) return;
 
+            // Используем алгоритм Тасования Фишера — Йетса
+            Random rng = new();
+            var list = Library.CurrentTracks.ToList();
+            int n = list.Count;
+            while (n > 1)
+            {
+                n--;
+                int k = rng.Next(n + 1);
+                (list[n], list[k]) = (list[k], list[n]);
+            }
+
+            // Очищаем текущий список и заливаем перемешанный
+            Library.CurrentTracks.Clear();
+            foreach (var track in list)
+            {
+                Library.CurrentTracks.Add(track);
+            }
+
+            // Визуальный фидбек — кнопка становится ярче
+            // ShuffleButton.Opacity = (ShuffleButton.Opacity == 1.0) ? 0.5 : 1.0;
+        }
         private void RepeatButton_Click(object sender, RoutedEventArgs e)
         {
-            var RepeatButton = new RepeatButton();
+            // Циклическое переключение: NoRepeat -> RepeatAll -> RepeatOne -> NoRepeat
             switch (Player.RepeatMode1)
             {
                 case RepeatMode.NoRepeat:
                     Player.RepeatMode1 = RepeatMode.RepeatAll;
-                    RepeatButton.Content = "🔁";
+                    // RepeatButton.Content = "🔁"; // Можно подсветить кнопку цветом
+                    // RepeatButton.Opacity = 1.0;
                     break;
                 case RepeatMode.RepeatAll:
                     Player.RepeatMode1 = RepeatMode.RepeatOne;
-                    RepeatButton.Content = "🔂";
+                    // RepeatButton.Content = "🔂"; // Иконка повтора одного трека
+                    // RepeatButton.Opacity = 1.0;
                     break;
                 case RepeatMode.RepeatOne:
                     Player.RepeatMode1 = RepeatMode.NoRepeat;
-                    RepeatButton.Content = "➡️";
+                    // RepeatButton.Content = "🔁";
+                    // RepeatButton.Opacity = 0.5; // Делаем полупрозрачной, когда выключено
                     break;
+            }
+        }
+        private void DeletePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            var menuItem = sender as MenuItem;
+
+            if (menuItem?.DataContext is Playlist playlist)
+            {
+                var result = MessageBox.Show($"Вы уверены, что хотите удалить плейлист '{playlist.Name}'?",
+                    "Удаление", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    MusicLibrary.Instance.Playlists.Remove(playlist);
+                }
+            }
+        }
+        private void EditPlaylist_click(object sender, RoutedEventArgs e)
+        {
+            if ((sender as MenuItem)?.DataContext is not Playlist playlist) return;
+            var editWin = new CreatePlaylistDialog(playlist) { Owner = this };
+            if (editWin.ShowDialog() == true)
+            {
+                playlist.Name = editWin.PlaylistName;
+                playlist.Description = editWin.PlaylistDescription;
+                playlist.CoverImage = editWin.PlaylistCoverImage;
+                MusicLibrary.Instance.UpdatePlaylistView();
+            }
+        }
+
+        private void FavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            var currentTrack = Instance.CurrentTrack;
+            if (currentTrack == null)
+            {
+                MessageBox.Show("Сначала запустите трек!");
+                return;
+            }
+
+            var favorites = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
+            if (favorites == null) return;
+            var existingTrack = favorites.Tracks.FirstOrDefault(t => t.Path == currentTrack.Path);
+            if (existingTrack != null)
+            {
+
+                favorites.Tracks.Remove(existingTrack);
+                FavoriteIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove_favorites.png"));
+            }
+            else
+            {
+                // Если нет — добавляем
+                favorites.Tracks.Add(currentTrack);
+                FavoriteIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/add_favorites.png"));
+            }
+            if (MusicLibrary.Instance.CurrentPlaylist == favorites)
+            {
+                MusicLibrary.Instance.UpdatePlaylistView();
             }
         }
 

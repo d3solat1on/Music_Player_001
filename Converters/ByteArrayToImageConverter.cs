@@ -21,7 +21,7 @@ namespace MusicPlayer_by_d3solat1on.Converters
                 {
                     image.BeginInit();
                     // Важно для экономии памяти в списках:
-                    image.DecodePixelWidth = 100; // Можно ограничить размер, так как это иконка в списке
+                    image.DecodePixelWidth = 350; // Можно ограничить размер, так как это иконка в списке
                     image.CacheOption = BitmapCacheOption.OnLoad;
                     image.StreamSource = stream;
                     image.EndInit();

@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Windows;
 using MusicPlayer_by_d3solat1on.Models;
 using MusicPlayer_by_d3solat1on.Services;
 
@@ -17,6 +18,36 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
 
         // Все плейлисты
         public ObservableCollection<Playlist> Playlists { get; set; } = [];
+        public const string FavoritesName = "Избранное";
+
+        private MusicLibrary()
+        {
+            if (Playlists == null) Playlists = [];
+            if (!Playlists.Any(p => p.Name == FavoritesName))
+            {
+                // Сначала получаем данные картинки из ресурсов
+                byte[]? defaultImageData = null;
+                try
+                {
+                    var uri = new Uri("pack://application:,,,/Resources/favorites_cover.png");
+                    var info = Application.GetResourceStream(uri);
+                    using var ms = new System.IO.MemoryStream();
+                    info.Stream.CopyTo(ms);
+                    defaultImageData = ms.ToArray();
+                }
+                catch { /* Если файл не найден, останется null */ }
+
+                Playlists.Add(new Playlist
+                {
+                    Id = 0,
+                    Name = FavoritesName,
+                    Description = "Ваши любимые треки",
+                    CreatedDate = DateTime.Now,
+                    CoverImage = defaultImageData,
+                    Tracks = [] 
+                });
+            }
+        }
 
         // Текущий выбранный плейлист
         private Playlist? _currentPlaylist;
@@ -162,6 +193,11 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
                 }
             }
 
+            OnPropertyChanged(nameof(CurrentTracks));
+        }
+        public void UpdatePlaylistView()
+        {
+            OnPropertyChanged(nameof(CurrentPlaylist));
             OnPropertyChanged(nameof(CurrentTracks));
         }
     }

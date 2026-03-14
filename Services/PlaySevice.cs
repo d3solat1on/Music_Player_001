@@ -207,48 +207,56 @@ namespace MusicPlayer_by_d3solat1on.Services
 
                 if (Duration > 0 && Position >= Duration - 0.5)
                 {
-                    Stop();
-
-                    var library = MusicLibrary.Instance;
-                    if (library == null || library.CurrentTracks.Count == 0) return;
-
-                    var currentIndex = library.CurrentTracks.IndexOf(CurrentTrack);
-
-                    // Режим RepeatOne имеет наивысший приоритет
                     if (RepeatMode1 == RepeatMode.RepeatOne)
                     {
-                        PlayTrack(CurrentTrack);
-                        return;
+                        // Если повтор одного — просто сбрасываем позицию в 0
+                        Seek(0);
+                        _mediaPlayer.Play();
                     }
-
-                    // Режим перемешивания
-                    if (IsShuffle)
+                    else
                     {
-                        PlayNextShuffleTrack();
-                        return;
-                    }
+                        Stop();
 
-                    // Обычный режим
-                    switch (RepeatMode1)
-                    {
-                        case RepeatMode.RepeatAll:
-                            if (currentIndex >= 0 && currentIndex < library.CurrentTracks.Count - 1)
-                            {
-                                PlayTrack(library.CurrentTracks[currentIndex + 1]);
-                            }
-                            else
-                            {
-                                PlayTrack(library.CurrentTracks[0]);
-                            }
-                            break;
+                        var library = MusicLibrary.Instance;
+                        if (library == null || library.CurrentTracks.Count == 0) return;
 
-                        case RepeatMode.NoRepeat:
-                        default:
-                            if (currentIndex >= 0 && currentIndex < library.CurrentTracks.Count - 1)
-                            {
-                                PlayTrack(library.CurrentTracks[currentIndex + 1]);
-                            }
-                            break;
+                        var currentIndex = library.CurrentTracks.IndexOf(CurrentTrack);
+
+                        // Режим RepeatOne имеет наивысший приоритет
+                        if (RepeatMode1 == RepeatMode.RepeatOne)
+                        {
+                            PlayTrack(CurrentTrack);
+                            return;
+                        }
+
+                        // Режим перемешивания
+                        if (IsShuffle)
+                        {
+                            PlayNextShuffleTrack();
+                            return;
+                        }
+
+                        switch (RepeatMode1)
+                        {
+                            case RepeatMode.RepeatAll:
+                                if (currentIndex >= 0 && currentIndex < library.CurrentTracks.Count - 1)
+                                {
+                                    PlayTrack(library.CurrentTracks[currentIndex + 1]);
+                                }
+                                else
+                                {
+                                    PlayTrack(library.CurrentTracks[0]);
+                                }
+                                break;
+
+                            case RepeatMode.NoRepeat:
+                            default:
+                                if (currentIndex >= 0 && currentIndex < library.CurrentTracks.Count - 1)
+                                {
+                                    PlayTrack(library.CurrentTracks[currentIndex + 1]);
+                                }
+                                break;
+                        }
                     }
                 }
             }

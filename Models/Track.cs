@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Data;
 using TagLib; // для INotifyPropertyChanged
 
 namespace MusicPlayer_by_d3solat1on.Models
@@ -12,9 +13,10 @@ namespace MusicPlayer_by_d3solat1on.Models
         public string? Executor { get; set; }
         public string? Album { get; set; }
         public string? Duration { get; set; }
-        
+        public string Genre { get; set; } = "Неизвестно";
         public int Bitrate { get; set; }
         public int SampleRate { get; set; }
+
 
         // Форматированные свойства для отображения
         public string ExtensionDisplay => !string.IsNullOrEmpty(Extension) ? Extension.ToUpper() : "Неизвестно";
@@ -25,19 +27,10 @@ namespace MusicPlayer_by_d3solat1on.Models
 
 
 
+
         // Для обложки альбома (позже добавим)
         public byte[]? CoverImage { get; set; }
 
-        private string _genre;
-        public string Genre
-        {
-            get => _genre;
-            set
-            {
-                _genre = value;
-                OnPropertyChanged(nameof(Genre));
-            }
-        }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
- 
+    <None Remove="Resources\default_cover.png" />
     <None Remove="Resources\add_music.png" />
     <None Remove="Resources\add_new_folder.png" />
     <None Remove="Resources\delete_playlist.png" />
@@ -23,6 +23,9 @@
     <None Remove="Resources\settings.png" />
     <None Remove="Resources\shuffle.png" />
     <None Remove="Resources\stop.png" />
+    <None Remove="Resources\add_favorites.png" />
+    <None Remove="Resources\remove_favorites.png" />
+    <None Remove="Resurces\favorite_cover.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,7 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-
+    <Resource Include="Resources\default_cover.png" />
     <Resource Include="Resources\add_music.png" />
     <Resource Include="Resources\add_new_folder.png" />
     <Resource Include="Resources\delete_playlist.png" />
@@ -48,6 +51,9 @@
     <Resource Include="Resources\settings.png" />
     <Resource Include="Resources\shuffle.png" />
     <Resource Include="Resources\stop.png" />
+    <Resource Include="Resources\add_favorites.png" />
+    <Resource Include="Resources\remove_favorites.png" />
+    <Resource Include="Resources\favorite_cover.png" />
   </ItemGroup>
 
 </Project>

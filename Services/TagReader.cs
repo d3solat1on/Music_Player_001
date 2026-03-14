@@ -12,8 +12,14 @@ namespace MusicPlayer_by_d3solat1on.Services
             try
             {
                 using var file = TagLib.File.Create(filePath);
+                byte[]? artBytes = null;
+                if (file.Tag.Pictures.Length > 0)
+                {
+                    artBytes = file.Tag.Pictures[0].Data.Data;
+                }
                 var track = new Track
                 {
+
                     Path = filePath,
                     Name = string.IsNullOrEmpty(file.Tag.Title) ?
                            Path.GetFileNameWithoutExtension(filePath) :
@@ -23,7 +29,9 @@ namespace MusicPlayer_by_d3solat1on.Services
                     Duration = file.Properties.Duration.ToString(@"mm\:ss"),
                     Bitrate = file.Properties.AudioBitrate,
                     SampleRate = file.Properties.AudioSampleRate,
-                    Genre = file.Tag.FirstGenre ?? "Неизвестный жанр"
+                    Genre = file.Tag.FirstGenre ?? "Неизвестный жанр",
+                    CoverImage = artBytes
+
                 };
 
                 // Читаем обложку, если есть
@@ -41,26 +49,26 @@ namespace MusicPlayer_by_d3solat1on.Services
                 return null;
             }
         }
-        
+
         public static Track[] ReadTracksFromFiles(string[] filePaths)
         {
             var tracks = new List<Track>();
-            
+
             foreach (string filePath in filePaths)
             {
                 var track = ReadTrackFromFile(filePath);
                 if (track != null)
                     tracks.Add(track);
             }
-            
+
             return [.. tracks];
         }
-        
+
         public static Track[] ReadTracksFromFolder(string folderPath, string searchPattern = "*.mp3")
         {
             var files = Directory.GetFiles(folderPath, searchPattern, SearchOption.AllDirectories);
             return ReadTracksFromFiles(files);
         }
-        
+
     }
 }
