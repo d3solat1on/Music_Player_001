@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using MusicPlayer_by_d3solat1on.Models;
 using TagLib;
+using File = System.IO.File;
 
 namespace MusicPlayer_by_d3solat1on.Services
 {
@@ -9,18 +10,16 @@ namespace MusicPlayer_by_d3solat1on.Services
     {
         public static Track? ReadTrackFromFile(string filePath)
         {
+            if (!File.Exists(filePath)) return null;
+
             try
             {
+                using FileStream fs = new(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
                 using var file = TagLib.File.Create(filePath);
-                byte[]? artBytes = null;
-                if (file.Tag.Pictures.Length > 0)
-                {
-                    artBytes = file.Tag.Pictures[0].Data.Data;
-                }
                 var track = new Track
                 {
 
-                    Path = filePath,
+                    Path = Path.GetFullPath(filePath),
                     Name = string.IsNullOrEmpty(file.Tag.Title) ?
                            Path.GetFileNameWithoutExtension(filePath) :
                            file.Tag.Title,
@@ -30,22 +29,32 @@ namespace MusicPlayer_by_d3solat1on.Services
                     Bitrate = file.Properties.AudioBitrate,
                     SampleRate = file.Properties.AudioSampleRate,
                     Genre = file.Tag.FirstGenre ?? "Неизвестный жанр",
-                    CoverImage = artBytes
 
                 };
 
-                // Читаем обложку, если есть
-                if (file.Tag.Pictures != null && file.Tag.Pictures.Length > 0)
-                {
-                    var picture = file.Tag.Pictures[0];
-                    track.CoverImage = picture.Data.Data;
-                }
-
+                System.Diagnostics.Debug.WriteLine($"=== Загрузка файла: {filePath} ===");
+                System.Diagnostics.Debug.WriteLine($"Длительность: {file.Properties.Duration}");
+                System.Diagnostics.Debug.WriteLine($"Битрейт: {file.Properties.AudioBitrate}");
+                System.Diagnostics.Debug.WriteLine($"Частота: {file.Properties.AudioSampleRate}");
+                System.Diagnostics.Debug.WriteLine($"Кодеки: {file.Properties.Description}");
                 return track;
+            }
+            catch (CorruptFileException)
+            {
+                // Если теги битые, всё равно добавляем трек, используя имя файла
+                return new Track
+                {
+                    Name = Path.GetFileNameWithoutExtension(filePath),
+                    Executor = "Corrupt Metadata",
+                    Path = Path.GetFullPath(filePath)
+                };
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Ошибка при чтении {filePath}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Критическая ошибка на файле {filePath}: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"=== ОШИБКА ЧТЕНИЯ ТЕГОВ ===");
+                System.Diagnostics.Debug.WriteLine($"Файл: {filePath}");
+                System.Diagnostics.Debug.WriteLine($"Ошибка: {ex.Message}");
                 return null;
             }
         }
@@ -64,7 +73,7 @@ namespace MusicPlayer_by_d3solat1on.Services
             return [.. tracks];
         }
 
-        public static Track[] ReadTracksFromFolder(string folderPath, string searchPattern = "*.mp3")
+        public static Track[] ReadTracksFromFolder(string folderPath, string searchPattern = "*.mp3 | *.flac | *.wav | *.aac")
         {
             var files = Directory.GetFiles(folderPath, searchPattern, SearchOption.AllDirectories);
             return ReadTracksFromFiles(files);

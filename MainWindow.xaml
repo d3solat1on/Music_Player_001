@@ -8,8 +8,8 @@
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="MPM"
-        Width="1920"
-        Height="1080"
+        Width="2560"
+        Height="1440"
         WindowStartupLocation="CenterScreen"
         FontFamily="GOST type A"
         Loaded="MainWindow_Loaded"
@@ -20,6 +20,87 @@
                 <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
                 <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
                 <converters:NotNullConverter x:Key="NotNullConverter"/>
+                <converters:LargeTrackImageConverter x:Key="LargeTrackImageConverter"/>
+                <Style x:Key="ScrollBarThumb"
+                       TargetType="Thumb">
+                        <Setter Property="OverridesDefaultStyle"
+                                Value="true"/>
+                        <Setter Property="IsTabStop"
+                                Value="false"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="Thumb">
+                                                <Border x:Name="rectangle"
+                                                        CornerRadius="3"
+                                                        Background="#3E3E42"
+                                                        Width="6"
+                                                        Margin="2,0"/>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                 Value="true">
+                                                                <Setter TargetName="rectangle"
+                                                                        Property="Background"
+                                                                        Value="#505050"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+
+                <Style TargetType="ScrollBar">
+                        <Setter Property="Stylus.IsPressAndHoldEnabled"
+                                Value="false"/>
+                        <Setter Property="Stylus.IsFlicksEnabled"
+                                Value="false"/>
+                        <Setter Property="Width"
+                                Value="8"/>
+                        <Setter Property="Margin"
+                                Value="2,0"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="ScrollBar">
+                                                <Grid x:Name="Bg"
+                                                      Background="Transparent"
+                                                      SnapsToDevicePixels="true"
+                                                      Opacity="0">
+                                                        <Track x:Name="PART_Track"
+                                                               IsDirectionReversed="true"
+                                                               IsEnabled="{TemplateBinding IsEnabled}">
+                                                                <Track.Thumb>
+                                                                        <Thumb Style="{StaticResource ScrollBarThumb}"/>
+                                                                </Track.Thumb>
+                                                        </Track>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ScrollViewer}}"
+                                                                     Value="True">
+                                                                <DataTrigger.EnterActions>
+                                                                        <BeginStoryboard>
+                                                                                <Storyboard>
+                                                                                        <DoubleAnimation Storyboard.TargetName="Bg"
+                                                                                                         Storyboard.TargetProperty="Opacity"
+                                                                                                         To="1"
+                                                                                                         Duration="0:0:0.2"/>
+                                                                                </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                                <DataTrigger.ExitActions>
+                                                                        <BeginStoryboard>
+                                                                                <Storyboard>
+                                                                                        <DoubleAnimation Storyboard.TargetName="Bg"
+                                                                                                         Storyboard.TargetProperty="Opacity"
+                                                                                                         To="0"
+                                                                                                         Duration="0:0:0.5"/>
+                                                                                </Storyboard>
+                                                                        </BeginStoryboard>
+                                                                </DataTrigger.ExitActions>
+                                                        </DataTrigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
                 <Style x:Key="IconButton"
                        TargetType="Button">
                         <Setter Property="Background"
@@ -68,31 +149,37 @@
                                         <ColumnDefinition Width="1*"/>
                                 </Grid.ColumnDefinitions>
 
-                                <StackPanel Grid.Column="1"
-                                                Orientation="Horizontal"
-                                                VerticalAlignment="Center">
+                                <StackPanel Grid.Column="0"
+                                            Orientation="Horizontal"
+                                            VerticalAlignment="Center">
+
+                                        <!-- Кнопка избранного -->
                                         <Button x:Name="FavoriteButton"
                                                 Style="{StaticResource IconButton}"
                                                 Click="FavoriteButton_Click"
-                                                Margin="0,0,10,0"
-                                                ToolTip="Добавить в избранное">
+                                                ToolTip="Добавить в избранное"
+                                                Width="40"
+                                                Height="40"
+                                                Margin="0,0,10,0">
                                                 <Image x:Name="FavoriteIcon"
-                                                                Source="/Resources/remove_favorites.png"
-                                                                Width="20"
-                                                                Height="20"/>
+                                                       Source="/Resources/add_favorites.png"
+                                                       Stretch="Uniform"
+                                                       Width="24"
+                                                       Height="24"/>
                                         </Button>
-                                </StackPanel>
-                                <StackPanel Grid.Column="0"
-                                            VerticalAlignment="Center">
-                                        <TextBlock x:Name="LastTrackName"
-                                                   Text="Track Name"
-                                                   Foreground="White"
-                                                   FontSize="14"
-                                                   FontWeight="Bold"/>
-                                        <TextBlock x:Name="LastTrackExecutor"
-                                                   Text="Artist"
-                                                   Foreground="Gray"
-                                                   FontSize="12"/>
+
+                                        <!-- Информация о треке -->
+                                        <StackPanel>
+                                                <TextBlock x:Name="LastTrackName"
+                                                           Text="Track Name"
+                                                           Foreground="White"
+                                                           FontSize="14"
+                                                           FontWeight="Bold"/>
+                                                <TextBlock x:Name="LastTrackExecutor"
+                                                           Text="Artist"
+                                                           Foreground="Gray"
+                                                           FontSize="12"/>
+                                        </StackPanel>
                                 </StackPanel>
 
                                 <StackPanel Grid.Column="1"
@@ -101,13 +188,14 @@
                                                     HorizontalAlignment="Center">
                                                 <Button Style="{StaticResource IconButton}"
                                                         Click="ShuffleButton_Click"
+                                                        Width="55"
                                                         Margin="5,0">
                                                         <Image Source="Resources/shuffle.png"
                                                                Stretch="Uniform"
                                                                Margin="5"/>
                                                 </Button>
                                                 <Button Style="{StaticResource IconButton}"
-                                                        Width="30"
+                                                        Width="55"
                                                         Click="PrevButton_Click">
                                                         <Image Source="/Resources/fast_rewind.png"
                                                                Stretch="Uniform"
@@ -116,14 +204,14 @@
                                                 <Button x:Name="PlayPauseButton"
                                                         Style="{StaticResource IconButton}"
                                                         FontSize="24"
-                                                        Width="50"
+                                                        Width="55"
                                                         Click="PlayPauseButton_Click">
                                                         <Image Source="/Resources/play.png"
                                                                Stretch="Uniform"
                                                                Margin="5"/>
                                                 </Button>
                                                 <Button Style="{StaticResource IconButton}"
-                                                        Width="30"
+                                                        Width="55"
                                                         Click="NextButton_Click">
                                                         <Image Source="/Resources/fast_forward.png"
                                                                Stretch="Uniform"
@@ -131,6 +219,7 @@
                                                 </Button>
                                                 <Button Style="{StaticResource IconButton}"
                                                         Click="RepeatButton_Click"
+                                                        Width="55"
                                                         Margin="5,0">
                                                         <Image Source="Resources/loop.png"
                                                                Stretch="Uniform"
@@ -149,6 +238,7 @@
                                                            Grid.Column="0"
                                                            Text="0:00"
                                                            Foreground="White"
+                                                           FontSize="30"
                                                            Margin="5,0"/>
                                                 <Slider x:Name="ProgressSlider"
                                                         Grid.Column="1"
@@ -162,6 +252,7 @@
                                                            Grid.Column="2"
                                                            Text="0:00"
                                                            Foreground="White"
+                                                           FontSize="30"
                                                            Margin="5,0"/>
                                         </Grid>
                                 </StackPanel>
@@ -340,7 +431,7 @@
                                                                                                 <ContextMenu Background="#282828"
                                                                                                              Foreground="White">
                                                                                                         <MenuItem Header="Редактировать"
-                                                                                                                  Click="EditPlaylist_click"/>
+                                                                                                                  Click="EditPlaylist_Click"/>
                                                                                                         <Separator Background="#444"/>
                                                                                                         <MenuItem Header="Удалить"
                                                                                                                   Click="DeletePlaylist_Click"
@@ -420,33 +511,224 @@
                                           Foreground="White"
                                           BorderThickness="0"
                                           AutoGenerateColumns="False"
+                                          CanUserResizeRows="False"
                                           CanUserAddRows="False"
+                                          CanUserReorderColumns="False"
+                                          CanUserResizeColumns="False"
                                           IsReadOnly="True"
                                           SelectionMode="Single"
                                           MouseDoubleClick="TracksDataGrid_MouseDoubleClick"
                                           GridLinesVisibility="None">
+                                        <DataGrid.Resources>
+                                                <Style TargetType="{x:Type DataGridRowHeader}">
+                                                        <Setter Property="Background"
+                                                                Value="Transparent"/>
+                                                        <Setter Property="BorderThickness"
+                                                                Value="0"/>
+                                                        <Setter Property="Width"
+                                                                Value="0"/>
+                                                </Style>
+                                                <!-- Стиль для заголовков колонок -->
+                                                <Style TargetType="DataGridColumnHeader">
+                                                        <Setter Property="Background"
+                                                                Value="#1E1E1E"/>
+                                                        <Setter Property="Foreground"
+                                                                Value="#CCCCCC"/>
+                                                        <Setter Property="FontWeight"
+                                                                Value="Bold"/>
+                                                        <Setter Property="FontSize"
+                                                                Value="18"/>
+                                                        <Setter Property="Height"
+                                                                Value="40"/>
+                                                        <Setter Property="BorderBrush"
+                                                                Value="#333333"/>
+                                                        <Setter Property="BorderThickness"
+                                                                Value="0,0,1,1"/>
+                                                        <Setter Property="HorizontalContentAlignment"
+                                                                Value="Left"/>
+                                                        <Setter Property="Padding"
+                                                                Value="10,0,0,0"/>
+                                                </Style>
+
+                                                <!-- Стиль для ячеек -->
+                                                <Style TargetType="DataGridCell">
+                                                        <Setter Property="Background"
+                                                                Value="Transparent"/>
+                                                        <Setter Property="Foreground"
+                                                                Value="White"/>
+                                                        <Setter Property="BorderBrush"
+                                                                Value="Transparent"/>
+                                                        <Setter Property="VerticalAlignment"
+                                                                Value="Center"/>
+                                                        <Setter Property="Padding"
+                                                                Value="10,5,0,5"/>
+                                                        <Setter Property="FontSize"
+                                                                Value="18"/>
+                                                        <Style.Triggers>
+                                                                <Trigger Property="IsSelected"
+                                                                         Value="True">
+                                                                        <Setter Property="Background"
+                                                                                Value="#2D2D2D"/>
+                                                                        <Setter Property="Foreground"
+                                                                                Value="White"/>
+                                                                        <Setter Property="BorderBrush"
+                                                                                Value="#007ACC"/>
+                                                                </Trigger>
+                                                        </Style.Triggers>
+                                                </Style>
+
+                                                <!-- Стиль для строк -->
+                                                <Style TargetType="DataGridRow">
+                                                        <Setter Property="Background"
+                                                                Value="#141414"/>
+                                                        <Setter Property="MinHeight"
+                                                                Value="35"/>
+                                                        <Style.Triggers>
+                                                                <Trigger Property="AlternationIndex"
+                                                                         Value="1">
+                                                                        <Setter Property="Background"
+                                                                                Value="#1A1A1A"/>
+                                                                </Trigger>
+                                                                <Trigger Property="IsSelected"
+                                                                         Value="True">
+                                                                        <Setter Property="Background"
+                                                                                Value="#2D2D2D"/>
+                                                                </Trigger>
+                                                        </Style.Triggers>
+                                                </Style>
+                                        </DataGrid.Resources>
                                         <DataGrid.Columns>
+                                                <!-- В DataGrid.Columns, перед колонкой NAME -->
+                                                <DataGridTemplateColumn Header=""
+                                                                        Width="75">
+                                                        <DataGridTemplateColumn.CellTemplate>
+                                                                <DataTemplate>
+                                                                        <Border Width="75"
+                                                                                Height="75"
+                                                                                CornerRadius="4"
+                                                                                BorderThickness="1"
+                                                                                BorderBrush="#333"
+                                                                                Background="#222">
+                                                                                <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                                       Stretch="Uniform"
+                                                                                       HorizontalAlignment="Center"
+                                                                                       VerticalAlignment="Center">
+
+                                                                                        <Image.Style>
+                                                                                                <Style TargetType="Image">
+                                                                                                        <Setter Property="Visibility"
+                                                                                                                Value="Visible"/>
+                                                                                                        <Style.Triggers>
+                                                                                                                <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                                             Value="{x:Null}">
+                                                                                                                        <Setter Property="Visibility"
+                                                                                                                                Value="Collapsed"/>
+                                                                                                                </DataTrigger>
+                                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                                             Value="0">
+                                                                                                                        <Setter Property="Visibility"
+                                                                                                                                Value="Collapsed"/>
+                                                                                                                </DataTrigger>
+                                                                                                        </Style.Triggers>
+                                                                                                </Style>
+                                                                                        </Image.Style>
+                                                                                </Image>
+                                                                        </Border>
+                                                                </DataTemplate>
+                                                        </DataGridTemplateColumn.CellTemplate>
+
+                                                </DataGridTemplateColumn>
                                                 <DataGridTextColumn Header="NAME"
                                                                     Binding="{Binding Name}"
-                                                                    Width="2*"/>
+                                                                    Width="3*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="White"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
                                                 <DataGridTextColumn Header="EXECUTOR"
                                                                     Binding="{Binding Executor}"
-                                                                    Width="1*"/>
+                                                                    Width="2*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="#CCCCCC"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
                                                 <DataGridTextColumn Header="ALBUM"
                                                                     Binding="{Binding Album}"
-                                                                    Width="1*"/>
+                                                                    Width="2*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="#CCCCCC"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
                                                 <DataGridTextColumn Header="DURATION"
-                                                                    Binding="{Binding Duration, StringFormat=\{0:mm\\:ss\}}"
-                                                                    Width="80"/>
+                                                                    Binding="{Binding Duration}"
+                                                                    Width="1*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="#999999"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
+
                                                 <DataGridTextColumn Header="BITRATE"
-                                                                    Binding="{Binding Bitrate}"
-                                                                    Width="80"/>
+                                                                    Binding="{Binding BitrateDisplay}"
+                                                                    Width="1*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="#999999"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
                                                 <DataGridTextColumn Header="GENRE"
                                                                     Binding="{Binding Genre}"
-                                                                    Width="100"/>
+                                                                    Width="1*">
+                                                        <DataGridTextColumn.ElementStyle>
+                                                                <Style>
+                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                Value="#999999"/>
+                                                                        <Setter Property="TextBlock.Margin"
+                                                                                Value="10,0,0,0"/>
+                                                                </Style>
+                                                        </DataGridTextColumn.ElementStyle>
+                                                </DataGridTextColumn>
                                         </DataGrid.Columns>
                                 </DataGrid>
                         </Grid>
+
+
                         <!-- Правая колонка - NOW PLAYING -->
                         <Border Grid.Column="2"
                                 Background="#121212"
@@ -455,7 +737,7 @@
                                 <StackPanel VerticalAlignment="Top">
                                         <TextBlock Text="NOW PLAYING"
                                                    Foreground="White"
-                                                   FontSize="18"
+                                                   FontSize="20"
                                                    FontWeight="Bold"
                                                    Margin="0,0,0,20"/>
 
@@ -468,7 +750,7 @@
                                                        Stretch="Uniform"
                                                        HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"
-                                                       Source="{Binding ElementName=TracksDataGrid, Path=SelectedItem.CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"/>
+                                                       Source="{Binding ElementName=TracksDataGrid, Path=SelectedItem.CoverImage, Converter={StaticResource LargeTrackImageConverter}}"/>
                                         </Border>
                                         <TextBlock x:Name="CurrentTrackName"
                                                    Text="NAME"
@@ -478,17 +760,17 @@
                                                    TextWrapping="Wrap"/>
                                         <TextBlock x:Name="CurrentTrackExecutor"
                                                    Text="EXECUTOR"
-                                                   FontSize="16"
+                                                   FontSize="20"
                                                    Foreground="Gray"
                                                    Margin="0,5"/>
                                         <TextBlock x:Name="CurrentTrackAlbum"
                                                    Text="ALBUM"
-                                                   FontSize="14"
+                                                   FontSize="20"
                                                    Foreground="Gray"/>
 
                                         <TextBlock x:Name="CurrentTrackData"
                                                    Text="Genre | 00:00"
-                                                   FontSize="14"
+                                                   FontSize="16"
                                                    Foreground="DarkGray"
                                                    Margin="0,20,0,0"/>
                                 </StackPanel>

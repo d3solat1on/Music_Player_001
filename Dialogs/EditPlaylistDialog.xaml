@@ -1,17 +1,23 @@
-<Window x:Class="MusicPlayer_by_d3solat1on.Dialogs.CreatePlaylistDialog"
+<Window x:Class="MusicPlayer_by_d3solat1on.Dialogs.EditPlaylistDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MusicPlayer_by_d3solat1on.Dialogs"
+        xmlns:converters="clr-namespace:MusicPlayer_by_d3solat1on.Converters"
         Background="Transparent"
         AllowsTransparency="True"
         WindowStyle="None"
         Width="450"
         Height="550"
-        Title="Создать плейлист"
+        Title="Редактировать плейлист"
         WindowStartupLocation="CenterOwner">
-
+        <Window.Resources>
+                <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
+                <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
+                <converters:NotNullConverter x:Key="NotNullConverter"/>
+                <converters:LargeTrackImageConverter x:Key="LargeTrackImageConverter"/>
+        </Window.Resources>
 
         <Border
                 Background="#1A1A1A"
@@ -34,7 +40,7 @@
                                 <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="Новый плейлист"
+                        <TextBlock Text="Редактировать плейлист"
                                    Foreground="White"
                                    FontSize="20"
                                    FontWeight="Bold"
@@ -47,14 +53,31 @@
                                 Click="SelectCoverButton_Click"
                                 Background="#282828">
                                 <Grid>
-                                        <Image x:Name="CoverImage"
-                                               Stretch="UniformToFill"/>
+                                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                               Stretch="UniformToFill"
+                                               Margin="2">
+                                                <Image.Style>
+                                                        <Style TargetType="Image">
+                                                                <Setter Property="Visibility"
+                                                                        Value="Visible"/>
+                                                                <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding CoverImage}"
+                                                                                     Value="{x:Null}">
+                                                                                <Setter Property="Visibility"
+                                                                                        Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                        <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                     Value="0">
+                                                                                <Setter Property="Visibility"
+                                                                                        Value="Collapsed"/>
+                                                                        </DataTrigger>
+                                                                </Style.Triggers>
+                                                        </Style>
+                                                </Image.Style>
+                                        </Image>
                                         <StackPanel VerticalAlignment="Center"
                                                     x:Name="PlaceholderText">
-                                                <TextBlock Text="➕"
-                                                           FontSize="30"
-                                                           HorizontalAlignment="Center"/>
-                                                <TextBlock Text="Выбрать обложку"
+                                                <TextBlock Text="Изменить обложку"
                                                            Foreground="Gray"
                                                            FontSize="12"
                                                            HorizontalAlignment="Center"/>
@@ -69,6 +92,7 @@
                                            Margin="0,0,0,5"/>
                                 <TextBox x:Name="PlaylistNameTextBox"
                                          Background="#252525"
+                                         Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
                                          Foreground="White"
                                          BorderThickness="0"
                                          Padding="10"
@@ -80,6 +104,7 @@
                                 <TextBox x:Name="PlaylistDescriptionTextBox"
                                          Background="#252525"
                                          Foreground="White"
+                                         Text="{Binding Description, UpdateSourceTrigger=PropertyChanged}"
                                          BorderThickness="0"
                                          Padding="10"
                                          Height="80"
@@ -107,8 +132,8 @@
                                                 </Style>
                                         </Button.Resources>
                                 </Button>
-                                <Button Content="Создать"
-                                        Click="CreateButton_Click"
+                                <Button Content="Сохранить"
+                                        Click="EditPlaylist_Сlick"
                                         Width="100"
                                         Height="35"
                                         Background="#1DB954"

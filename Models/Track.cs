@@ -16,7 +16,7 @@ namespace MusicPlayer_by_d3solat1on.Models
         public string Genre { get; set; } = "Неизвестно";
         public int Bitrate { get; set; }
         public int SampleRate { get; set; }
-
+        private byte[]? _coverImage;
 
         // Форматированные свойства для отображения
         public string ExtensionDisplay => !string.IsNullOrEmpty(Extension) ? Extension.ToUpper() : "Неизвестно";
@@ -27,14 +27,40 @@ namespace MusicPlayer_by_d3solat1on.Models
 
 
 
-
-        // Для обложки альбома (позже добавим)
-        public byte[]? CoverImage { get; set; }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        protected void OnPropertyChanged(string propertyName)
+        public byte[]? CoverImage
         {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+            get
+            {
+                // Ленивая загрузка при первом обращении
+                if (_coverImage == null && !string.IsNullOrEmpty(Path))
+                {
+                    _coverImage = LoadCoverFromFile();
+                }
+                return _coverImage;
+            }
+            set => _coverImage = value;
         }
+        private byte[]? LoadCoverFromFile()
+        {
+            try
+            {
+                using var file = File.Create(Path);
+                if (file.Tag.Pictures != null && file.Tag.Pictures.Length > 0)
+                {
+                    return file.Tag.Pictures[0].Data.Data;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки обложки: {ex.Message}");
+            }
+            return null;
+        }
+        public void UnloadCover()
+        {
+            _coverImage = null;
+        }
+        public event PropertyChangedEventHandler PropertyChanged;
+    
     }
 }

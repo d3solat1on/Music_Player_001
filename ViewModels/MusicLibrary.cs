@@ -22,7 +22,7 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
 
         private MusicLibrary()
         {
-            if (Playlists == null) Playlists = [];
+            Playlists ??= [];
             if (!Playlists.Any(p => p.Name == FavoritesName))
             {
                 // Сначала получаем данные картинки из ресурсов
@@ -44,9 +44,14 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
                     Description = "Ваши любимые треки",
                     CreatedDate = DateTime.Now,
                     CoverImage = defaultImageData,
-                    Tracks = [] 
+                    Tracks = []
                 });
             }
+            if (Playlists.Count > 0)
+            {
+                CurrentPlaylist = Playlists[0];
+            }
+            OnPropertyChanged(nameof(Playlists));
         }
 
         // Текущий выбранный плейлист
@@ -90,6 +95,38 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
             }
         }
 
+        public void LoadPlaylists(IEnumerable<Playlist> loadedPlaylists)
+        {
+            Playlists.Clear();
+            foreach (var playlist in loadedPlaylists)
+                Playlists.Add(playlist);
+
+            // Убедимся, что "Избранное" существует
+            if (!Playlists.Any(p => p.Name == "Избранное"))
+            {
+                byte[]? defaultImageData = null;
+                try
+                {
+                    var uri = new Uri("pack://application:,,,/Resources/favorites_cover.png");
+                    var info = Application.GetResourceStream(uri);
+                    using var ms = new System.IO.MemoryStream();
+                    info.Stream.CopyTo(ms);
+                    defaultImageData = ms.ToArray();
+                }
+                catch { /* Если файл не найден, останется null */ }
+                Playlists.Insert(0, new Playlist
+                {
+                    Id = 1,
+                    Name = "Избранное",
+                    Description = "Ваши любимые треки",
+                    CreatedDate = DateTime.Now,
+                    CoverImage = defaultImageData,
+                    Tracks = []
+                });
+            }
+            GC.Collect(2, GCCollectionMode.Forced, true);
+            GC.WaitForPendingFinalizers();
+        }
         public void AddTracks(string[] filePaths)
         {
             var tracks = TagReader.ReadTracksFromFiles(filePaths);
@@ -147,12 +184,12 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
         {
             if (CurrentPlaylist == null)
             {
-                System.Windows.MessageBox.Show("Сначала выберите плейлист", "Информация",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                MessageBox.Show("Сначала выберите плейлист", "Информация",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            var tracks = Services.TagReader.ReadTracksFromFiles(filePaths);
+            var tracks = TagReader.ReadTracksFromFiles(filePaths);
             foreach (var track in tracks)
             {
                 if (track != null)
@@ -175,12 +212,12 @@ namespace MusicPlayer_by_d3solat1on.ViewModels
         {
             if (CurrentPlaylist == null)
             {
-                System.Windows.MessageBox.Show("Сначала выберите плейлист", "Информация",
-                    System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                MessageBox.Show("Сначала выберите плейлист", "Информация",
+                    MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
 
-            var tracks = Services.TagReader.ReadTracksFromFolder(folderPath);
+            var tracks = TagReader.ReadTracksFromFolder(folderPath);
             foreach (var track in tracks)
             {
                 if (track != null)

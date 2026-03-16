@@ -1,15 +1,18 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using Microsoft.Win32;
 using MusicPlayer_by_d3solat1on.Dialogs;
 using MusicPlayer_by_d3solat1on.Models;
 using MusicPlayer_by_d3solat1on.Services;
 using MusicPlayer_by_d3solat1on.ViewModels;
+using static MusicPlayer_by_d3solat1on.Dialogs.NotificationWindow;
 using static MusicPlayer_by_d3solat1on.Services.PlayerService;
 using Track = MusicPlayer_by_d3solat1on.Models.Track;
 
@@ -17,10 +20,12 @@ namespace MusicPlayer_by_d3solat1on
 {
     public partial class MainWindow : Window
     {
+        private DispatcherTimer _memoryCleanupTimer;
         public static MusicLibrary Library => MusicLibrary.Instance;
         private static PlayerService Player => Instance;
         private bool _isSliderDragging = false;
 
+        private Track _lastTrackWithCover;
 
         public MainWindow()
         {
@@ -34,6 +39,7 @@ namespace MusicPlayer_by_d3solat1on
             Player.PositionChanged += OnPositionChanged;
             Player.PlaybackPaused += OnPlaybackPaused;
             Player.VolumeChanged += OnVolumeChanged;
+            Player.DurationChanged += OnDurationChanged;
 
             VolumeSlider.Value = Player.Volume * 100;
 
@@ -52,8 +58,26 @@ namespace MusicPlayer_by_d3solat1on
 
             Closed += (s, e) => StorageService.Instance.SaveLibrary();
             VolumeSlider.Value = 50;
+            _memoryCleanupTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromMinutes(5)
+            };
+            _memoryCleanupTimer.Tick += (s, e) =>
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        GC.Collect();
+    };
+            _memoryCleanupTimer.Start();
         }
 
+        private void OnDurationChanged()
+        {
+            Dispatcher.Invoke(() =>
+            {
+                TotalTimeText.Text = FormatTime(Player.Duration);
+            });
+        }
         private void OnVolumeChanged(double volume)
         {
             Dispatcher.Invoke(() =>
@@ -69,6 +93,7 @@ namespace MusicPlayer_by_d3solat1on
             {
                 UpdateNowPlayingInfo(track);
                 UpdatePlayPauseIcon(true);
+                UpdateFavoriteIcon(track);
                 CurrentTrackName.Text = track.Name;
                 CurrentTrackExecutor.Text = track.Executor;
                 CurrentTrackAlbum.Text = track.Album;
@@ -96,7 +121,7 @@ namespace MusicPlayer_by_d3solat1on
                         ? "pack://application:,,,/Resources/remove_favorites.png"
                         : "pack://application:,,,/Resources/add_favorites.png"));
                 }
-
+                UpdateCurrentTrackCover(track); // Добавить эту строку
                 TotalTimeText.Text = totalTime;
             });
         }
@@ -119,18 +144,26 @@ namespace MusicPlayer_by_d3solat1on
         }
         private void OnPositionChanged(double position)
         {
-            Dispatcher.Invoke(() =>
+            if (!Dispatcher.CheckAccess())
             {
-                if (!_isSliderDragging)
-                {
+                Dispatcher.Invoke(() => OnPositionChanged(position));
+                return;
+            }
 
-                    if (Player.Duration > 0)
+            if (!_isSliderDragging)
+            {
+                if (Player.Duration > 0)
+                {
+                    double sliderValue = position / Player.Duration * 100;
+
+                    // Проверка на корректность
+                    if (!double.IsNaN(sliderValue) && !double.IsInfinity(sliderValue))
                     {
-                        ProgressSlider.Value = position / Player.Duration * 100;
+                        ProgressSlider.Value = sliderValue;
                     }
-                    CurrentTimeText.Text = FormatTime(position);
                 }
-            });
+                CurrentTimeText.Text = FormatTime(position);
+            }
         }
 
         private void OnPlaybackPaused(bool isPaused)
@@ -140,8 +173,6 @@ namespace MusicPlayer_by_d3solat1on
                 UpdatePlayPauseIcon(!isPaused);
             });
         }
-
-
 
         private static string FormatTime(double seconds)
         {
@@ -157,7 +188,6 @@ namespace MusicPlayer_by_d3solat1on
         {
             if (Player.CurrentTrack == null)
             {
-
                 if (Library.CurrentTracks.Count > 0)
                 {
                     Player.PlayTrack(Library.CurrentTracks[0]);
@@ -198,7 +228,6 @@ namespace MusicPlayer_by_d3solat1on
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
         {
-
             if (Library.CurrentTracks.Count == 0) return;
 
             var currentIndex = Library.CurrentTracks.IndexOf(Player.CurrentTrack);
@@ -221,12 +250,12 @@ namespace MusicPlayer_by_d3solat1on
         }
 
 
-        private void ProgressSlider_DragStarted(object sender, System.Windows.Controls.Primitives.DragStartedEventArgs e)
+        private void ProgressSlider_DragStarted(object sender, DragStartedEventArgs e)
         {
             _isSliderDragging = true;
         }
 
-        private void ProgressSlider_DragCompleted(object sender, System.Windows.Controls.Primitives.DragCompletedEventArgs e)
+        private void ProgressSlider_DragCompleted(object sender, DragCompletedEventArgs e)
         {
             _isSliderDragging = false;
             if (Player.CurrentTrack != null)
@@ -353,7 +382,7 @@ namespace MusicPlayer_by_d3solat1on
         }
 
 
-        private void TracksDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void TracksDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
             {
@@ -363,20 +392,18 @@ namespace MusicPlayer_by_d3solat1on
 
         private void UpdateNowPlayingInfo(Track track)
         {
-
-
-            LastTrackName.Text = track.Name;
-            LastTrackExecutor.Text = track.Executor;
-            // LastTrackAlbum.Text = track.Album;
-            // LastTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
-
+            if (_lastTrackWithCover != null && _lastTrackWithCover != track)
+            {
+                _lastTrackWithCover.UnloadCover();
+            }
             CurrentTrackName.Text = track.Name;
             CurrentTrackExecutor.Text = track.Executor;
             CurrentTrackAlbum.Text = track.Album;
             CurrentTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
 
-
             Library.LastPlayedTrack = track;
+            _lastTrackWithCover = track;
+            MusicLibrary.Instance.UpdatePlaylistView();
         }
 
         private void RemoveFromPlaylist_Click(object sender, RoutedEventArgs e)
@@ -431,16 +458,16 @@ namespace MusicPlayer_by_d3solat1on
         {
             if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
             {
-                var result = MessageBox.Show(
-                    $"Удалить плейлист \"{selectedPlaylist.Name}\"?\n" +
-                    "Треки в плейлисте останутся в библиотеке.",
-                    "Подтверждение",
-                    MessageBoxButton.YesNo,
-                    MessageBoxImage.Warning);
+                // Вызываем твое кастомное окно
+                string message = $"Удалить плейлист \"{selectedPlaylist.Name}\"?\n" +
+                                 "Треки в плейлисте останутся в библиотеке.";
 
-                if (result == MessageBoxResult.Yes)
+                if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
                 {
                     Library.Playlists.Remove(selectedPlaylist);
+                    // Если нужно, вызываем обновление интерфейса
+                    MusicLibrary.Instance.UpdatePlaylistView();
+
                 }
             }
         }
@@ -496,20 +523,20 @@ namespace MusicPlayer_by_d3solat1on
         private void RepeatButton_Click(object sender, RoutedEventArgs e)
         {
             // Циклическое переключение: NoRepeat -> RepeatAll -> RepeatOne -> NoRepeat
-            switch (Player.RepeatMode1)
+            switch (Player.RepeatMode)
             {
                 case RepeatMode.NoRepeat:
-                    Player.RepeatMode1 = RepeatMode.RepeatAll;
+                    Player.RepeatMode = RepeatMode.RepeatAll;
                     // RepeatButton.Content = "🔁"; // Можно подсветить кнопку цветом
                     // RepeatButton.Opacity = 1.0;
                     break;
                 case RepeatMode.RepeatAll:
-                    Player.RepeatMode1 = RepeatMode.RepeatOne;
+                    Player.RepeatMode = RepeatMode.RepeatOne;
                     // RepeatButton.Content = "🔂"; // Иконка повтора одного трека
                     // RepeatButton.Opacity = 1.0;
                     break;
                 case RepeatMode.RepeatOne:
-                    Player.RepeatMode1 = RepeatMode.NoRepeat;
+                    Player.RepeatMode = RepeatMode.NoRepeat;
                     // RepeatButton.Content = "🔁";
                     // RepeatButton.Opacity = 0.5; // Делаем полупрозрачной, когда выключено
                     break;
@@ -517,59 +544,156 @@ namespace MusicPlayer_by_d3solat1on
         }
         private void DeletePlaylist_Click(object sender, RoutedEventArgs e)
         {
-            var menuItem = sender as MenuItem;
-
-            if (menuItem?.DataContext is Playlist playlist)
+            if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
             {
-                var result = MessageBox.Show($"Вы уверены, что хотите удалить плейлист '{playlist.Name}'?",
-                    "Удаление", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+                // Вызываем твое кастомное окно
+                string message = $"Удалить плейлист \"{selectedPlaylist.Name}\"?\n" +
+                                 "Треки в плейлисте останутся в библиотеке.";
 
-                if (result == MessageBoxResult.Yes)
+                if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
                 {
-                    MusicLibrary.Instance.Playlists.Remove(playlist);
+                    Library.Playlists.Remove(selectedPlaylist);
+                    // Если нужно, вызываем обновление интерфейса
+                    MusicLibrary.Instance.UpdatePlaylistView();
+
                 }
             }
         }
-        private void EditPlaylist_click(object sender, RoutedEventArgs e)
+        private void EditPlaylist_Click(object sender, RoutedEventArgs e)
         {
-            if ((sender as MenuItem)?.DataContext is not Playlist playlist) return;
-            var editWin = new CreatePlaylistDialog(playlist) { Owner = this };
-            if (editWin.ShowDialog() == true)
+            // Получаем плейлист, на котором кликнули
+            if (sender is MenuItem menuItem && menuItem.DataContext is Playlist selectedPlaylist)
             {
-                playlist.Name = editWin.PlaylistName;
-                playlist.Description = editWin.PlaylistDescription;
-                playlist.CoverImage = editWin.PlaylistCoverImage;
-                MusicLibrary.Instance.UpdatePlaylistView();
+                // Создаем окно редактирования
+                var dialog = new EditPlaylistDialog
+                {
+                    Owner = this,
+                    DataContext = selectedPlaylist // Передаем данные в диалог
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    // Обновляем UI или сохраняем изменения
+                    MusicLibrary.Instance.UpdatePlaylistView();
+                }
             }
         }
 
         private void FavoriteButton_Click(object sender, RoutedEventArgs e)
         {
-            var currentTrack = Instance.CurrentTrack;
-            if (currentTrack == null)
+            if (Player.CurrentTrack == null)
             {
-                MessageBox.Show("Сначала запустите трек!");
+                NotificationWindow.Show("Нет трека для добавления в Избранное", this);
                 return;
             }
 
-            var favorites = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
-            if (favorites == null) return;
-            var existingTrack = favorites.Tracks.FirstOrDefault(t => t.Path == currentTrack.Path);
-            if (existingTrack != null)
-            {
+            var favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
 
-                favorites.Tracks.Remove(existingTrack);
-                FavoriteIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/remove_favorites.png"));
+            // Если плейлиста "Избранное" ещё нет, создаём его
+            if (favoritePlaylist == null)
+            {
+                byte[]? favCover = null;
+                try
+                {
+                    // Пытаемся загрузить обложку для плейлиста "Избранное"
+                    var uri = new Uri("pack://application:,,,/Resources/favorite_cover.png");
+                    var resourceStream = Application.GetResourceStream(uri);
+                    if (resourceStream != null)
+                    {
+                        using var ms = new System.IO.MemoryStream();
+                        resourceStream.Stream.CopyTo(ms);
+                        favCover = ms.ToArray();
+                    }
+                }
+                catch { /* Если нет обложки - игнорируем */ }
+
+                favoritePlaylist = Library.CreatePlaylist(
+                    MusicLibrary.FavoritesName,
+                    "Ваши любимые треки",
+                    favCover
+                );
+
+                // CreatePlaylist уже добавляет плейлист в коллекцию
+                // Если нет - раскомментируйте:
+                // Library.Playlists.Insert(0, favoritePlaylist);
+            }
+
+            // Проверяем, есть ли трек в избранном
+            if (!favoritePlaylist.Tracks.Contains(Player.CurrentTrack))
+            {
+                // Добавляем трек
+                favoritePlaylist.Tracks.Add(Player.CurrentTrack);
+
+                // Меняем иконку на "в избранном"
+                UpdateFavoriteIcon(Player.CurrentTrack, true);
+
+                NotificationWindow.Show("Трек успешно добавлен в Избранное", this);
             }
             else
             {
-                // Если нет — добавляем
-                favorites.Tracks.Add(currentTrack);
-                FavoriteIcon.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/add_favorites.png"));
+                NotificationWindow.Show("Трек успешно удален из Избранного", this);
+                favoritePlaylist.Tracks.Remove(Player.CurrentTrack);
+                UpdateFavoriteIcon(Player.CurrentTrack, false);
             }
-            if (MusicLibrary.Instance.CurrentPlaylist == favorites)
+        }
+        private void UpdateFavoriteIcon(Track track, bool? forceState = null)
+        {
+            if (FavoriteIcon == null) return;
+
+            bool isFavorite;
+
+            if (forceState.HasValue)
             {
-                MusicLibrary.Instance.UpdatePlaylistView();
+                isFavorite = forceState.Value;
+            }
+            else if (track != null)
+            {
+                var favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
+                isFavorite = favoritePlaylist?.Tracks.Contains(track) ?? false;
+            }
+            else
+            {
+                isFavorite = false;
+            }
+
+            string iconPath = isFavorite
+                ? "/Resources/favorites_added.png"   // В избранном
+                : "/Resources/add_favorites.png";     // Не в избранном
+
+            FavoriteIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.RelativeOrAbsolute));
+            FavoriteButton.ToolTip = isFavorite
+                ? "Удалить из избранного"
+                : "Добавить в избранное";
+        }
+
+        private void UpdateCurrentTrackCover(Track track)
+        {
+            try
+            {
+                if (track?.CoverImage != null && track.CoverImage.Length > 0)
+                {
+                    using (var ms = new System.IO.MemoryStream(track.CoverImage))
+                    {
+                        var bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.StreamSource = ms;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+                        CurrentTrackImage.Source = bitmap;
+                    }
+                }
+                else
+                {
+                    // Пытаемся загрузить из ресурсов заглушку
+                    var uri = new Uri("pack://application:,,,/Resources/default_cover.png");
+                    CurrentTrackImage.Source = new BitmapImage(uri);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки обложки: {ex.Message}");
+                CurrentTrackImage.Source = null;
             }
         }
 

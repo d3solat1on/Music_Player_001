@@ -8,34 +8,27 @@ namespace MusicPlayer_by_d3solat1on.Converters
 {
     public class ByteArrayToImageConverter : IValueConverter
     {
-        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            // Безопасное приведение типа
-            if (value is not byte[] bytes || bytes.Length == 0)
-                return null;
-
-            try
+            if (value is byte[] bytes && bytes.Length > 0)
             {
+                using var ms = new MemoryStream(bytes);
                 var image = new BitmapImage();
-                using (var stream = new MemoryStream(bytes))
-                {
-                    image.BeginInit();
-                    // Важно для экономии памяти в списках:
-                    image.DecodePixelWidth = 350; // Можно ограничить размер, так как это иконка в списке
-                    image.CacheOption = BitmapCacheOption.OnLoad;
-                    image.StreamSource = stream;
-                    image.EndInit();
-                }
-                image.Freeze(); // Делает объект доступным для других потоков и ускоряет рендеринг
+                image.BeginInit();
+                image.CacheOption = BitmapCacheOption.OnLoad;
+
+                // ОГРАНИЧИВАЕМ РАЗМЕР ДЕКОДИРОВАНИЯ
+                // Это заставит WPF не грузить картинку целиком, а взять только 300 пикселей
+                image.DecodePixelWidth = 300;
+
+                image.StreamSource = ms;
+                image.EndInit();
+                image.Freeze(); // Важно для производительности
                 return image;
             }
-            catch
-            {
-                return null; // Если массив байтов не является валидным изображением
-            }
+            return null; // Или стандартная иконка
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-            => throw new NotImplementedException();
+        public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => null;
     }
 }
