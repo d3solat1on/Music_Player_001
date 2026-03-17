@@ -1,6 +1,7 @@
 using System;
 using System.ComponentModel;
 using System.Data;
+using System.Text.Json.Serialization;
 using TagLib; // для INotifyPropertyChanged
 
 namespace MusicPlayer_by_d3solat1on.Models
@@ -26,7 +27,7 @@ namespace MusicPlayer_by_d3solat1on.Models
         public string AlbumDisplay => !string.IsNullOrEmpty(Album) ? Album : "Неизвестно";
 
 
-
+        [JsonIgnore]
         public byte[]? CoverImage
         {
             get
