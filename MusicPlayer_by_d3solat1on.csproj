@@ -26,6 +26,11 @@
     <None Remove="Resources\add_favorites.png" />
     <None Remove="Resources\remove_favorites.png" />
     <None Remove="Resurces\favorite_cover.png" />
+    <None Remove="Resources\volume.png" />
+    <None Remove="Resources\volume_off.png" />
+    <None Remove="Resources\close.png" />
+    <None Remove="Resources\minimize.png" />
+    <None Remove="Resources\maximize.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +40,8 @@
   <ItemGroup>
     <PackageReference Include="BunLabs.NAudio.Flac" Version="2.0.1" />
     <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="NAudio.Flac" Version="1.0.5702.29018" />
+    <PackageReference Include="NAudio.Flac.Unknown" Version="1.0.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
@@ -56,6 +63,11 @@
     <Resource Include="Resources\add_favorites.png" />
     <Resource Include="Resources\remove_favorites.png" />
     <Resource Include="Resources\favorite_cover.png" />
+    <Resource Include="Resources\volume.png" />
+    <Resource Include="Resources\volume_off.png" />
+    <Resource Include="Resources\close.png" />
+    <Resource Include="Resources\minimize.png" />
+    <Resource Include="Resources\maximize.png" />
   </ItemGroup>
 
 </Project>

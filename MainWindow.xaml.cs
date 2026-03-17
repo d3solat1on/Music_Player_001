@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 using Microsoft.Win32;
 using MusicPlayer_by_d3solat1on.Dialogs;
 using MusicPlayer_by_d3solat1on.Models;
 using MusicPlayer_by_d3solat1on.Services;
 using MusicPlayer_by_d3solat1on.ViewModels;
+using System.Runtime.InteropServices;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
+using System.Windows.Input;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 using static MusicPlayer_by_d3solat1on.Dialogs.NotificationWindow;
 using static MusicPlayer_by_d3solat1on.Services.PlayerService;
 using Track = MusicPlayer_by_d3solat1on.Models.Track;
@@ -20,16 +18,22 @@ namespace MusicPlayer_by_d3solat1on
 {
     public partial class MainWindow : Window
     {
-        private DispatcherTimer _memoryCleanupTimer;
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, uint attr, ref int attrValue, int attrSize);
+        private readonly DispatcherTimer _memoryCleanupTimer;
         public static MusicLibrary Library => MusicLibrary.Instance;
         private static PlayerService Player => Instance;
         private bool _isSliderDragging = false;
-
+        private double _lastVolume = 0.5;
         private Track _lastTrackWithCover;
 
         public MainWindow()
         {
             InitializeComponent();
+            var hWnd = new System.Windows.Interop.WindowInteropHelper(this).EnsureHandle();
+            uint attribute = 20; // DWMWA_USE_IMMERSIVE_DARK_MODE
+            int useImmersiveDarkMode = 1;
+            DwmSetWindowAttribute(hWnd, attribute, ref useImmersiveDarkMode, sizeof(int));
             DataContext = MusicLibrary.Instance;
             TracksDataGrid.ItemsSource = Library.CurrentTracks;
             PlaylistsListBox.ItemsSource = Library.Playlists;
@@ -63,11 +67,11 @@ namespace MusicPlayer_by_d3solat1on
                 Interval = TimeSpan.FromMinutes(5)
             };
             _memoryCleanupTimer.Tick += (s, e) =>
-    {
-        GC.Collect();
-        GC.WaitForPendingFinalizers();
-        GC.Collect();
-    };
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    GC.Collect();
+                };
             _memoryCleanupTimer.Start();
         }
 
@@ -268,40 +272,28 @@ namespace MusicPlayer_by_d3solat1on
 
         private void AddMusicButton_Click(object sender, RoutedEventArgs e)
         {
-            var contextMenu = new ContextMenu();
-
             if (Library.CurrentPlaylist != null)
             {
+                // Обновляем заголовки под текущий плейлист
+                MenuAddFilesPlaylist.Header = $"Добавить файлы в \"{Library.CurrentPlaylist.Name}\"";
+                MenuAddFolderPlaylist.Header = $"Добавить папку в \"{Library.CurrentPlaylist.Name}\"";
 
-                var addFilesToPlaylistItem = new MenuItem
-                {
-                    Header = $"Добавить файлы в плейлист \"{Library.CurrentPlaylist.Name}\"..."
-                };
-                addFilesToPlaylistItem.Click += (s, args) => AddFilesToCurrentPlaylist();
-                contextMenu.Items.Add(addFilesToPlaylistItem);
-
-                var addFolderToPlaylistItem = new MenuItem
-                {
-                    Header = $"Добавить папку в плейлист \"{Library.CurrentPlaylist.Name}\"..."
-                };
-                addFolderToPlaylistItem.Click += (s, args) => AddFolderToCurrentPlaylist();
-                contextMenu.Items.Add(addFolderToPlaylistItem);
-
-                contextMenu.Items.Add(new Separator());
+                MenuAddFilesPlaylist.Visibility = Visibility.Visible;
+                MenuAddFolderPlaylist.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                // Если плейлист не выбран, скрываем эти пункты
+                MenuAddFilesPlaylist.Visibility = Visibility.Collapsed;
+                MenuAddFolderPlaylist.Visibility = Visibility.Collapsed;
             }
 
-
-            var addFilesItem = new MenuItem { Header = "Добавить файлы в библиотеку..." };
-            addFilesItem.Click += (s, args) => AddFiles();
-            contextMenu.Items.Add(addFilesItem);
-
-            var addFolderItem = new MenuItem { Header = "Добавить папку в библиотеку..." };
-            addFolderItem.Click += (s, args) => AddFolder();
-            contextMenu.Items.Add(addFolderItem);
-
-            contextMenu.PlacementTarget = sender as UIElement;
-            contextMenu.IsOpen = true;
+            // Открываем меню
+            AddMusicMenu.PlacementTarget = sender as Button;
+            AddMusicMenu.IsOpen = true;
         }
+        private void AddFilesToPlaylist_Click(object sender, RoutedEventArgs e) => AddFilesToCurrentPlaylist();
+        private void AddFolderToPlaylist_Click(object sender, RoutedEventArgs e) => AddFolderToCurrentPlaylist();
         private static void AddFilesToCurrentPlaylist()
         {
             var openFileDialog = new OpenFileDialog
@@ -396,6 +388,8 @@ namespace MusicPlayer_by_d3solat1on
             {
                 _lastTrackWithCover.UnloadCover();
             }
+            LastTrackName.Text = track.Name;
+            LastTrackExecutor.Text = track.Executor;
             CurrentTrackName.Text = track.Name;
             CurrentTrackExecutor.Text = track.Executor;
             CurrentTrackAlbum.Text = track.Album;
@@ -488,11 +482,33 @@ namespace MusicPlayer_by_d3solat1on
                 double volume = VolumeSlider.Value / 100.0;
                 Player.Volume = volume;
 
-                // Проверка на null теперь работает, так как элемент загружен
+                // Обновляем иконку в зависимости от громкости
+                if (VolumeSlider.Value == 0)
+                {
+                    VolumeImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/volume_off.png"));
+                }
+                else
+                {
+                    VolumeImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/volume.png"));
+                }
+
                 if (VolumePercentage != null)
                 {
                     VolumePercentage.Text = $"{VolumeSlider.Value:F0}%";
                 }
+            }
+        }
+        private void VolumeButton_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            // Переключение mute/unmute
+            if (VolumeSlider.Value > 0)
+            {
+                _lastVolume = VolumeSlider.Value;
+                VolumeSlider.Value = 0;
+            }
+            else
+            {
+                VolumeSlider.Value = _lastVolume;
             }
         }
         private void ShuffleButton_Click(object sender, RoutedEventArgs e)
@@ -672,16 +688,14 @@ namespace MusicPlayer_by_d3solat1on
             {
                 if (track?.CoverImage != null && track.CoverImage.Length > 0)
                 {
-                    using (var ms = new System.IO.MemoryStream(track.CoverImage))
-                    {
-                        var bitmap = new BitmapImage();
-                        bitmap.BeginInit();
-                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
-                        bitmap.StreamSource = ms;
-                        bitmap.EndInit();
-                        bitmap.Freeze();
-                        CurrentTrackImage.Source = bitmap;
-                    }
+                    using var ms = new System.IO.MemoryStream(track.CoverImage);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    CurrentTrackImage.Source = bitmap;
                 }
                 else
                 {
@@ -694,6 +708,19 @@ namespace MusicPlayer_by_d3solat1on
             {
                 System.Diagnostics.Debug.WriteLine($"Ошибка загрузки обложки: {ex.Message}");
                 CurrentTrackImage.Source = null;
+            }
+        }
+        private void Close_Click(object sender, RoutedEventArgs e) => Close();
+        private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
+        private void Maximize_Click(object sender, RoutedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                WindowState = WindowState.Normal;
+            }
+            else
+            {
+                WindowState = WindowState.Maximized;
             }
         }
 

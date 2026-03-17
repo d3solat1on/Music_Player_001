@@ -16,11 +16,333 @@
         Background="#141414"
         Foreground="White">
 
+        <WindowChrome.WindowChrome>
+                <WindowChrome CaptionHeight="30"
+                              GlassFrameThickness="0"
+                              CornerRadius="0"/>
+        </WindowChrome.WindowChrome>
+
         <Window.Resources>
                 <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
                 <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter"/>
                 <converters:NotNullConverter x:Key="NotNullConverter"/>
                 <converters:LargeTrackImageConverter x:Key="LargeTrackImageConverter"/>
+                <converters:PercentOfConverter x:Key="PercentOfConverter"/>
+
+
+                <Style x:Key="TitleBarButtonStyle"
+                                TargetType="Button">
+                        <Setter Property="Background"
+                                        Value="Transparent"/>
+                        <Setter Property="BorderThickness"
+                                        Value="0"/>
+                        <Setter Property="Width"
+                                        Value="40"/>
+                        <Setter Property="Height"
+                                        Value="30"/>
+                        <Setter Property="Cursor"
+                                        Value="Hand"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}">
+                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                        Value="True">
+                                                                <Setter Property="Background"
+                                                                                Value="#333333"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed"
+                                                                        Value="True">
+                                                                <Setter Property="Background"
+                                                                                Value="#404040"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+
+                <Style x:Key="CloseButtonStyle"
+                                TargetType="Button"
+                                BasedOn="{StaticResource TitleBarButtonStyle}">
+                        <Style.Triggers>
+                                <Trigger Property="IsMouseOver"
+                                                Value="True">
+                                        <Setter Property="Background"
+                                                        Value="#C42B1C"/>
+                                </Trigger>
+                        </Style.Triggers>
+                </Style>
+                <Style x:Key="ModernContextMenu"
+                       TargetType="ContextMenu">
+                        <Setter Property="Background"
+                                Value="#1E1E1E"/>
+                        <Setter Property="BorderBrush"
+                                Value="#333"/>
+                        <Setter Property="BorderThickness"
+                                Value="1"/>
+                        <Setter Property="Padding"
+                                Value="5"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="ContextMenu">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                                        CornerRadius="8">
+                                                        <ItemsPresenter/>
+                                                </Border>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+
+                <Style TargetType="MenuItem">
+                        <Setter Property="Foreground"
+                                Value="White"/>
+                        <Setter Property="Padding"
+                                Value="10,5"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                                <Grid x:Name="RootGrid"
+                                                      Background="Transparent">
+                                                        <Border x:Name="BgBorder"
+                                                                CornerRadius="4"
+                                                                Margin="2"/>
+                                                        <ContentPresenter ContentSource="Header"
+                                                                          Margin="{TemplateBinding Padding}"/>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                 Value="True">
+                                                                <Setter TargetName="BgBorder"
+                                                                        Property="Background"
+                                                                        Value="#333"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+                <Style x:Key="ModernVolumeSlider"
+                       TargetType="Slider">
+                        <Setter Property="Minimum"
+                                Value="0"/>
+                        <Setter Property="Maximum"
+                                Value="100"/>
+                        <Setter Property="Value"
+                                Value="50"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="Slider">
+                                                <Grid>
+                                                        <!-- Фон трека -->
+                                                        <Border x:Name="TrackBackground"
+                                                                Height="4"
+                                                                Background="#252525"
+                                                                CornerRadius="2"/>
+
+                                                        <!-- Полоса громкости -->
+                                                        <Border x:Name="VolumeFill"
+                                                                Height="4"
+                                                                Background="#1DB954"
+                                                                CornerRadius="2"
+                                                                HorizontalAlignment="Left">
+                                                                <Border.Width>
+                                                                        <MultiBinding Converter="{StaticResource PercentOfConverter}">
+                                                                                <Binding Path="Value"
+                                                                                         RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                                                <Binding Path="Maximum"
+                                                                                         RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                                        </MultiBinding>
+                                                                </Border.Width>
+                                                        </Border>
+
+                                                        <!-- Track для обработки ввода -->
+                                                        <Track x:Name="PART_Track"
+                                                               Height="4"
+                                                               IsEnabled="{TemplateBinding IsEnabled}">
+                                                                <Track.Thumb>
+                                                                        <Thumb x:Name="Thumb"
+                                                                               Width="12"
+                                                                               Height="12"
+                                                                               Cursor="Hand"
+                                                                               Margin="0,-4,0,0">
+                                                                                <Thumb.Template>
+                                                                                        <ControlTemplate TargetType="Thumb">
+                                                                                                <Ellipse Fill="#1DB954"
+                                                                                                         Width="12"
+                                                                                                         Height="12"
+                                                                                                         Stroke="White"
+                                                                                                         StrokeThickness="1.5"/>
+                                                                                        </ControlTemplate>
+                                                                                </Thumb.Template>
+                                                                        </Thumb>
+                                                                </Track.Thumb>
+                                                        </Track>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                 Value="True">
+                                                                <Setter TargetName="VolumeFill"
+                                                                        Property="Background"
+                                                                        Value="#1ed760"/>
+                                                                <Setter TargetName="TrackBackground"
+                                                                        Property="Height"
+                                                                        Value="6"/>
+                                                                <Setter TargetName="VolumeFill"
+                                                                        Property="Height"
+                                                                        Value="6"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+                <Style x:Key="VolumeIconStyle"
+                       TargetType="Image">
+                        <Setter Property="Stretch"
+                                Value="Uniform"/>
+                        <Setter Property="Width"
+                                Value="24"/>
+                        <Setter Property="Height"
+                                Value="24"/>
+                        <Setter Property="Margin"
+                                Value="0,0,5,0"/>
+                </Style>
+
+                <Style x:Key="VolumeButtonStyle"
+                       TargetType="Button">
+                        <Setter Property="Background"
+                                Value="Transparent"/>
+                        <Setter Property="BorderThickness"
+                                Value="0"/>
+                        <Setter Property="Cursor"
+                                Value="Hand"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        CornerRadius="16"
+                                                        Width="32"
+                                                        Height="32">
+                                                        <ContentPresenter HorizontalAlignment="Center"
+                                                                          VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                 Value="True">
+                                                                <Setter Property="Background"
+                                                                        Value="#2A2A2A"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsPressed"
+                                                                 Value="True">
+                                                                <Setter Property="Background"
+                                                                        Value="#3A3A3A"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+
+
+                <!-- Стиль для слайдера громкости (исправленный) -->
+                <!-- Стиль для слайдера времени (исправленный упрощенный) -->
+                <Style x:Key="ModernTimeSlider"
+                       TargetType="Slider">
+                        <Setter Property="Minimum"
+                                Value="0"/>
+                        <Setter Property="Maximum"
+                                Value="100"/>
+                        <Setter Property="Value"
+                                Value="0"/>
+                        <Setter Property="BorderThickness"
+                                Value="0"/>
+                        <Setter Property="Template">
+                                <Setter.Value>
+                                        <ControlTemplate TargetType="Slider">
+                                                <Grid>
+                                                        <!-- Видимый трек -->
+                                                        <Border x:Name="TrackBackground"
+                                                                Height="4"
+                                                                Background="#252525"
+                                                                CornerRadius="2"/>
+
+                                                        <!-- Полоса прогресса -->
+                                                        <Border x:Name="ProgressFill"
+                                                                Height="4"
+                                                                Background="#1DB954"
+                                                                CornerRadius="2"
+                                                                HorizontalAlignment="Left">
+                                                                <Border.Width>
+                                                                        <MultiBinding Converter="{StaticResource PercentOfConverter}">
+                                                                                <Binding Path="Value"
+                                                                                         RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                                                <Binding Path="Maximum"
+                                                                                         RelativeSource="{RelativeSource TemplatedParent}"/>
+                                                                        </MultiBinding>
+                                                                </Border.Width>
+                                                        </Border>
+
+                                                        <!-- Track для обработки ввода -->
+                                                        <Track x:Name="PART_Track"
+                                                               Height="4"
+                                                               IsEnabled="{TemplateBinding IsEnabled}">
+                                                                <Track.Thumb>
+                                                                        <Thumb x:Name="Thumb"
+                                                                               Width="12"
+                                                                               Height="12"
+                                                                               Cursor="Hand"
+                                                                               Margin="0,-4,0,0">
+                                                                                <Thumb.Template>
+                                                                                        <ControlTemplate TargetType="Thumb">
+                                                                                                <Ellipse x:Name="ThumbEllipse"
+                                                                                                         Fill="#1DB954"
+                                                                                                         Width="12"
+                                                                                                         Height="12"
+                                                                                                         Stroke="White"
+                                                                                                         StrokeThickness="1.5"/>
+                                                                                        </ControlTemplate>
+                                                                                </Thumb.Template>
+                                                                        </Thumb>
+                                                                </Track.Thumb>
+                                                        </Track>
+                                                </Grid>
+                                                <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver"
+                                                                 Value="True">
+                                                                <Setter TargetName="ProgressFill"
+                                                                        Property="Background"
+                                                                        Value="#1ed760"/>
+                                                                <Setter TargetName="Thumb"
+                                                                        Property="Width"
+                                                                        Value="14"/>
+                                                                <Setter TargetName="Thumb"
+                                                                        Property="Height"
+                                                                        Value="14"/>
+                                                        </Trigger>
+                                                </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                </Setter.Value>
+                        </Setter>
+                </Style>
+                <Style x:Key="TimeTextStyle"
+                       TargetType="TextBlock">
+                        <Setter Property="Foreground"
+                                Value="Gray"/>
+                        <Setter Property="FontSize"
+                                Value="12"/>
+                        <Setter Property="FontFamily"
+                                Value="Segoe UI"/>
+                        <Setter Property="VerticalAlignment"
+                                Value="Center"/>
+                </Style>
                 <Style x:Key="ScrollBarThumb"
                        TargetType="Thumb">
                         <Setter Property="OverridesDefaultStyle"
@@ -134,647 +456,761 @@
                 </Style>
         </Window.Resources>
 
-        <DockPanel LastChildFill="True">
-                <!-- Нижняя панель с управлением -->
-                <Border DockPanel.Dock="Bottom"
-                        Height="100"
-                        Background="#181818"
-                        BorderBrush="#333"
-                        BorderThickness="0,1,0,0"
-                        Padding="15,0">
-                        <Grid>
-                                <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1*"/>
-                                        <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="1*"/>
-                                </Grid.ColumnDefinitions>
+        <Grid>
+                <Grid.RowDefinitions>
+                        <RowDefinition Height="30"/>
+                        <!-- Строка заголовка -->
+                        <RowDefinition Height="*"/>
+                        <!-- Основной контент -->
+                </Grid.RowDefinitions>
 
-                                <StackPanel Grid.Column="0"
-                                            Orientation="Horizontal"
-                                            VerticalAlignment="Center">
+                <!-- Строка заголовка -->
+                <Grid Grid.Row="0"
+                      Background="#1A1A1A">
+                        <!-- Название приложения слева (опционально) -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Left"
+                                    VerticalAlignment="Center"
+                                    Margin="10,0,0,0"
+                                    WindowChrome.IsHitTestVisibleInChrome="True">
+                                <TextBlock Text="MPM"
+                                           Foreground="White"
+                                           FontWeight="Bold"/>
+                        </StackPanel>
 
-                                        <!-- Кнопка избранного -->
-                                        <Button x:Name="FavoriteButton"
-                                                Style="{StaticResource IconButton}"
-                                                Click="FavoriteButton_Click"
-                                                ToolTip="Добавить в избранное"
-                                                Width="40"
-                                                Height="40"
-                                                Margin="0,0,10,0">
-                                                <Image x:Name="FavoriteIcon"
-                                                       Source="/Resources/add_favorites.png"
-                                                       Stretch="Uniform"
-                                                       Width="24"
-                                                       Height="24"/>
-                                        </Button>
+                        <!-- Кнопки управления справа -->
+                        <StackPanel Orientation="Horizontal"
+                                    HorizontalAlignment="Right"
+                                    WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button x:Name="BtnMinimize"
+                                        Style="{StaticResource TitleBarButtonStyle}"
+                                        Click="Minimize_Click">
+                                        <Image Source="/Resources/minimize.png"
+                                                        Width="12"/>
+                                </Button>
+                                
+                                <Button x:Name="BtnMaximize"
+                                        Style="{StaticResource TitleBarButtonStyle}"
+                                        Click="Maximize_Click">
+                                        <Image Source="/Resources/maximize.png"
+                                                        Width="12"/>
+                                </Button>
+                                <Button x:Name="BtnClose"
+                                        Style="{StaticResource CloseButtonStyle}"
+                                        Click="Close_Click">
+                                        <Image Source="/Resources/close.png"
+                                                        Width="12"/>
+                                </Button>
+                        </StackPanel>
+                </Grid>
+                <DockPanel Grid.Row="1"
+                                LastChildFill="True">
+                        <!-- Нижняя панель с управлением -->
+                        <Border DockPanel.Dock="Bottom"
+                                Height="100"
+                                Background="#181818"
+                                BorderBrush="#333"
+                                BorderThickness="0,1,0,0"
+                                Padding="15,0">
+                                <Grid>
+                                        <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="1*"/>
+                                                <ColumnDefinition Width="2*"/>
+                                                <ColumnDefinition Width="1*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                        <!-- Информация о треке -->
-                                        <StackPanel>
-                                                <TextBlock x:Name="LastTrackName"
-                                                           Text="Track Name"
-                                                           Foreground="White"
-                                                           FontSize="14"
-                                                           FontWeight="Bold"/>
-                                                <TextBlock x:Name="LastTrackExecutor"
-                                                           Text="Artist"
-                                                           Foreground="Gray"
-                                                           FontSize="12"/>
-                                        </StackPanel>
-                                </StackPanel>
+                                        <StackPanel Grid.Column="0"
+                                                    Orientation="Horizontal"
+                                                    VerticalAlignment="Center">
 
-                                <StackPanel Grid.Column="1"
-                                            VerticalAlignment="Center">
-                                        <StackPanel Orientation="Horizontal"
-                                                    HorizontalAlignment="Center">
-                                                <Button Style="{StaticResource IconButton}"
-                                                        Click="ShuffleButton_Click"
-                                                        Width="55"
-                                                        Margin="5,0">
-                                                        <Image Source="Resources/shuffle.png"
-                                                               Stretch="Uniform"
-                                                               Margin="5"/>
-                                                </Button>
-                                                <Button Style="{StaticResource IconButton}"
-                                                        Width="55"
-                                                        Click="PrevButton_Click">
-                                                        <Image Source="/Resources/fast_rewind.png"
-                                                               Stretch="Uniform"
-                                                               Margin="5"/>
-                                                </Button>
-                                                <Button x:Name="PlayPauseButton"
+                                                <!-- Кнопка избранного -->
+                                                <Button x:Name="FavoriteButton"
                                                         Style="{StaticResource IconButton}"
-                                                        FontSize="24"
-                                                        Width="55"
-                                                        Click="PlayPauseButton_Click">
-                                                        <Image Source="/Resources/play.png"
+                                                        Click="FavoriteButton_Click"
+                                                        ToolTip="Добавить в избранное"
+                                                        Width="40"
+                                                        Height="40"
+                                                        Margin="0,0,10,0">
+                                                        <Image x:Name="FavoriteIcon"
+                                                               Source="/Resources/add_favorites.png"
                                                                Stretch="Uniform"
-                                                               Margin="5"/>
+                                                               Width="24"
+                                                               Height="24"/>
                                                 </Button>
-                                                <Button Style="{StaticResource IconButton}"
-                                                        Width="55"
-                                                        Click="NextButton_Click">
-                                                        <Image Source="/Resources/fast_forward.png"
-                                                               Stretch="Uniform"
-                                                               Margin="5"/>
-                                                </Button>
-                                                <Button Style="{StaticResource IconButton}"
-                                                        Click="RepeatButton_Click"
-                                                        Width="55"
-                                                        Margin="5,0">
-                                                        <Image Source="Resources/loop.png"
-                                                               Stretch="Uniform"
-                                                               Margin="5"/>
-                                                </Button>
+
+                                                <!-- Информация о треке -->
+                                                <StackPanel>
+                                                        <TextBlock x:Name="LastTrackName"
+                                                                   Text="Track Name"
+                                                                   Foreground="White"
+                                                                   FontSize="14"
+                                                                   FontWeight="Bold"/>
+                                                        <TextBlock x:Name="LastTrackExecutor"
+                                                                   Text="Artist"
+                                                                   Foreground="Gray"
+                                                                   FontSize="12"/>
+                                                </StackPanel>
                                         </StackPanel>
 
-                                        <Grid Margin="20,10">
-                                                <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                        <ColumnDefinition Width="*"/>
-                                                        <ColumnDefinition Width="Auto"/>
-                                                </Grid.ColumnDefinitions>
-
-                                                <TextBlock x:Name="CurrentTimeText"
-                                                           Grid.Column="0"
-                                                           Text="0:00"
-                                                           Foreground="White"
-                                                           FontSize="30"
-                                                           Margin="5,0"/>
-                                                <Slider x:Name="ProgressSlider"
-                                                        Grid.Column="1"
-                                                        Minimum="0"
-                                                        Maximum="100"
-                                                        Value="0"
-                                                        Thumb.DragStarted="ProgressSlider_DragStarted"
-                                                        Thumb.DragCompleted="ProgressSlider_DragCompleted"
-                                                        VerticalAlignment="Center"/>
-                                                <TextBlock x:Name="TotalTimeText"
-                                                           Grid.Column="2"
-                                                           Text="0:00"
-                                                           Foreground="White"
-                                                           FontSize="30"
-                                                           Margin="5,0"/>
-                                        </Grid>
-                                </StackPanel>
-
-                                <StackPanel Grid.Column="2"
-                                            Orientation="Horizontal"
-                                            HorizontalAlignment="Right"
-                                            VerticalAlignment="Center">
-                                        <TextBlock Text="🔈"
-                                                   Foreground="Gray"
-                                                   VerticalAlignment="Center"
-                                                   Margin="0,0,5,0"/>
-                                        <Slider x:Name="VolumeSlider"
-                                                Width="100"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                Value="50"
-                                                ValueChanged="VolumeSlider_ValueChanged"/>
-                                        <TextBlock x:Name="VolumePercentage"
-                                                   Text="50%"
-                                                   Foreground="Gray"
-                                                   FontSize="11"
-                                                   Width="35"
-                                                   Margin="5,0,0,0"/>
-                                </StackPanel>
-                        </Grid>
-                </Border>
-
-                <!-- Основная область с тремя колонками -->
-                <Grid>
-                        <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="250"/>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="300"/>
-                        </Grid.ColumnDefinitions>
-
-                        <!-- Левая колонка - плейлисты -->
-                        <Border Grid.Column="0"
-                                BorderBrush="Gray"
-                                BorderThickness="0,0,1,0"
-                                Margin="0,0,0,0"
-                                Background="#121212">
-                                <StackPanel Margin="10">
-                                        <DockPanel Margin="0,0,0,10">
-                                                <TextBlock Text="ПЛЕЙЛИСТЫ"
-                                                           FontSize="24"
-                                                           FontWeight="Bold"
-                                                           Foreground="White"
-                                                           VerticalAlignment="Center"/>
-
+                                        <StackPanel Grid.Column="1"
+                                                    VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal"
-                                                            DockPanel.Dock="Right">
-                                                        <Button x:Name="CreatePlaylistButton"
-                                                                Background="Transparent"
-                                                                BorderBrush="Transparent"
-                                                                Width="40"
-                                                                Height="40"
-                                                                Click="CreatePlaylistButton_Click"
-                                                                ToolTip="Создать плейлист">
-                                                                <Image Source="/Resources/add_new_folder.png"
+                                                            HorizontalAlignment="Center">
+                                                        <Button Style="{StaticResource IconButton}"
+                                                                Click="ShuffleButton_Click"
+                                                                Width="55"
+                                                                Margin="5,0">
+                                                                <Image Source="Resources/shuffle.png"
                                                                        Stretch="Uniform"
-                                                                       Margin="0,0,5,0"/>
+                                                                       Margin="5"/>
                                                         </Button>
-                                                        <Button x:Name="RemovePlaylistButton"
-                                                                Background="Transparent"
-                                                                BorderBrush="Transparent"
-                                                                Width="40"
-                                                                Height="40"
-                                                                Click="RemovePlaylist_Click"
-                                                                ToolTip="Удалить выбранный плейлист"
-                                                                IsEnabled="{Binding ElementName=PlaylistsListBox, Path=SelectedItem, Converter={StaticResource NotNullConverter}}">
-                                                                <Image Source="/Resources/delete_playlist.png"
-                                                                       Stretch="Uniform"/>
+                                                        <Button Style="{StaticResource IconButton}"
+                                                                Width="55"
+                                                                Click="PrevButton_Click">
+                                                                <Image Source="/Resources/fast_rewind.png"
+                                                                       Stretch="Uniform"
+                                                                       Margin="5"/>
                                                         </Button>
-                                                        <Button x:Name="AddMusicButton"
-                                                                Background="Transparent"
-                                                                BorderBrush="Transparent"
-                                                                Width="40"
-                                                                Height="40"
-                                                                Click="AddMusicButton_Click"
-                                                                ToolTip="Добавить музыку">
-                                                                <Image Source="/Resources/add_music.png"
-                                                                       Stretch="Uniform"/>
+                                                        <Button x:Name="PlayPauseButton"
+                                                                Style="{StaticResource IconButton}"
+                                                                FontSize="24"
+                                                                Width="55"
+                                                                Click="PlayPauseButton_Click">
+                                                                <Image Source="/Resources/play.png"
+                                                                       Stretch="Uniform"
+                                                                       Margin="5"/>
+                                                        </Button>
+                                                        <Button Style="{StaticResource IconButton}"
+                                                                Width="55"
+                                                                Click="NextButton_Click">
+                                                                <Image Source="/Resources/fast_forward.png"
+                                                                       Stretch="Uniform"
+                                                                       Margin="5"/>
+                                                        </Button>
+                                                        <Button Style="{StaticResource IconButton}"
+                                                                Click="RepeatButton_Click"
+                                                                Width="55"
+                                                                Margin="5,0">
+                                                                <Image Source="Resources/loop.png"
+                                                                       Stretch="Uniform"
+                                                                       Margin="5"/>
                                                         </Button>
                                                 </StackPanel>
-                                        </DockPanel>
 
-                                        <ListBox x:Name="PlaylistsListBox"
-                                                 Background="Transparent"
-                                                 BorderThickness="0"
-                                                 Foreground="White"
-                                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-                                                 SelectionChanged="PlaylistsListBox_SelectionChanged"
-                                                 Height="400">
-                                                <ListBox.ItemTemplate>
-                                                        <DataTemplate>
+                                                <Grid Margin="20,5"
+                                                      HorizontalAlignment="Stretch">
+                                                        <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                        </Grid.ColumnDefinitions>
 
-                                                                <Border BorderBrush="#333333"
-                                                                        BorderThickness="0,0,0,1"
-                                                                        Padding="8"
-                                                                        Margin="0,2"
-                                                                        Background="Transparent">
-                                                                        <Grid>
-                                                                                <Grid.ColumnDefinitions>
-                                                                                        <ColumnDefinition Width="50"/>
-                                                                                        <ColumnDefinition Width="*"/>
-                                                                                </Grid.ColumnDefinitions>
+                                                        <!-- Текущее время -->
+                                                        <TextBlock x:Name="CurrentTimeText"
+                                                                   Grid.Column="0"
+                                                                   Text="0:00"
+                                                                   Foreground="#B3B3B3"
+                                                                   FontSize="12"
+                                                                   FontFamily="Segoe UI"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="0,0,10,0"
+                                                                   MinWidth="35"
+                                                                   TextAlignment="Right"/>
 
-                                                                                <!-- Обложка плейлиста -->
-                                                                                <Border Grid.Column="0"
-                                                                                        Width="45"
-                                                                                        Height="45"
-                                                                                        BorderBrush="#444444"
-                                                                                        BorderThickness="1"
-                                                                                        CornerRadius="4"
-                                                                                        Background="#222222">
-                                                                                        <Grid>
-                                                                                                <!-- Изображение (если есть) -->
-                                                                                                <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-                                                                                                       Stretch="UniformToFill"
-                                                                                                       Margin="2">
-                                                                                                        <Image.Style>
-                                                                                                                <Style TargetType="Image">
-                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                Value="Visible"/>
-                                                                                                                        <Style.Triggers>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage}"
-                                                                                                                                             Value="{x:Null}">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Collapsed"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
-                                                                                                                                             Value="0">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Collapsed"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                        </Style.Triggers>
-                                                                                                                </Style>
-                                                                                                        </Image.Style>
-                                                                                                </Image>
+                                                        <!-- Слайдер -->
+                                                        <Slider x:Name="ProgressSlider"
+                                                                Grid.Column="1"
+                                                                Style="{StaticResource ModernTimeSlider}"
+                                                                Thumb.DragStarted="ProgressSlider_DragStarted"
+                                                                Thumb.DragCompleted="ProgressSlider_DragCompleted"
+                                                                VerticalAlignment="Center"
+                                                                Margin="0,0,0,0"/>
 
-                                                                                                <!-- Текстовая иконка (если нет изображения) -->
-                                                                                                <TextBlock Text="📁"
-                                                                                                           FontSize="24"
-                                                                                                           HorizontalAlignment="Center"
-                                                                                                           VerticalAlignment="Center"
-                                                                                                           Foreground="#888888">
-                                                                                                        <TextBlock.Style>
-                                                                                                                <Style TargetType="TextBlock">
-                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                Value="Collapsed"/>
-                                                                                                                        <Style.Triggers>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage}"
-                                                                                                                                             Value="{x:Null}">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Visible"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
-                                                                                                                                             Value="0">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Visible"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                        </Style.Triggers>
-                                                                                                                </Style>
-                                                                                                        </TextBlock.Style>
-                                                                                                </TextBlock>
-                                                                                        </Grid>
-                                                                                </Border>
+                                                        <!-- Общее время -->
+                                                        <TextBlock x:Name="TotalTimeText"
+                                                                   Grid.Column="2"
+                                                                   Text="0:00"
+                                                                   Foreground="#B3B3B3"
+                                                                   FontSize="12"
+                                                                   FontFamily="Segoe UI"
+                                                                   VerticalAlignment="Center"
+                                                                   Margin="10,0,0,0"
+                                                                   MinWidth="35"/>
+                                                </Grid>
+                                        </StackPanel>
 
-                                                                                <!-- Информация о плейлисте -->
-                                                                                <StackPanel
-                                                                                        Grid.Column="1"
-                                                                                        Margin="8,0,0,0"
-                                                                                        VerticalAlignment="Center">
-                                                                                        <StackPanel.ContextMenu>
-                                                                                                <ContextMenu Background="#282828"
-                                                                                                             Foreground="White">
-                                                                                                        <MenuItem Header="Редактировать"
-                                                                                                                  Click="EditPlaylist_Click"/>
-                                                                                                        <Separator Background="#444"/>
-                                                                                                        <MenuItem Header="Удалить"
-                                                                                                                  Click="DeletePlaylist_Click"
-                                                                                                                  Foreground="Red"/>
-                                                                                                </ContextMenu>
-                                                                                        </StackPanel.ContextMenu>
-                                                                                        <TextBlock Text="{Binding Name}"
-                                                                                                   FontWeight="Bold"
-                                                                                                   FontSize="14"
-                                                                                                   Foreground="White"
-                                                                                                   TextTrimming="CharacterEllipsis"/>
-                                                                                        <TextBlock Text="{Binding TrackCount, StringFormat='{}{0} треков'}"
-                                                                                                   FontSize="10"
-                                                                                                   Foreground="#999999"
-                                                                                                   Margin="0,2,0,0"/>
-                                                                                </StackPanel>
-                                                                        </Grid>
-                                                                </Border>
-                                                        </DataTemplate>
-                                                </ListBox.ItemTemplate>
-                                        </ListBox>
-                                </StackPanel>
+                                        <StackPanel Grid.Column="2"
+                                                    Orientation="Horizontal"
+                                                    HorizontalAlignment="Right"
+                                                    VerticalAlignment="Center"
+                                                    Margin="0,0,15,0">
+
+                                                <!-- Кнопка звука -->
+                                                <Button x:Name="VolumeButton"
+                                                        Style="{StaticResource VolumeButtonStyle}"
+                                                        MouseDoubleClick="VolumeButton_MouseDoubleClick"
+                                                        Width="32"
+                                                        Height="32"
+                                                        Padding="0">
+                                                        <Image x:Name="VolumeImage"
+                                                               Source="/Resources/volume.png"
+                                                               Width="18"
+                                                               Height="18"
+                                                               Stretch="Uniform"/>
+                                                </Button>
+
+                                                <!-- Слайдер громкости -->
+                                                <Slider x:Name="VolumeSlider"
+                                                        Style="{StaticResource ModernVolumeSlider}"
+                                                        ValueChanged="VolumeSlider_ValueChanged"
+                                                        VerticalAlignment="Center"
+                                                        Width="90"
+                                                        Margin="5,0,5,0"/>
+
+                                                <!-- Процент громкости -->
+                                                <TextBlock x:Name="VolumePercentage"
+                                                           Text="50%"
+                                                           Foreground="#B3B3B3"
+                                                           FontSize="11"
+                                                           FontFamily="Segoe UI"
+                                                           Width="35"
+                                                           TextAlignment="Right"/>
+                                        </StackPanel>
+                                </Grid>
                         </Border>
 
+                        <!-- Основная область с тремя колонками -->
 
-                        <Grid Grid.Column="1"
-                              Background="#121212">
-                                <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
-                                </Grid.RowDefinitions>
+                        <Grid>
 
-                                <Border Grid.Row="0"
-                                        Padding="20"
-                                        Background="#1a1a1a"
-                                        BorderBrush="#333"
-                                        BorderThickness="0,0,0,1">
-                                        <StackPanel Orientation="Horizontal">
-                                                <Border Width="150"
-                                                        Height="150"
-                                                        CornerRadius="4"
-                                                        Background="#282828"
-                                                        Margin="0,0,20,0">
-                                                        <Image Source="{Binding CurrentPlaylist.CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-                                                               Stretch="UniformToFill"/>
-                                                </Border>
+                                <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="250"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="300"/>
+                                </Grid.ColumnDefinitions>
 
-                                                <StackPanel VerticalAlignment="Bottom">
-                                                        <TextBlock Text="ПЛЕЙЛИСТ"
-                                                                   Foreground="White"
-                                                                   FontSize="12"
+                                <!-- Левая колонка - плейлисты -->
+                                <Border Grid.Column="0"
+                                        BorderBrush="Gray"
+                                        BorderThickness="0,0,1,0"
+                                        Margin="0,0,0,0"
+                                        Background="#121212">
+                                        <StackPanel Margin="10">
+                                                <DockPanel Margin="0,0,0,10">
+                                                        <TextBlock Text="ПЛЕЙЛИСТЫ"
+                                                                   FontSize="24"
                                                                    FontWeight="Bold"
-                                                                   Margin="0,0,0,5"/>
-                                                        <TextBlock Text="{Binding CurrentPlaylist.Name}"
                                                                    Foreground="White"
-                                                                   FontSize="48"
-                                                                   FontWeight="Black"
-                                                                   Margin="0,0,0,10"/>
-                                                        <TextBlock Text="{Binding CurrentPlaylist.Description}"
-                                                                   Foreground="Gray"
-                                                                   FontSize="14"
-                                                                   TextWrapping="Wrap"
-                                                                   MaxWidth="500"/>
-                                                        <TextBlock Text="{Binding CurrentTracks.Count, StringFormat='{}{0} треков'}"
-                                                                   Foreground="LightGray"
-                                                                   FontSize="14"
-                                                                   Margin="0,10,0,0"/>
-                                                </StackPanel>
+                                                                   VerticalAlignment="Center"/>
+
+                                                        <StackPanel Orientation="Horizontal"
+                                                                    DockPanel.Dock="Right">
+                                                                <Button x:Name="CreatePlaylistButton"
+                                                                        Background="Transparent"
+                                                                        BorderBrush="Transparent"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Click="CreatePlaylistButton_Click"
+                                                                        ToolTip="Создать плейлист">
+                                                                        <Image Source="/Resources/add_new_folder.png"
+                                                                               Stretch="Uniform"
+                                                                               Margin="0,0,5,0"/>
+                                                                </Button>
+                                                                <Button x:Name="RemovePlaylistButton"
+                                                                        Background="Transparent"
+                                                                        BorderBrush="Transparent"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Click="RemovePlaylist_Click"
+                                                                        ToolTip="Удалить выбранный плейлист"
+                                                                        IsEnabled="{Binding ElementName=PlaylistsListBox, Path=SelectedItem, Converter={StaticResource NotNullConverter}}">
+                                                                        <Image Source="/Resources/delete_playlist.png"
+                                                                               Stretch="Uniform"/>
+                                                                </Button>
+                                                                <Button x:Name="AddMusicButton"
+                                                                        Background="Transparent"
+                                                                        BorderBrush="Transparent"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Click="AddMusicButton_Click"
+                                                                        ToolTip="Добавить музыку">
+                                                                        <Button.Resources>
+                                                                                <Style TargetType="ContextMenu"
+                                                                                       x:Key="ModernMenu">
+                                                                                        <Setter Property="Background"
+                                                                                                Value="#1E1E1E"/>
+                                                                                        <Setter Property="BorderBrush"
+                                                                                                Value="#333"/>
+                                                                                        <Setter Property="Template">
+                                                                                                <Setter.Value>
+                                                                                                        <ControlTemplate TargetType="ContextMenu">
+                                                                                                                <Border Background="{TemplateBinding Background}"
+                                                                                                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                                                        BorderThickness="1"
+                                                                                                                        CornerRadius="8">
+                                                                                                                        <StackPanel IsItemsHost="True"
+                                                                                                                                    Margin="5"/>
+                                                                                                                </Border>
+                                                                                                        </ControlTemplate>
+                                                                                                </Setter.Value>
+                                                                                        </Setter>
+                                                                                </Style>
+                                                                        </Button.Resources>
+
+                                                                        <Button.ContextMenu>
+                                                                                <ContextMenu x:Name="AddMusicMenu"
+                                                                                             Style="{StaticResource ModernMenu}">
+                                                                                        <MenuItem x:Name="MenuAddFilesPlaylist"
+                                                                                                  Click="AddFilesToPlaylist_Click"/>
+                                                                                        <MenuItem x:Name="MenuAddFolderPlaylist"
+                                                                                                  Click="AddFolderToPlaylist_Click"/>
+
+                                                                                </ContextMenu>
+                                                                        </Button.ContextMenu>
+
+                                                                        <Image Source="/Resources/add_music.png"
+                                                                               Stretch="Uniform"/>
+                                                                </Button>
+                                                        </StackPanel>
+                                                </DockPanel>
+
+                                                <ListBox x:Name="PlaylistsListBox"
+                                                         Background="Transparent"
+                                                         BorderThickness="0"
+                                                         Foreground="White"
+                                                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                                                         SelectionChanged="PlaylistsListBox_SelectionChanged"
+                                                         Height="400">
+                                                        <ListBox.ItemTemplate>
+                                                                <DataTemplate>
+
+                                                                        <Border BorderBrush="#333333"
+                                                                                BorderThickness="0,0,0,1"
+                                                                                Padding="8"
+                                                                                Margin="0,2"
+                                                                                Background="Transparent">
+                                                                                <Grid>
+                                                                                        <Grid.ColumnDefinitions>
+                                                                                                <ColumnDefinition Width="50"/>
+                                                                                                <ColumnDefinition Width="*"/>
+                                                                                        </Grid.ColumnDefinitions>
+
+                                                                                        <!-- Обложка плейлиста -->
+                                                                                        <Border Grid.Column="0"
+                                                                                                Width="45"
+                                                                                                Height="45"
+                                                                                                BorderBrush="#444444"
+                                                                                                BorderThickness="1"
+                                                                                                CornerRadius="4"
+                                                                                                Background="#222222">
+                                                                                                <Grid>
+                                                                                                        <!-- Изображение (если есть) -->
+                                                                                                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                                                               Stretch="UniformToFill"
+                                                                                                               Margin="2">
+                                                                                                                <Image.Style>
+                                                                                                                        <Style TargetType="Image">
+                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                        Value="Visible"/>
+                                                                                                                                <Style.Triggers>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                                                                     Value="{x:Null}">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Collapsed"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                                                                     Value="0">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Collapsed"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                </Style.Triggers>
+                                                                                                                        </Style>
+                                                                                                                </Image.Style>
+                                                                                                        </Image>
+
+                                                                                                        <!-- Текстовая иконка (если нет изображения) -->
+                                                                                                        <TextBlock Text="📁"
+                                                                                                                   FontSize="24"
+                                                                                                                   HorizontalAlignment="Center"
+                                                                                                                   VerticalAlignment="Center"
+                                                                                                                   Foreground="#888888">
+                                                                                                                <TextBlock.Style>
+                                                                                                                        <Style TargetType="TextBlock">
+                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                        Value="Collapsed"/>
+                                                                                                                                <Style.Triggers>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                                                                     Value="{x:Null}">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Visible"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                                                                     Value="0">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Visible"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                </Style.Triggers>
+                                                                                                                        </Style>
+                                                                                                                </TextBlock.Style>
+                                                                                                        </TextBlock>
+                                                                                                </Grid>
+                                                                                        </Border>
+
+                                                                                        <!-- Информация о плейлисте -->
+                                                                                        <StackPanel
+                                                                                                Grid.Column="1"
+                                                                                                Margin="8,0,0,0"
+                                                                                                VerticalAlignment="Center">
+                                                                                                <StackPanel.ContextMenu>
+                                                                                                        <ContextMenu Background="#282828"
+                                                                                                                     Foreground="White">
+                                                                                                                <MenuItem Header="Редактировать"
+                                                                                                                          Click="EditPlaylist_Click"/>
+                                                                                                                <Separator Background="#444"/>
+                                                                                                                <MenuItem Header="Удалить"
+                                                                                                                          Click="DeletePlaylist_Click"
+                                                                                                                          Foreground="Red"/>
+                                                                                                        </ContextMenu>
+                                                                                                </StackPanel.ContextMenu>
+                                                                                                <TextBlock Text="{Binding Name}"
+                                                                                                           FontWeight="Bold"
+                                                                                                           FontSize="14"
+                                                                                                           Foreground="White"
+                                                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                                                <TextBlock Text="{Binding TrackCount, StringFormat='{}{0} треков'}"
+                                                                                                           FontSize="10"
+                                                                                                           Foreground="#999999"
+                                                                                                           Margin="0,2,0,0"/>
+                                                                                        </StackPanel>
+                                                                                </Grid>
+                                                                        </Border>
+                                                                </DataTemplate>
+                                                        </ListBox.ItemTemplate>
+                                                </ListBox>
                                         </StackPanel>
                                 </Border>
 
-                                <DataGrid x:Name="TracksDataGrid"
-                                          Grid.Row="1"
-                                          ItemsSource="{Binding CurrentTracks}"
-                                          Background="Transparent"
-                                          RowBackground="#121212"
-                                          Foreground="White"
-                                          BorderThickness="0"
-                                          AutoGenerateColumns="False"
-                                          CanUserResizeRows="False"
-                                          CanUserAddRows="False"
-                                          CanUserReorderColumns="False"
-                                          CanUserResizeColumns="False"
-                                          IsReadOnly="True"
-                                          SelectionMode="Single"
-                                          MouseDoubleClick="TracksDataGrid_MouseDoubleClick"
-                                          GridLinesVisibility="None">
-                                        <DataGrid.Resources>
-                                                <Style TargetType="{x:Type DataGridRowHeader}">
-                                                        <Setter Property="Background"
-                                                                Value="Transparent"/>
-                                                        <Setter Property="BorderThickness"
-                                                                Value="0"/>
-                                                        <Setter Property="Width"
-                                                                Value="0"/>
-                                                </Style>
-                                                <!-- Стиль для заголовков колонок -->
-                                                <Style TargetType="DataGridColumnHeader">
-                                                        <Setter Property="Background"
-                                                                Value="#1E1E1E"/>
-                                                        <Setter Property="Foreground"
-                                                                Value="#CCCCCC"/>
-                                                        <Setter Property="FontWeight"
-                                                                Value="Bold"/>
-                                                        <Setter Property="FontSize"
-                                                                Value="18"/>
-                                                        <Setter Property="Height"
-                                                                Value="40"/>
-                                                        <Setter Property="BorderBrush"
-                                                                Value="#333333"/>
-                                                        <Setter Property="BorderThickness"
-                                                                Value="0,0,1,1"/>
-                                                        <Setter Property="HorizontalContentAlignment"
-                                                                Value="Left"/>
-                                                        <Setter Property="Padding"
-                                                                Value="10,0,0,0"/>
-                                                </Style>
 
-                                                <!-- Стиль для ячеек -->
-                                                <Style TargetType="DataGridCell">
-                                                        <Setter Property="Background"
-                                                                Value="Transparent"/>
-                                                        <Setter Property="Foreground"
-                                                                Value="White"/>
-                                                        <Setter Property="BorderBrush"
-                                                                Value="Transparent"/>
-                                                        <Setter Property="VerticalAlignment"
-                                                                Value="Center"/>
-                                                        <Setter Property="Padding"
-                                                                Value="10,5,0,5"/>
-                                                        <Setter Property="FontSize"
-                                                                Value="18"/>
-                                                        <Style.Triggers>
-                                                                <Trigger Property="IsSelected"
-                                                                         Value="True">
-                                                                        <Setter Property="Background"
-                                                                                Value="#2D2D2D"/>
-                                                                        <Setter Property="Foreground"
-                                                                                Value="White"/>
-                                                                        <Setter Property="BorderBrush"
-                                                                                Value="#007ACC"/>
-                                                                </Trigger>
-                                                        </Style.Triggers>
-                                                </Style>
+                                <Grid Grid.Column="1"
+                                      Background="#121212">
+                                        <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="*"/>
+                                        </Grid.RowDefinitions>
 
-                                                <!-- Стиль для строк -->
-                                                <Style TargetType="DataGridRow">
-                                                        <Setter Property="Background"
-                                                                Value="#141414"/>
-                                                        <Setter Property="MinHeight"
-                                                                Value="35"/>
-                                                        <Style.Triggers>
-                                                                <Trigger Property="AlternationIndex"
-                                                                         Value="1">
-                                                                        <Setter Property="Background"
-                                                                                Value="#1A1A1A"/>
-                                                                </Trigger>
-                                                                <Trigger Property="IsSelected"
-                                                                         Value="True">
-                                                                        <Setter Property="Background"
-                                                                                Value="#2D2D2D"/>
-                                                                </Trigger>
-                                                        </Style.Triggers>
-                                                </Style>
-                                        </DataGrid.Resources>
-                                        <DataGrid.Columns>
-                                                <!-- В DataGrid.Columns, перед колонкой NAME -->
-                                                <DataGridTemplateColumn Header=""
-                                                                        Width="75">
-                                                        <DataGridTemplateColumn.CellTemplate>
-                                                                <DataTemplate>
-                                                                        <Border Width="75"
-                                                                                Height="75"
-                                                                                CornerRadius="4"
-                                                                                BorderThickness="1"
-                                                                                BorderBrush="#333"
-                                                                                Background="#222">
-                                                                                <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-                                                                                       Stretch="Uniform"
-                                                                                       HorizontalAlignment="Center"
-                                                                                       VerticalAlignment="Center">
+                                        <Border Grid.Row="0"
+                                                Padding="20"
+                                                Background="#1a1a1a"
+                                                BorderBrush="#333"
+                                                BorderThickness="0,0,0,1">
+                                                <StackPanel Orientation="Horizontal">
+                                                        <Border Width="150"
+                                                                Height="150"
+                                                                CornerRadius="4"
+                                                                Background="#282828"
+                                                                Margin="0,0,20,0">
+                                                                <Image Source="{Binding CurrentPlaylist.CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                       Stretch="UniformToFill"/>
+                                                        </Border>
 
-                                                                                        <Image.Style>
-                                                                                                <Style TargetType="Image">
-                                                                                                        <Setter Property="Visibility"
-                                                                                                                Value="Visible"/>
-                                                                                                        <Style.Triggers>
-                                                                                                                <DataTrigger Binding="{Binding CoverImage}"
-                                                                                                                             Value="{x:Null}">
-                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                Value="Collapsed"/>
-                                                                                                                </DataTrigger>
-                                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
-                                                                                                                             Value="0">
-                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                Value="Collapsed"/>
-                                                                                                                </DataTrigger>
-                                                                                                        </Style.Triggers>
-                                                                                                </Style>
-                                                                                        </Image.Style>
-                                                                                </Image>
-                                                                        </Border>
-                                                                </DataTemplate>
-                                                        </DataGridTemplateColumn.CellTemplate>
+                                                        <StackPanel VerticalAlignment="Bottom">
+                                                                <TextBlock Text="ПЛЕЙЛИСТ"
+                                                                           Foreground="White"
+                                                                           FontSize="12"
+                                                                           FontWeight="Bold"
+                                                                           Margin="0,0,0,5"/>
+                                                                <TextBlock Text="{Binding CurrentPlaylist.Name}"
+                                                                           Foreground="White"
+                                                                           FontSize="48"
+                                                                           FontWeight="Black"
+                                                                           Margin="0,0,0,10"/>
+                                                                <TextBlock Text="{Binding CurrentPlaylist.Description}"
+                                                                           Foreground="Gray"
+                                                                           FontSize="14"
+                                                                           TextWrapping="Wrap"
+                                                                           MaxWidth="500"/>
+                                                                <TextBlock Text="{Binding CurrentTracks.Count, StringFormat='{}{0} треков'}"
+                                                                           Foreground="LightGray"
+                                                                           FontSize="14"
+                                                                           Margin="0,10,0,0"/>
+                                                        </StackPanel>
+                                                </StackPanel>
+                                        </Border>
 
-                                                </DataGridTemplateColumn>
-                                                <DataGridTextColumn Header="NAME"
-                                                                    Binding="{Binding Name}"
-                                                                    Width="3*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="White"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                        <Setter Property="TextBlock.VerticalAlignment"
-                                                                                Value="Center"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
+                                        <DataGrid x:Name="TracksDataGrid"
+                                                  Grid.Row="1"
+                                                  ItemsSource="{Binding CurrentTracks}"
+                                                  Background="Transparent"
+                                                  RowBackground="#121212"
+                                                  Foreground="White"
+                                                  BorderThickness="0"
+                                                  AutoGenerateColumns="False"
+                                                  CanUserResizeRows="False"
+                                                  CanUserAddRows="False"
+                                                  CanUserReorderColumns="False"
+                                                  CanUserResizeColumns="False"
+                                                  IsReadOnly="True"
+                                                  SelectionMode="Single"
+                                                  MouseDoubleClick="TracksDataGrid_MouseDoubleClick"
+                                                  GridLinesVisibility="None">
+                                                <DataGrid.Resources>
+                                                        <Style TargetType="{x:Type DataGridRowHeader}">
+                                                                <Setter Property="Background"
+                                                                        Value="Transparent"/>
+                                                                <Setter Property="BorderThickness"
+                                                                        Value="0"/>
+                                                                <Setter Property="Width"
+                                                                        Value="0"/>
+                                                        </Style>
+                                                        <!-- Стиль для заголовков колонок -->
+                                                        <Style TargetType="DataGridColumnHeader">
+                                                                <Setter Property="Background"
+                                                                        Value="#1E1E1E"/>
+                                                                <Setter Property="Foreground"
+                                                                        Value="#CCCCCC"/>
+                                                                <Setter Property="FontWeight"
+                                                                        Value="Bold"/>
+                                                                <Setter Property="FontSize"
+                                                                        Value="18"/>
+                                                                <Setter Property="Height"
+                                                                        Value="40"/>
+                                                                <Setter Property="BorderBrush"
+                                                                        Value="#333333"/>
+                                                                <Setter Property="BorderThickness"
+                                                                        Value="0,0,1,1"/>
+                                                                <Setter Property="HorizontalContentAlignment"
+                                                                        Value="Left"/>
+                                                                <Setter Property="Padding"
+                                                                        Value="10,0,0,0"/>
+                                                        </Style>
 
-                                                <DataGridTextColumn Header="EXECUTOR"
-                                                                    Binding="{Binding Executor}"
-                                                                    Width="2*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="#CCCCCC"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                        <Setter Property="TextBlock.VerticalAlignment"
-                                                                                Value="Center"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
+                                                        <!-- Стиль для ячеек -->
+                                                        <Style TargetType="DataGridCell">
+                                                                <Setter Property="Background"
+                                                                        Value="Transparent"/>
+                                                                <Setter Property="Foreground"
+                                                                        Value="White"/>
+                                                                <Setter Property="BorderBrush"
+                                                                        Value="Transparent"/>
+                                                                <Setter Property="VerticalAlignment"
+                                                                        Value="Center"/>
+                                                                <Setter Property="Padding"
+                                                                        Value="10,5,0,5"/>
+                                                                <Setter Property="FontSize"
+                                                                        Value="18"/>
+                                                                <Style.Triggers>
+                                                                        <Trigger Property="IsSelected"
+                                                                                 Value="True">
+                                                                                <Setter Property="Background"
+                                                                                        Value="#2D2D2D"/>
+                                                                                <Setter Property="Foreground"
+                                                                                        Value="White"/>
+                                                                                <Setter Property="BorderBrush"
+                                                                                        Value="#007ACC"/>
+                                                                        </Trigger>
+                                                                </Style.Triggers>
+                                                        </Style>
 
-                                                <DataGridTextColumn Header="ALBUM"
-                                                                    Binding="{Binding Album}"
-                                                                    Width="2*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="#CCCCCC"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                        <Setter Property="TextBlock.VerticalAlignment"
-                                                                                Value="Center"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
+                                                        <!-- Стиль для строк -->
+                                                        <Style TargetType="DataGridRow">
+                                                                <Setter Property="Background"
+                                                                        Value="#141414"/>
+                                                                <Setter Property="MinHeight"
+                                                                        Value="35"/>
+                                                                <Style.Triggers>
+                                                                        <Trigger Property="AlternationIndex"
+                                                                                 Value="1">
+                                                                                <Setter Property="Background"
+                                                                                        Value="#1A1A1A"/>
+                                                                        </Trigger>
+                                                                        <Trigger Property="IsSelected"
+                                                                                 Value="True">
+                                                                                <Setter Property="Background"
+                                                                                        Value="#2D2D2D"/>
+                                                                        </Trigger>
+                                                                </Style.Triggers>
+                                                        </Style>
+                                                </DataGrid.Resources>
+                                                <DataGrid.Columns>
+                                                        <!-- В DataGrid.Columns, перед колонкой NAME -->
+                                                        <DataGridTemplateColumn Header=""
+                                                                                Width="75">
+                                                                <DataGridTemplateColumn.CellTemplate>
+                                                                        <DataTemplate>
+                                                                                <Border Width="75"
+                                                                                        Height="75"
+                                                                                        CornerRadius="4"
+                                                                                        BorderThickness="1"
+                                                                                        BorderBrush="#333"
+                                                                                        Background="#222">
+                                                                                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                                               Stretch="Uniform"
+                                                                                               HorizontalAlignment="Center"
+                                                                                               VerticalAlignment="Center">
 
-                                                <DataGridTextColumn Header="DURATION"
-                                                                    Binding="{Binding Duration}"
-                                                                    Width="1*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="#999999"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                        <Setter Property="TextBlock.VerticalAlignment"
-                                                                                Value="Center"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
+                                                                                                <Image.Style>
+                                                                                                        <Style TargetType="Image">
+                                                                                                                <Setter Property="Visibility"
+                                                                                                                        Value="Visible"/>
+                                                                                                                <Style.Triggers>
+                                                                                                                        <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                                                     Value="{x:Null}">
+                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                        Value="Collapsed"/>
+                                                                                                                        </DataTrigger>
+                                                                                                                        <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                                                     Value="0">
+                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                        Value="Collapsed"/>
+                                                                                                                        </DataTrigger>
+                                                                                                                </Style.Triggers>
+                                                                                                        </Style>
+                                                                                                </Image.Style>
+                                                                                        </Image>
+                                                                                </Border>
+                                                                        </DataTemplate>
+                                                                </DataGridTemplateColumn.CellTemplate>
 
-                                                <DataGridTextColumn Header="BITRATE"
-                                                                    Binding="{Binding BitrateDisplay}"
-                                                                    Width="1*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="#999999"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                        <Setter Property="TextBlock.VerticalAlignment"
-                                                                                Value="Center"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
-                                                <DataGridTextColumn Header="GENRE"
-                                                                    Binding="{Binding Genre}"
-                                                                    Width="1*">
-                                                        <DataGridTextColumn.ElementStyle>
-                                                                <Style>
-                                                                        <Setter Property="TextBlock.Foreground"
-                                                                                Value="#999999"/>
-                                                                        <Setter Property="TextBlock.Margin"
-                                                                                Value="10,0,0,0"/>
-                                                                </Style>
-                                                        </DataGridTextColumn.ElementStyle>
-                                                </DataGridTextColumn>
-                                        </DataGrid.Columns>
-                                </DataGrid>
+                                                        </DataGridTemplateColumn>
+                                                        <DataGridTextColumn Header="NAME"
+                                                                            Binding="{Binding Name}"
+                                                                            Width="3*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="White"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                                <Setter Property="TextBlock.VerticalAlignment"
+                                                                                        Value="Center"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+
+                                                        <DataGridTextColumn Header="EXECUTOR"
+                                                                            Binding="{Binding Executor}"
+                                                                            Width="2*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="#CCCCCC"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                                <Setter Property="TextBlock.VerticalAlignment"
+                                                                                        Value="Center"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+
+                                                        <DataGridTextColumn Header="ALBUM"
+                                                                            Binding="{Binding Album}"
+                                                                            Width="2*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="#CCCCCC"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                                <Setter Property="TextBlock.VerticalAlignment"
+                                                                                        Value="Center"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+
+                                                        <DataGridTextColumn Header="DURATION"
+                                                                            Binding="{Binding Duration}"
+                                                                            Width="1*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="#999999"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                                <Setter Property="TextBlock.VerticalAlignment"
+                                                                                        Value="Center"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+
+                                                        <DataGridTextColumn Header="BITRATE"
+                                                                            Binding="{Binding BitrateDisplay}"
+                                                                            Width="1*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="#999999"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                                <Setter Property="TextBlock.VerticalAlignment"
+                                                                                        Value="Center"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+                                                        <DataGridTextColumn Header="GENRE"
+                                                                            Binding="{Binding Genre}"
+                                                                            Width="1*">
+                                                                <DataGridTextColumn.ElementStyle>
+                                                                        <Style>
+                                                                                <Setter Property="TextBlock.Foreground"
+                                                                                        Value="#999999"/>
+                                                                                <Setter Property="TextBlock.Margin"
+                                                                                        Value="10,0,0,0"/>
+                                                                        </Style>
+                                                                </DataGridTextColumn.ElementStyle>
+                                                        </DataGridTextColumn>
+                                                </DataGrid.Columns>
+                                        </DataGrid>
+                                </Grid>
+
+
+                                <!-- Правая колонка - NOW PLAYING -->
+                                <Border Grid.Column="2"
+                                        Background="#121212"
+                                        BorderThickness="1,0,0,0"
+                                        BorderBrush="#333">
+                                        <StackPanel VerticalAlignment="Top">
+                                                <TextBlock Text="NOW PLAYING"
+                                                           Foreground="White"
+                                                           FontSize="20"
+                                                           FontWeight="Bold"
+                                                           Margin="0,0,0,20"/>
+
+                                                <Border CornerRadius="8"
+                                                        ClipToBounds="True"
+                                                        Height="275"
+                                                        Background="#121212"
+                                                        Margin="0,0,0,10">
+                                                        <Image x:Name="CurrentTrackImage"
+                                                               Stretch="Uniform"
+                                                               HorizontalAlignment="Center"
+                                                               VerticalAlignment="Center"
+                                                               Source="{Binding ElementName=TracksDataGrid, Path=SelectedItem.CoverImage, Converter={StaticResource LargeTrackImageConverter}}"/>
+                                                </Border>
+                                                <TextBlock x:Name="CurrentTrackName"
+                                                           Text="NAME"
+                                                           FontSize="22"
+                                                           FontWeight="Bold"
+                                                           Foreground="White"
+                                                           TextWrapping="Wrap"/>
+                                                <TextBlock x:Name="CurrentTrackExecutor"
+                                                           Text="EXECUTOR"
+                                                           FontSize="20"
+                                                           Foreground="Gray"
+                                                           Margin="0,5"/>
+                                                <TextBlock x:Name="CurrentTrackAlbum"
+                                                           Text="ALBUM"
+                                                           FontSize="20"
+                                                           Foreground="Gray"/>
+
+                                                <TextBlock x:Name="CurrentTrackData"
+                                                           Text="Genre | 00:00"
+                                                           FontSize="16"
+                                                           Foreground="DarkGray"
+                                                           Margin="0,20,0,0"/>
+                                        </StackPanel>
+                                </Border>
                         </Grid>
 
-
-                        <!-- Правая колонка - NOW PLAYING -->
-                        <Border Grid.Column="2"
-                                Background="#121212"
-                                BorderThickness="1,0,0,0"
-                                BorderBrush="#333">
-                                <StackPanel VerticalAlignment="Top">
-                                        <TextBlock Text="NOW PLAYING"
-                                                   Foreground="White"
-                                                   FontSize="20"
-                                                   FontWeight="Bold"
-                                                   Margin="0,0,0,20"/>
-
-                                        <Border CornerRadius="8"
-                                                ClipToBounds="True"
-                                                Height="275"
-                                                Background="#121212"
-                                                Margin="0,0,0,10">
-                                                <Image x:Name="CurrentTrackImage"
-                                                       Stretch="Uniform"
-                                                       HorizontalAlignment="Center"
-                                                       VerticalAlignment="Center"
-                                                       Source="{Binding ElementName=TracksDataGrid, Path=SelectedItem.CoverImage, Converter={StaticResource LargeTrackImageConverter}}"/>
-                                        </Border>
-                                        <TextBlock x:Name="CurrentTrackName"
-                                                   Text="NAME"
-                                                   FontSize="22"
-                                                   FontWeight="Bold"
-                                                   Foreground="White"
-                                                   TextWrapping="Wrap"/>
-                                        <TextBlock x:Name="CurrentTrackExecutor"
-                                                   Text="EXECUTOR"
-                                                   FontSize="20"
-                                                   Foreground="Gray"
-                                                   Margin="0,5"/>
-                                        <TextBlock x:Name="CurrentTrackAlbum"
-                                                   Text="ALBUM"
-                                                   FontSize="20"
-                                                   Foreground="Gray"/>
-
-                                        <TextBlock x:Name="CurrentTrackData"
-                                                   Text="Genre | 00:00"
-                                                   FontSize="16"
-                                                   Foreground="DarkGray"
-                                                   Margin="0,20,0,0"/>
-                                </StackPanel>
-                        </Border>
-                </Grid>
-        </DockPanel>
+                </DockPanel>
+        </Grid>
 </Window>

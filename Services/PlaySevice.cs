@@ -9,6 +9,9 @@ using MusicPlayer_by_d3solat1on.Models;
 using MusicPlayer_by_d3solat1on.ViewModels;
 using MusicPlayer_by_d3solat1on.Dialogs;
 using System.IO;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
 
 namespace MusicPlayer_by_d3solat1on.Services
 {
@@ -100,6 +103,7 @@ namespace MusicPlayer_by_d3solat1on.Services
 
         private readonly Random _random = new();
 
+        private string? _tempFilePath;
         private PlayerService()
         {
             _positionTimer = new DispatcherTimer
@@ -116,58 +120,52 @@ namespace MusicPlayer_by_d3solat1on.Services
                 Stop();
                 CurrentTrack = track;
 
-                // Напрямую открываем файл. MediaFoundationReader не блокируется обложками.
-                try
+                string extension = Path.GetExtension(track.Path).ToLowerInvariant();
+
+                if (extension == ".flac")
                 {
-                    _audioFileReader = new AudioFileReader(track.Path);
+                    // Используем тот самый рабочий ридер
+                    _audioFileReader = new FlacReader(track.Path);
                 }
-                catch
+                else
                 {
-                    _audioFileReader = new MediaFoundationReader(track.Path);
+                    // Для MP3 и прочего используем стандартный путь
+                    _audioFileReader = new AudioFileReader(track.Path);
                 }
 
                 _waveOutEvent = new WaveOutEvent();
                 _waveOutEvent.Init(_audioFileReader);
+                _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
 
-                // Обновляем длительность и громкость
                 Duration = _audioFileReader.TotalTime.TotalSeconds;
-                _waveOutEvent.Volume = (float)_volume;
-
                 IsPlaying = true;
                 _positionTimer.Start();
 
                 _waveOutEvent.PlaybackStopped += OnPlaybackStopped;
-                LoadCoverForTrack(track);
                 TrackChanged?.Invoke(track);
             }
             catch (Exception ex)
             {
                 NotificationWindow.Show($"Ошибка: {ex.Message}", Application.Current.MainWindow);
+                Stop();
             }
         }
-        private static void LoadCoverForTrack(Track track)
-        {
-            try
-            {
-                using var file = TagLib.File.Create(track.Path);
-                var pic = file.Tag.Pictures.FirstOrDefault();
-                if (pic != null)
-                {
-                    track.CoverImage = pic.Data.Data;
-                }
-            }
-            catch
-            {
-                track.CoverImage = null;
-            }
-        }
+
+
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
         {
-            // Используем Dispatcher, чтобы корректно вызвать метод из другого потока
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // Если трек доиграл до конца (нет ошибки)
+                // Если трек прервался раньше времени (например, на 3-й секунде), 
+                // это ошибка буфера, а не конец песни.
+                if (_audioFileReader != null && _audioFileReader.CurrentTime < _audioFileReader.TotalTime - TimeSpan.FromSeconds(1))
+                {
+                    // Игнорируем «ложную» остановку
+                    System.Diagnostics.Debug.WriteLine("Ложная остановка проигнорирована.");
+                    return;
+                }
+
                 if (e.Exception == null)
                 {
                     PlayNextTrack();
@@ -181,10 +179,11 @@ namespace MusicPlayer_by_d3solat1on.Services
                 Position = _audioFileReader.CurrentTime.TotalSeconds;
                 PositionChanged?.Invoke(Position);
 
-                // Если осталось менее 0.3 сек до конца или текущая позиция превысила длительность
-                if (_audioFileReader.CurrentTime >= _audioFileReader.TotalTime - TimeSpan.FromMilliseconds(300))
+                // ПРОВЕРКА: Переключаем, только если трек играет больше 5 секунд 
+                // И до конца осталось меньше 0.5 сек.
+                if (Position > 5 && Position >= _audioFileReader.TotalTime.TotalSeconds - 0.5)
                 {
-                    _positionTimer.Stop();
+                    _positionTimer.Stop(); // Сначала стопим таймер, чтобы не вызвало дважды
                     PlayNextTrack();
                 }
             }
@@ -218,7 +217,6 @@ namespace MusicPlayer_by_d3solat1on.Services
 
             if (_waveOutEvent != null)
             {
-                _waveOutEvent.PlaybackStopped -= OnPlaybackStopped;
                 _waveOutEvent.Stop();
                 _waveOutEvent.Dispose();
                 _waveOutEvent = null;
@@ -226,19 +224,20 @@ namespace MusicPlayer_by_d3solat1on.Services
 
             if (_audioFileReader != null)
             {
-                _audioFileReader.Dispose(); // Это КРИТИЧЕСКИ важно для MediaFoundation
+                _audioFileReader.Dispose(); // Освобождает файл и память FLAC-ридера
                 _audioFileReader = null;
             }
 
-            // Принудительно очищаем ссылки на текущий трек
-            CurrentTrack = null;
-            IsPlaying = false;
-            Position = 0;
+            // Удаляем временный файл, если он создавался ранее
+            if (!string.IsNullOrEmpty(_tempFilePath) && System.IO.File.Exists(_tempFilePath))
+            {
+                try { System.IO.File.Delete(_tempFilePath); } catch { }
+                _tempFilePath = null;
+            }
 
-            // Вызываем сборщик мусора, чтобы вернуть память системе немедленно
+            // Самый важный момент для очистки после тяжелых треков
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            GC.Collect();
         }
         public void Seek(double seconds)
         {
@@ -326,32 +325,61 @@ namespace MusicPlayer_by_d3solat1on.Services
             _positionTimer?.Stop();
             _positionTimer = null;
         }
-        private static string? CreateFlacWithoutCover(string originalPath)
+        private static string? CreateOptimizedFlac(string originalPath)
         {
             try
             {
-                // Создаём временный файл
-                string tempFile = Path.GetTempFileName() + ".flac";
-
-                // Копируем оригинальный файл
+                string tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString() + ".flac");
                 System.IO.File.Copy(originalPath, tempFile, true);
 
-                // Удаляем обложку из временного файла с помощью TagLib#
                 using (var file = TagLib.File.Create(tempFile))
                 {
-                    // Удаляем все картинки
-                    file.Tag.Pictures = [];
-                    file.Save();
-                }
+                    var pic = file.Tag.Pictures.FirstOrDefault();
 
-                System.Diagnostics.Debug.WriteLine($"✓ Создан временный файл без обложки: {tempFile}");
+                    // Если обложка больше 2 МБ — сжимаем её
+                    if (pic != null && pic.Data.Data.Length > 2 * 1024 * 1024)
+                    {
+                        byte[] smallData = ResizeImageBytes(pic.Data.Data, 600);
+
+                        // Заменяем тяжелые байты на легкие
+                        pic.Data = [.. smallData];
+                        file.Tag.Pictures = [pic];
+                        file.Save();
+                        System.Diagnostics.Debug.WriteLine("✓ Обложка оптимизирована для стабильного чтения.");
+                    }
+                }
                 return tempFile;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"✗ Ошибка при создании файла без обложки: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"✗ Ошибка оптимизации: {ex.Message}");
                 return null;
             }
+        }
+        private static byte[] ResizeImageBytes(byte[] imageData, int maxWidth)
+        {
+            using var ms = new MemoryStream(imageData);
+            using var original = Image.FromStream(ms);
+            // Рассчитываем пропорции, чтобы картинка не сплющилась
+            double ratio = (double)original.Width / original.Height;
+            int newWidth = Math.Min(original.Width, maxWidth);
+            int newHeight = (int)(newWidth / ratio);
+
+            // Используем Bitmap вместо Image
+            using var resized = new Bitmap(newWidth, newHeight);
+
+            using var graphics = Graphics.FromImage(resized);
+            // Настройки для высокого качества сжатия
+            graphics.CompositingQuality = CompositingQuality.HighQuality;
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.SmoothingMode = SmoothingMode.HighQuality;
+
+            graphics.DrawImage(original, 0, 0, newWidth, newHeight);
+
+            using var outMs = new MemoryStream();
+            // Сохраняем как JPEG (он весит меньше всего)
+            resized.Save(outMs, ImageFormat.Jpeg);
+            return outMs.ToArray();
         }
     }
 
