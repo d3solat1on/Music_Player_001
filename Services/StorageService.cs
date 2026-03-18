@@ -98,30 +98,7 @@ namespace MusicPlayer_by_d3solat1on.Services
             }
             catch (Exception) { /* ... */ }
         }
-        private void RestorePlaylistTracks()
-        {
-            // Проходим по всем плейлистам и проверяем, что треки в них существуют в AllTracks
-            foreach (var playlist in MusicLibrary.Instance.Playlists)
-            {
-                var validTracks = new List<Track>();
-                foreach (var track in playlist.Tracks.ToList())
-                {
-                    // Ищем трек по пути в AllTracks
-                    var existingTrack = MusicLibrary.Instance.AllTracks.FirstOrDefault(t => t.Path == track.Path);
-                    if (existingTrack != null)
-                    {
-                        validTracks.Add(existingTrack);
-                    }
-                }
 
-                // Заменяем треки в плейлисте на валидные
-                playlist.Tracks.Clear();
-                foreach (var track in validTracks)
-                {
-                    playlist.Tracks.Add(track);
-                }
-            }
-        }
         private static void EnsureDefaultPlaylists()
         {
             if (!MusicLibrary.Instance.Playlists.Any(p => p.Name == "Избранное"))

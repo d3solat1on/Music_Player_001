@@ -477,7 +477,7 @@
                                     VerticalAlignment="Center"
                                     Margin="10,0,0,0"
                                     WindowChrome.IsHitTestVisibleInChrome="True">
-                                <TextBlock Text="MPM"
+                                <TextBlock Text="QAMP"
                                            Foreground="White"
                                            FontWeight="Bold"/>
                         </StackPanel>
@@ -868,10 +868,31 @@
                                                                                                 VerticalAlignment="Center">
 
                                                                                                 <StackPanel.ContextMenu>
+
                                                                                                         <ContextMenu Background="#282828"
                                                                                                                      Foreground="White"
                                                                                                                      BorderBrush="#444">
                                                                                                                 <ContextMenu.Resources>
+                                                                                                                        <!-- 1. Убираем колонку иконок в самом ContextMenu -->
+                                                                                                                        <Style TargetType="ContextMenu">
+                                                                                                                                <Setter Property="Template">
+                                                                                                                                        <Setter.Value>
+                                                                                                                                                <ControlTemplate TargetType="ContextMenu">
+                                                                                                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                                                                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                                                                                                                                BorderThickness="1"
+                                                                                                                                                                Padding="0">
+                                                                                                                                                                <!-- Убираем лишние отступы -->
+                                                                                                                                                                <!-- Используем StackPanel вместо стандартного ItemsPresenter -->
+                                                                                                                                                                <StackPanel IsItemsHost="True"
+                                                                                                                                                                            KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                                                                                                                                        </Border>
+                                                                                                                                                </ControlTemplate>
+                                                                                                                                        </Setter.Value>
+                                                                                                                                </Setter>
+                                                                                                                        </Style>
+
+                                                                                                                        <!-- 2. Ваш стиль для MenuItem (уже почти ок, добавим только привязку текста) -->
                                                                                                                         <Style TargetType="MenuItem">
                                                                                                                                 <Setter Property="Template">
                                                                                                                                         <Setter.Value>
@@ -879,13 +900,15 @@
                                                                                                                                                         <Border x:Name="Border"
                                                                                                                                                                 Background="Transparent"
                                                                                                                                                                 Padding="15,7">
-                                                                                                                                                                <ContentPresenter ContentSource="Header"/>
+                                                                                                                                                                <!-- Header — это то, что вы написали в MenuItem Header="..." -->
+                                                                                                                                                                <ContentPresenter ContentSource="Header"
+                                                                                                                                                                                  RecognizesAccessKey="True"/>
                                                                                                                                                         </Border>
                                                                                                                                                         <ControlTemplate.Triggers>
                                                                                                                                                                 <Trigger Property="IsHighlighted"
                                                                                                                                                                          Value="True">
                                                                                                                                                                         <Setter TargetName="Border"
-                                                                                                                                                                                Property="Border.Background"
+                                                                                                                                                                                Property="Background"
                                                                                                                                                                                 Value="#3E3E3E"/>
                                                                                                                                                                 </Trigger>
                                                                                                                                                         </ControlTemplate.Triggers>
@@ -902,18 +925,15 @@
                                                                                                                           Foreground="Red"/>
                                                                                                         </ContextMenu>
                                                                                                 </StackPanel.ContextMenu>
-
                                                                                                 <TextBlock Text="{Binding Name}"
                                                                                                            FontWeight="Bold"
                                                                                                            FontSize="14"
                                                                                                            Foreground="White"
                                                                                                            TextTrimming="CharacterEllipsis"/>
-
                                                                                                 <TextBlock Text="{Binding TrackCount, StringFormat='{}{0} треков'}"
                                                                                                            FontSize="10"
                                                                                                            Foreground="#999999"
                                                                                                            Margin="0,2,0,0"/>
-
                                                                                         </StackPanel>
                                                                                 </Grid>
                                                                         </Border>
@@ -990,26 +1010,43 @@
                                                 <DataGrid.ContextMenu>
                                                         <ContextMenu Background="#282828">
                                                                 <ContextMenu.Resources>
-                                                                        <!-- Этот стиль убирает резервирование места под иконку -->
+                                                                        <!-- 1. ГЛАВНОЕ: Убираем саму колонку в контейнере меню -->
+                                                                        <Style TargetType="ContextMenu">
+                                                                                <Setter Property="Template">
+                                                                                        <Setter.Value>
+                                                                                                <ControlTemplate TargetType="ContextMenu">
+                                                                                                        <Border Background="{TemplateBinding Background}"
+                                                                                                                BorderBrush="#444"
+                                                                                                                BorderThickness="1">
+                                                                                                                <!-- IsItemsHost="True" заставляет пункты просто идти друг за другом -->
+                                                                                                                <StackPanel IsItemsHost="True"
+                                                                                                                            KeyboardNavigation.DirectionalNavigation="Cycle"/>
+                                                                                                        </Border>
+                                                                                                </ControlTemplate>
+                                                                                        </Setter.Value>
+                                                                                </Setter>
+                                                                        </Style>
+
+                                                                        <!-- 2. Ваш стиль для MenuItem (оставляем как есть, он хороший) -->
                                                                         <Style TargetType="{x:Type MenuItem}">
                                                                                 <Setter Property="Foreground"
-                                                                                        Value="White"/>
+                                                                                                Value="White"/>
                                                                                 <Setter Property="Template">
                                                                                         <Setter.Value>
                                                                                                 <ControlTemplate TargetType="{x:Type MenuItem}">
-                                                                                                        <Grid Background="{TemplateBinding Background}">
-                                                                                                                <!-- ContentPresenter выводит текст Header -->
-                                                                                                                <!-- Убираем Margin слева, чтобы текст не прижимался к краю -->
+                                                                                                        <!-- Добавил Border для более чистого управления фоном -->
+                                                                                                        <Border x:Name="Bg"
+                                                                                                                        Background="Transparent">
                                                                                                                 <ContentPresenter ContentSource="Header"
-                                                                                                                                  Margin="10,5,10,5"
+                                                                                                                                  Margin="15,7"
                                                                                                                                   HorizontalAlignment="Left"/>
-                                                                                                        </Grid>
+                                                                                                        </Border>
                                                                                                         <ControlTemplate.Triggers>
-                                                                                                                <!-- Цвет при наведении мыши -->
                                                                                                                 <Trigger Property="IsHighlighted"
-                                                                                                                         Value="True">
-                                                                                                                        <Setter Property="Background"
-                                                                                                                                Value="#3E3E3E"/>
+                                                                                                                                Value="True">
+                                                                                                                        <Setter TargetName="Bg"
+                                                                                                                                        Property="Background"
+                                                                                                                                        Value="#3E3E3E"/>
                                                                                                                 </Trigger>
                                                                                                         </ControlTemplate.Triggers>
                                                                                                 </ControlTemplate>
@@ -1205,7 +1242,7 @@
                                                         </DataGridTextColumn>
 
                                                         <DataGridTextColumn Header="BITRATE"
-                                                                            Binding="{Binding BitrateDisplay}"
+                                                                            Binding="{Binding Bitrate}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
                                                                         <Style>
@@ -1279,6 +1316,15 @@
                                                            FontSize="16"
                                                            Foreground="DarkGray"
                                                            Margin="0,20,0,0"/>
+                                                <TextBlock x:Name="CurrentTrackExtension"
+                                                           Text="EXTENSION"
+                                                           FontSize="16"
+                                                           Foreground="DarkGray"/>
+                                                <TextBlock x:Name="CurrentTrackYear"
+                                                           Text="YEAR"
+                                                           FontSize="16"
+                                                           Foreground="DarkGray"/>
+
                                         </StackPanel>
                                 </Border>
                         </Grid>

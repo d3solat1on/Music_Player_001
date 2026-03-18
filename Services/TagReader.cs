@@ -11,12 +11,12 @@ namespace MusicPlayer_by_d3solat1on.Services
         public static Track? ReadTrackFromFile(string filePath)
         {
             if (!File.Exists(filePath)) return null;
+            string extension = Path.GetExtension(filePath)?.TrimStart('.').ToLower() ?? "Неизвестно";
             try
             {
-                // Просто используем путь - TagLib сам откроет и закроет файл
                 using var file = TagLib.File.Create(filePath);
 
-                var track = new Track
+                return new Track
                 {
                     Path = Path.GetFullPath(filePath),
                     Name = string.IsNullOrEmpty(file.Tag.Title) ? Path.GetFileNameWithoutExtension(filePath) : file.Tag.Title,
@@ -26,13 +26,19 @@ namespace MusicPlayer_by_d3solat1on.Services
                     Bitrate = file.Properties.AudioBitrate,
                     SampleRate = file.Properties.AudioSampleRate,
                     Genre = file.Tag.FirstGenre ?? "Неизвестный жанр",
+                    Extension = extension,
+                    Year = (int)file.Tag.Year
                 };
-                return track;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Ошибка чтения {filePath}: {ex.Message}");
-                return new Track { Name = Path.GetFileNameWithoutExtension(filePath), Path = filePath };
+                return new Track
+                {
+                    Name = Path.GetFileNameWithoutExtension(filePath),
+                    Path = filePath,
+                    Extension = extension 
+                };
             }
         }
 

@@ -17,17 +17,10 @@ namespace MusicPlayer_by_d3solat1on.Models
         public string Genre { get; set; } = "Неизвестно";
         public int Bitrate { get; set; }
         public int SampleRate { get; set; }
-        
+        public int Year { get; set; }
+
         [JsonIgnore]
         private byte[]? _coverImage;
-
-        // Форматированные свойства для отображения
-        public string ExtensionDisplay => !string.IsNullOrEmpty(Extension) ? Extension.ToUpper() : "Неизвестно";
-        public string BitrateDisplay => Bitrate > 0 ? $"{Bitrate} kbps" : "Неизвестно";
-        public string SampleRateDisplay => SampleRate > 0 ? $"{SampleRate / 1000} kHz" : "Неизвестно";
-        public string DurationDisplay => Duration ?? "00:00";
-        public string AlbumDisplay => !string.IsNullOrEmpty(Album) ? Album : "Неизвестно";
-
 
         [JsonIgnore]
         public byte[]? CoverImage
@@ -64,6 +57,6 @@ namespace MusicPlayer_by_d3solat1on.Models
             _coverImage = null;
         }
         public event PropertyChangedEventHandler PropertyChanged;
-    
+
     }
 }

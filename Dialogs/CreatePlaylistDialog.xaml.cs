@@ -47,8 +47,8 @@ namespace MusicPlayer_by_d3solat1on.Dialogs
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Ошибка при загрузке изображения: {ex.Message}", "Ошибка",
-                                   MessageBoxButton.OK, MessageBoxImage.Error);
+                    
+                    NotificationWindow.Show($"Ошибка при загрузке изображения: {ex.Message}", this);               
                 }
             }
         }
@@ -57,8 +57,7 @@ namespace MusicPlayer_by_d3solat1on.Dialogs
         {
             if (string.IsNullOrWhiteSpace(PlaylistNameTextBox.Text))
             {
-                MessageBox.Show("Введите название плейлиста", "Ошибка",
-                               MessageBoxButton.OK, MessageBoxImage.Warning);
+                NotificationWindow.Show("Введите название плейлиста", this);
                 return;
             }
 

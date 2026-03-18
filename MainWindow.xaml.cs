@@ -53,10 +53,6 @@ namespace MusicPlayer_by_d3solat1on
             {
                 VolumePercentage.Text = $"{savedVolume:F0}%";
             }
-
-            // Сохранение при закрытии
-            Closed += (s, e) => StorageService.Instance.SaveLibrary();
-
             // Таймер очистки памяти (оставляем, раз он помогает держать 700МБ)
             _memoryCleanupTimer = new DispatcherTimer
             {
@@ -69,6 +65,7 @@ namespace MusicPlayer_by_d3solat1on
                 GC.Collect();
             };
             _memoryCleanupTimer.Start();
+            Closed += (s, e) => StorageService.Instance.SaveLibrary();
         }
 
         private void OnDurationChanged()
@@ -97,7 +94,9 @@ namespace MusicPlayer_by_d3solat1on
                 CurrentTrackName.Text = track.Name;
                 CurrentTrackExecutor.Text = track.Executor;
                 CurrentTrackAlbum.Text = track.Album;
-                CurrentTrackData.Text = $"{track.Genre} | {track.Duration:mm\\:ss}";
+                CurrentTrackData.Text = $"{track.Genre} | {track.Duration:mm\\:ss} | {track.SampleRate} Hz | {track.Bitrate} kbps";
+                CurrentTrackExtension.Text = track.Extension;
+                CurrentTrackYear.Text = track.Year > 0 ? track.Year.ToString() : "Неизвестно";
                 // Обновляем длительность
                 string totalTime = "0:00";
                 if (Player.Duration > 0)
@@ -217,14 +216,6 @@ namespace MusicPlayer_by_d3solat1on
                 }
             }
         }
-
-        // private void StopButton_Click(object sender, RoutedEventArgs e)
-        // {
-        //     Player.Stop();
-        //     PlayPauseButton.Content = "▶";
-        //     ProgressSlider.Value = 0;
-        //     CurrentTimeText.Text = "0:00";
-        // }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
         {
@@ -357,11 +348,7 @@ namespace MusicPlayer_by_d3solat1on
             }
             LastTrackName.Text = track.Name;
             LastTrackExecutor.Text = track.Executor;
-            CurrentTrackName.Text = track.Name;
-            CurrentTrackExecutor.Text = track.Executor;
-            CurrentTrackAlbum.Text = track.Album;
-            CurrentTrackData.Text = $"{track.ExtensionDisplay}, {track.SampleRateDisplay}, {track.BitrateDisplay}, {track.AlbumDisplay}, {track.Genre} JOINT STEREO";
-
+            
             Library.LastPlayedTrack = track;
             _lastTrackWithCover = track;
             MusicLibrary.Instance.UpdatePlaylistView();
@@ -670,7 +657,5 @@ namespace MusicPlayer_by_d3solat1on
             // Сохраняем всё при закрытии
             StorageService.Instance.SaveLibrary();
         }
-
-
     }
 }
