@@ -19,36 +19,25 @@ namespace QAMP.Dialogs
             InitializeComponent();
         }
 
-        
+
         private void SelectCoverButton_Click(object sender, RoutedEventArgs e)
         {
             var openFileDialog = new OpenFileDialog
             {
-                Title = "Выберите обложку для плейлиста",
-                Filter = "Изображения|*.jpg;*.jpeg;*.png;*.bmp|Все файлы|*.*"
+                Filter = "Images|*.jpg;*.jpeg;*.png"
             };
 
             if (openFileDialog.ShowDialog() == true)
             {
-                try
+                var cropper = new ImageCropperDialog(openFileDialog.FileName)
                 {
-                    // Загружаем изображение
-                    var bitmap = new BitmapImage(new Uri(openFileDialog.FileName));
-                    CoverImage.Source = bitmap;
+                    Owner = this
+                };
 
-                    // Конвертируем в байты для сохранения
-                    using var stream = new FileStream(openFileDialog.FileName, FileMode.Open, FileAccess.Read);
-                    using var memoryStream = new MemoryStream();
-                    stream.CopyTo(memoryStream);
-                    PlaylistCoverImage = memoryStream.ToArray();
-
-                    // Меняем текст кнопки
-                    // SelectCoverButton.Content = "Изменить обложку";
-                }
-                catch (Exception ex)
+                if (cropper.ShowDialog() == true)
                 {
-                    
-                    NotificationWindow.Show($"Ошибка при загрузке изображения: {ex.Message}", this);               
+                    CoverImage.Source = cropper.ResultImage;
+                    PlaceholderText.Visibility = Visibility.Collapsed;
                 }
             }
         }

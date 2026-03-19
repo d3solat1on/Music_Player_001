@@ -1,5 +1,6 @@
 using System.IO;
 using System.Windows;
+using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using QAMP.Models;
 using QAMP.ViewModels;
@@ -22,14 +23,36 @@ namespace QAMP.Dialogs
 
             if (openFileDialog.ShowDialog() == true)
             {
-                // Логика чтения файла в массив байтов и обновления превью
-                byte[] imageBytes = File.ReadAllBytes(openFileDialog.FileName);
-                // Предполагается, что DataContext окна — это объект плейлиста
-                if (DataContext is Playlist playlist)
+                // 1. Открываем окно обрезки
+                var cropper = new ImageCropperDialog(openFileDialog.FileName)
                 {
-                    playlist.CoverImage = imageBytes;
+                    Owner = GetWindow(this)
+                };
+
+                if (cropper.ShowDialog() == true && cropper.ResultImage != null)
+                {
+                    // 2. Отображаем результат в UI (превью в круге/квадрате)
+                    CoverImage.Source = cropper.ResultImage;
+                    if (PlaceholderText != null) PlaceholderText.Visibility = Visibility.Collapsed;
+
+                    // 3. Конвертируем BitmapSource в byte[] для сохранения в данные плейлиста
+                    byte[] imageBytes = BitmapSourceToByteArray(cropper.ResultImage);
+
+                    if (DataContext is Playlist playlist)
+                    {
+                        playlist.CoverImage = imageBytes;
+                    }
                 }
             }
+        }
+        private static byte[] BitmapSourceToByteArray(BitmapSource bitmapSource)
+        {
+            using var stream = new MemoryStream();
+            // Используем PngBitmapEncoder для сохранения прозрачности и качества
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+            encoder.Save(stream);
+            return stream.ToArray();
         }
 
         // Метод для кнопки "Сохранить" (обратите внимание на маленькую 'c' в 'click' в вашем XAML)

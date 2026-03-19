@@ -37,6 +37,8 @@ namespace QAMP.Services
         public Track CurrentTrack { get; private set; }
         public bool IsPlaying { get; private set; }
 
+        public bool IsShuffleEnabled { get; set; } = false;
+        public List<Track> ShuffledQueue { get; set; } = [];
         private double _position;
         public double Position
         {
@@ -224,11 +226,8 @@ namespace QAMP.Services
                 _waveOutEvent = null;
             }
 
-            if (_audioFileReader != null)
-            {
-                _audioFileReader.Dispose(); // Освобождает файл и память FLAC-ридера
-                _audioFileReader = null;
-            }
+            _audioFileReader?.Dispose(); // Освобождает файл и память FLAC-ридера
+            _audioFileReader = null;
 
             // Удаляем временный файл, если он создавался ранее
             if (!string.IsNullOrEmpty(_tempFilePath) && System.IO.File.Exists(_tempFilePath))
@@ -252,23 +251,65 @@ namespace QAMP.Services
             }
         }
 
-        public void PlayNextTrack()
+        public Track? GetNextTrack()
         {
-            // Берем очередь, а не CurrentTracks!
-            var queue = MusicLibrary.Instance.PlaybackQueue;
+            // Определяем, в каком списке искать
+            var activeList = IsShuffleEnabled 
+    ? ShuffledQueue 
+    : MusicLibrary.Instance.CurrentTracks.ToList();
 
-            if (queue == null || !queue.Any()) return;
+            if (activeList == null || activeList.Count == 0) return null;
 
-            var currentIndex = queue.IndexOf(CurrentTrack); // CurrentTrack — это тот, что играет сейчас
-            int nextIndex = currentIndex + 1;
+            // Ищем индекс текущего трека
+            int currentIndex = activeList.IndexOf(CurrentTrack);
 
-            if (nextIndex < queue.Count)
+            // Если трек найден и он не последний
+            if (currentIndex != -1 && currentIndex < activeList.Count - 1)
             {
-                var nextTrack = queue[nextIndex];
-                // Запускаем следующий
+                return activeList[currentIndex + 1];
+            }
+
+            // Если включен бесконечный Shuffle и мы на последнем треке
+            if (IsShuffleEnabled && currentIndex == activeList.Count - 1)
+            {
+                return activeList[0];
+            }
+
+            return null;
+        }
+
+        public void PlayNextTrack() // Убираем параметры, используем свойства класса
+        {
+            if (IsShuffleEnabled && ShuffledQueue.Count != 0)
+            {
+                var currentInShuffle = ShuffledQueue.IndexOf(CurrentTrack);
+                // Если текущего трека нет в очереди (например, сменили плейлист), берем первый
+                if (currentInShuffle == -1) currentInShuffle = 0;
+
+                var nextTrack = ShuffledQueue[(currentInShuffle + 1) % ShuffledQueue.Count];
                 PlayTrack(nextTrack);
+
+            }
+            else
+            {
+                var queue = MusicLibrary.Instance.PlaybackQueue;
+                if (queue == null || !queue.Any()) return;
+
+                var currentIndex = queue.IndexOf(CurrentTrack);
+                int nextIndex = currentIndex + 1;
+
+                if (nextIndex < queue.Count)
+                {
+                    PlayTrack(queue[nextIndex]);
+                }
+                else
+                {
+                    // Опционально: переход на первый трек, если список кончился
+                    PlayTrack(queue[0]);
+                }
             }
         }
+
         private void PlayNextShuffleTrack()
         {
             var library = MusicLibrary.Instance;

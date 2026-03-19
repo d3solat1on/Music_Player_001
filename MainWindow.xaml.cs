@@ -9,6 +9,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using static QAMP.Dialogs.NotificationWindow;
@@ -20,6 +21,7 @@ namespace QAMP
     public partial class MainWindow : Window
     {
 
+        private readonly PlayerService _playService = Instance;
         private readonly DispatcherTimer _memoryCleanupTimer;
         public static MusicLibrary Library => MusicLibrary.Instance;
         private static PlayerService Player => Instance;
@@ -44,6 +46,7 @@ namespace QAMP
             Player.PlaybackPaused += OnPlaybackPaused;
             Player.VolumeChanged += OnVolumeChanged;
             Player.DurationChanged += OnDurationChanged;
+            _playService.TrackChanged += UpdateNextTrackUI;
 
             // 3. Устанавливаем громкость СТРОГО после загрузки библиотеки
             double savedVolume = StorageService.Instance.Volume * 100;
@@ -190,6 +193,7 @@ namespace QAMP
                 if (Library.CurrentTracks.Count > 0)
                 {
                     Player.PlayTrack(Library.CurrentTracks[0]);
+                    UpdateNextTrackUI();
                 }
             }
             else if (Player.IsPlaying)
@@ -225,21 +229,67 @@ namespace QAMP
             if (currentIndex > 0)
             {
                 Player.PlayTrack(Library.CurrentTracks[currentIndex - 1]);
+                UpdateNextTrackUI();
             }
         }
 
         private void NextButton_Click(object sender, RoutedEventArgs e)
         {
-
-            if (Library.CurrentTracks.Count == 0) return;
-
-            var currentIndex = Library.CurrentTracks.IndexOf(Player.CurrentTrack);
-            if (currentIndex < Library.CurrentTracks.Count - 1)
+            if (_playService.IsShuffleEnabled)
             {
-                Player.PlayTrack(Library.CurrentTracks[currentIndex + 1]);
+                var nextTrack = _playService.ShuffledQueue.FirstOrDefault(t => t != Player.CurrentTrack);
+                if (nextTrack != null)
+                {
+                    Player.PlayTrack(nextTrack);
+                    _playService.ShuffledQueue.Remove(nextTrack);
+                    UpdateNextTrackUI();
+                }
+            }
+            else
+            {
+                var currentIndex = Library.CurrentTracks.IndexOf(Player.CurrentTrack);
+                if (currentIndex < Library.CurrentTracks.Count - 1)
+                {
+                    Player.PlayTrack(Library.CurrentTracks[currentIndex + 1]);
+                    UpdateNextTrackUI();
+                }
             }
         }
 
+        private void UpdateNextTrackUI(Track? currentTrack = null)
+        {
+            var next = _playService.GetNextTrack();
+
+            if (next != null)
+            {
+                NextTrackName.Text = $"{next.Executor} - {next.Name}";
+                NextTrackName.Foreground = Brushes.White;
+            }
+            else
+            {
+                NextTrackName.Text = "Плейлист закончился";
+                NextTrackName.Foreground = Brushes.DimGray; // Сделаем текст тусклым
+            }
+        }
+        private void ShuffleButton_Click(object sender, RoutedEventArgs e)
+        {
+            _playService.IsShuffleEnabled = !_playService.IsShuffleEnabled;
+
+            if (_playService.IsShuffleEnabled)
+            {
+                // Создаем очередь в сервисе
+                _playService.ShuffledQueue = [.. Library.CurrentTracks.OrderBy(x => Guid.NewGuid())];
+
+                ShuffleImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/shuffle_on.png"));
+                UpdateNextTrackUI();
+            }
+            else
+            {
+                _playService.ShuffledQueue.Clear();
+                ShuffleImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/shuffle.png"));
+                UpdateNextTrackUI();
+            }
+        }
 
         private void ProgressSlider_DragStarted(object sender, DragStartedEventArgs e)
         {
@@ -328,6 +378,7 @@ namespace QAMP
             if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
             {
                 Library.CurrentPlaylist = selectedPlaylist;
+                UpdateNextTrackUI();
             }
         }
 
@@ -337,6 +388,7 @@ namespace QAMP
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
             {
                 Player.PlayTrack(selectedTrack);
+                UpdateNextTrackUI();
             }
         }
 
@@ -348,7 +400,7 @@ namespace QAMP
             }
             LastTrackName.Text = track.Name;
             LastTrackExecutor.Text = track.Executor;
-            
+
             Library.LastPlayedTrack = track;
             _lastTrackWithCover = track;
             MusicLibrary.Instance.UpdatePlaylistView();
@@ -359,11 +411,12 @@ namespace QAMP
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
             {
                 Player.PlayTrack(selectedTrack);
+                UpdateNextTrackUI();
             }
         }
         private void RemoveFromPlaylist_Click(object sender, RoutedEventArgs e)
         {
-           if (Library.CurrentPlaylist == null)
+            if (Library.CurrentPlaylist == null)
             {
                 NotificationWindow.Show("Сначала выберите плейлист", Application.Current.MainWindow);
                 return;
@@ -371,10 +424,10 @@ namespace QAMP
 
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
             {
-                 var result = NotificationWindow.Show(
-                    $"Удалить трек \"{selectedTrack.Name}\" из плейлиста \"{Library.CurrentPlaylist.Name}\"?",
-                    this,
-                    NotificationMode.Confirm);
+                var result = NotificationWindow.Show(
+                   $"Удалить трек \"{selectedTrack.Name}\" из плейлиста \"{Library.CurrentPlaylist.Name}\"?",
+                   this,
+                   NotificationMode.Confirm);
 
                 if (result == true)
                 {
@@ -387,7 +440,7 @@ namespace QAMP
         {
             if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
             {
-                
+
                 if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
                 {
                     Library.Playlists.Remove(selectedPlaylist);
@@ -442,31 +495,8 @@ namespace QAMP
                 VolumeSlider.Value = _lastVolume;
             }
         }
-        private void ShuffleButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (Library.CurrentTracks == null || Library.CurrentTracks.Count < 2) return;
 
-            // Используем алгоритм Тасования Фишера — Йетса
-            Random rng = new();
-            var list = Library.CurrentTracks.ToList();
-            int n = list.Count;
-            while (n > 1)
-            {
-                n--;
-                int k = rng.Next(n + 1);
-                (list[n], list[k]) = (list[k], list[n]);
-            }
 
-            // Очищаем текущий список и заливаем перемешанный
-            Library.CurrentTracks.Clear();
-            foreach (var track in list)
-            {
-                Library.CurrentTracks.Add(track);
-            }
-
-            // Визуальный фидбек — кнопка становится ярче
-            // ShuffleButton.Opacity = (ShuffleButton.Opacity == 1.0) ? 0.5 : 1.0;
-        }
         private void RepeatButton_Click(object sender, RoutedEventArgs e)
         {
             // Циклическое переключение: NoRepeat -> RepeatAll -> RepeatOne -> NoRepeat
@@ -488,12 +518,13 @@ namespace QAMP
                     // RepeatButton.Opacity = 0.5; // Делаем полупрозрачной, когда выключено
                     break;
             }
+            UpdateNextTrackUI();
         }
         private void DeletePlaylist_Click(object sender, RoutedEventArgs e)
         {
             if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
             {
-                
+
                 if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
                 {
                     Library.Playlists.Remove(selectedPlaylist);
@@ -650,12 +681,6 @@ namespace QAMP
             {
                 WindowState = WindowState.Maximized;
             }
-        }
-
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
-        {
-            // Сохраняем всё при закрытии
-            StorageService.Instance.SaveLibrary();
         }
     }
 }

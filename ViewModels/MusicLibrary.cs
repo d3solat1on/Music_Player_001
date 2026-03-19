@@ -24,7 +24,7 @@ namespace QAMP.ViewModels
         // Сохраняем ID последнего выбранного плейлиста
         private int _lastPlaylistId = -1;
 
-        private MusicLibrary()
+        public MusicLibrary()
         {
             Playlists ??= [];
 

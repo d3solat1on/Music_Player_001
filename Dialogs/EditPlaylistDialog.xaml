@@ -53,7 +53,8 @@
                                 Click="SelectCoverButton_Click"
                                 Background="#282828">
                                 <Grid>
-                                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                        <Image x:Name="CoverImage"
+                                               Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
                                                Stretch="UniformToFill"
                                                Margin="2">
                                                 <Image.Style>

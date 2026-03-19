@@ -23,6 +23,7 @@
     <None Remove="Resources\play_pause.png" />
     <None Remove="Resources\settings.png" />
     <None Remove="Resources\shuffle.png" />
+    <None Remove ="Resources\shuffle_on.png" />
     <None Remove="Resources\stop.png" />
     <None Remove="Resources\add_favorites.png" />
     <None Remove="Resources\remove_favorites.png" />
@@ -60,6 +61,7 @@
     <Resource Include="Resources\play_pause.png" />
     <Resource Include="Resources\settings.png" />
     <Resource Include="Resources\shuffle.png" />
+    <Resource Include="Resources\shuffle_on.png" />
     <Resource Include="Resources\stop.png" />
     <Resource Include="Resources\add_favorites.png" />
     <Resource Include="Resources\remove_favorites.png" />

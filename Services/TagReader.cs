@@ -37,7 +37,7 @@ namespace QAMP.Services
                 {
                     Name = Path.GetFileNameWithoutExtension(filePath),
                     Path = filePath,
-                    Extension = extension 
+                    Extension = extension
                 };
             }
         }
@@ -56,9 +56,16 @@ namespace QAMP.Services
             return [.. tracks];
         }
 
-        public static Track[] ReadTracksFromFolder(string folderPath, string searchPattern = "*.mp3 | *.flac | *.wav | *.aac")
+        public static Track[] ReadTracksFromFolder(string folderPath)
         {
-            var files = Directory.GetFiles(folderPath, searchPattern, SearchOption.AllDirectories);
+            // Список поддерживаемых расширений
+            string[] extensions = { ".mp3", ".flac", ".wav", ".aac" };
+
+            // Получаем все файлы (рекурсивно) и фильтруем их
+            var files = Directory.EnumerateFiles(folderPath, "*.*", SearchOption.AllDirectories)
+                                 .Where(file => extensions.Contains(Path.GetExtension(file).ToLower()))
+                                 .ToArray();
+
             return ReadTracksFromFiles(files);
         }
 

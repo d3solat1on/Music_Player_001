@@ -564,7 +564,8 @@
                                                                 Click="ShuffleButton_Click"
                                                                 Width="55"
                                                                 Margin="5,0">
-                                                                <Image Source="Resources/shuffle.png"
+                                                                <Image x:Name="ShuffleImage"
+                                                                       Source="Resources/shuffle.png"
                                                                        Stretch="Uniform"
                                                                        Margin="5"/>
                                                         </Button>
@@ -779,12 +780,13 @@
                                                 </DockPanel>
 
                                                 <ListBox x:Name="PlaylistsListBox"
+                                                         
                                                          Background="Transparent"
                                                          BorderThickness="0"
                                                          Foreground="White"
                                                          ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                                                          SelectionChanged="PlaylistsListBox_SelectionChanged"
-                                                         Height="400"
+                                                         Height="Auto"
                                                          ItemsSource="{Binding Playlists}">
                                                         <ListBox.ItemTemplate>
                                                                 <DataTemplate>
@@ -992,6 +994,11 @@
                                         </Border>
 
                                         <DataGrid x:Name="TracksDataGrid"
+                                                  VirtualizingStackPanel.IsVirtualizing="True"
+                                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                                  ScrollViewer.IsDeferredScrollingEnabled="True"
+                                                  VirtualizingStackPanel.ScrollUnit="Pixel"
+                                                  VirtualizingStackPanel.CacheLength="15, 15"
                                                   Grid.Row="1"
                                                   ItemsSource="{Binding CurrentTracks}"
                                                   Background="Transparent"
@@ -1030,23 +1037,23 @@
                                                                         <!-- 2. Ваш стиль для MenuItem (оставляем как есть, он хороший) -->
                                                                         <Style TargetType="{x:Type MenuItem}">
                                                                                 <Setter Property="Foreground"
-                                                                                                Value="White"/>
+                                                                                        Value="White"/>
                                                                                 <Setter Property="Template">
                                                                                         <Setter.Value>
                                                                                                 <ControlTemplate TargetType="{x:Type MenuItem}">
                                                                                                         <!-- Добавил Border для более чистого управления фоном -->
                                                                                                         <Border x:Name="Bg"
-                                                                                                                        Background="Transparent">
+                                                                                                                Background="Transparent">
                                                                                                                 <ContentPresenter ContentSource="Header"
                                                                                                                                   Margin="15,7"
                                                                                                                                   HorizontalAlignment="Left"/>
                                                                                                         </Border>
                                                                                                         <ControlTemplate.Triggers>
                                                                                                                 <Trigger Property="IsHighlighted"
-                                                                                                                                Value="True">
+                                                                                                                         Value="True">
                                                                                                                         <Setter TargetName="Bg"
-                                                                                                                                        Property="Background"
-                                                                                                                                        Value="#3E3E3E"/>
+                                                                                                                                Property="Background"
+                                                                                                                                Value="#3E3E3E"/>
                                                                                                                 </Trigger>
                                                                                                         </ControlTemplate.Triggers>
                                                                                                 </ControlTemplate>
@@ -1324,7 +1331,18 @@
                                                            Text="YEAR"
                                                            FontSize="16"
                                                            Foreground="DarkGray"/>
-
+                                                <StackPanel x:Name="NextTrackPanel"
+                                                                Margin="0,20,0,0">
+                                                        <TextBlock Text="СЛЕДУЮЩИЙ ТРЕК:"
+                                                                   FontSize="12"
+                                                                        Foreground="Gray"
+                                                                        FontWeight="Bold"/>
+                                                        <TextBlock x:Name="NextTrackName"
+                                                                   Text="Название трека..."
+                                                                   FontSize="14"
+                                                                        Foreground="White"
+                                                                        TextWrapping="Wrap"/>
+                                                </StackPanel>
                                         </StackPanel>
                                 </Border>
                         </Grid>
