@@ -12,6 +12,7 @@ using System.IO;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Collections.ObjectModel;
 
 namespace QAMP.Services
 {
@@ -115,6 +116,7 @@ namespace QAMP.Services
 
         public void PlayTrack(Track track)
         {
+            MusicLibrary.Instance.PlaybackQueue = new ObservableCollection<Track>(MusicLibrary.Instance.CurrentTracks);
             try
             {
                 Stop();
@@ -238,7 +240,7 @@ namespace QAMP.Services
             // Самый важный момент для очистки после тяжелых треков
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            
+
         }
         public void Seek(double seconds)
         {
@@ -250,60 +252,21 @@ namespace QAMP.Services
             }
         }
 
-        private void PlayNextTrack()
+        public void PlayNextTrack()
         {
-            System.Diagnostics.Debug.WriteLine($"=== PlayNextTrack ===");
+            // Берем очередь, а не CurrentTracks!
+            var queue = MusicLibrary.Instance.PlaybackQueue;
 
-            var library = MusicLibrary.Instance;
-            if (library == null)
+            if (queue == null || !queue.Any()) return;
+
+            var currentIndex = queue.IndexOf(CurrentTrack); // CurrentTrack — это тот, что играет сейчас
+            int nextIndex = currentIndex + 1;
+
+            if (nextIndex < queue.Count)
             {
-                System.Diagnostics.Debug.WriteLine("✗ library == null");
-                return;
-            }
-
-            System.Diagnostics.Debug.WriteLine($"CurrentTracks.Count: {library.CurrentTracks.Count}");
-            System.Diagnostics.Debug.WriteLine($"CurrentTrack: {CurrentTrack?.Name}");
-
-            if (library.CurrentTracks.Count == 0)
-            {
-                System.Diagnostics.Debug.WriteLine("✗ Нет треков в текущем плейлисте");
-                return;
-            }
-
-            var currentIndex = library.CurrentTracks.IndexOf(CurrentTrack);
-            System.Diagnostics.Debug.WriteLine($"currentIndex: {currentIndex}");
-
-            // Режим RepeatOne
-            if (RepeatMode == RepeatMode.RepeatOne)
-            {
-                System.Diagnostics.Debug.WriteLine("Режим RepeatOne - повторяем текущий трек");
-                PlayTrack(CurrentTrack);
-                return;
-            }
-
-            // Режим Shuffle
-            if (IsShuffle)
-            {
-                System.Diagnostics.Debug.WriteLine("Режим Shuffle");
-                PlayNextShuffleTrack();
-                return;
-            }
-
-            // Обычный режим
-            if (currentIndex >= 0 && currentIndex < library.CurrentTracks.Count - 1)
-            {
-                var nextTrack = library.CurrentTracks[currentIndex + 1];
-                System.Diagnostics.Debug.WriteLine($"Переключаем на следующий трек: {nextTrack.Name}");
+                var nextTrack = queue[nextIndex];
+                // Запускаем следующий
                 PlayTrack(nextTrack);
-            }
-            else if (RepeatMode == RepeatMode.RepeatAll && currentIndex == library.CurrentTracks.Count - 1)
-            {
-                System.Diagnostics.Debug.WriteLine("Режим RepeatAll - начинаем сначала");
-                PlayTrack(library.CurrentTracks[0]);
-            }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Конец плейлиста, останавливаемся");
             }
         }
         private void PlayNextShuffleTrack()

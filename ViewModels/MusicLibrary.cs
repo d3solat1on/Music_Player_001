@@ -96,6 +96,16 @@ namespace QAMP.ViewModels
             get => CurrentPlaylist?.Tracks ?? AllTracks;
         }
 
+        private ObservableCollection<Track> _playbackQueue = [];
+        public ObservableCollection<Track> PlaybackQueue
+        {
+            get => _playbackQueue;
+            set
+            {
+                _playbackQueue = value;
+                OnPropertyChanged(nameof(PlaybackQueue));
+            }
+        }
         // Последний проигранный трек
         private Track? _lastPlayedTrack;
         public Track? LastPlayedTrack

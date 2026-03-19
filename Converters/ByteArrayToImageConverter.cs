@@ -19,7 +19,7 @@ namespace QAMP.Converters
 
                 // ОГРАНИЧИВАЕМ РАЗМЕР ДЕКОДИРОВАНИЯ
                 // Это заставит WPF не грузить картинку целиком, а взять только 300 пикселей
-                image.DecodePixelWidth = 225;
+                image.DecodePixelWidth = 200;
 
                 image.StreamSource = ms;
                 image.EndInit();
