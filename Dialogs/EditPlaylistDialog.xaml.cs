@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Media.Imaging;
 using Microsoft.Win32;
 using QAMP.Models;
+using QAMP.Services;
 using QAMP.ViewModels;
 namespace QAMP.Dialogs
 {
@@ -23,29 +24,45 @@ namespace QAMP.Dialogs
 
             if (openFileDialog.ShowDialog() == true)
             {
-                // 1. Открываем окно обрезки
-                var cropper = new ImageCropperDialog(openFileDialog.FileName)
-                {
-                    Owner = GetWindow(this)
-                };
+                // 1. Загружаем изображение для проверки размеров
+                var bitmap = new BitmapImage(new Uri(openFileDialog.FileName));
 
-                if (cropper.ShowDialog() == true && cropper.ResultImage != null)
+                // 2. Проверяем, является ли оно квадратным
+                // Используем допуск (например, 1-2 пикселя), на случай микро-ошибок в размерах
+                if (Math.Abs(bitmap.PixelWidth - bitmap.PixelHeight) < 2)
                 {
-                    // 2. Отображаем результат в UI (превью в круге/квадрате)
-                    CoverImage.Source = cropper.ResultImage;
+                    // Изображение уже 1 к 1 — просто применяем его
+                    CoverImage.Source = bitmap;
                     if (PlaceholderText != null) PlaceholderText.Visibility = Visibility.Collapsed;
 
-                    // 3. Конвертируем BitmapSource в byte[] для сохранения в данные плейлиста
-                    byte[] imageBytes = BitmapSourceToByteArray(cropper.ResultImage);
-
+                    // Сохраняем в данные плейлиста (конвертируем в байты)
                     if (DataContext is Playlist playlist)
                     {
-                        playlist.CoverImage = imageBytes;
+                        playlist.CoverImage = BitmapSourceToByteArray(bitmap);
+                    }
+                }
+                else
+                {
+                    // Изображение не квадратное — открываем кроппер
+                    var cropper = new ImageCropperDialog(openFileDialog.FileName)
+                    {
+                        Owner = GetWindow(this)
+                    };
+
+                    if (cropper.ShowDialog() == true && cropper.ResultImage != null)
+                    {
+                        CoverImage.Source = cropper.ResultImage;
+                        if (PlaceholderText != null) PlaceholderText.Visibility = Visibility.Collapsed;
+
+                        if (DataContext is Playlist playlist)
+                        {
+                            playlist.CoverImage = BitmapSourceToByteArray(cropper.ResultImage);
+                        }
                     }
                 }
             }
         }
-        private static byte[] BitmapSourceToByteArray(BitmapSource bitmapSource)
+        public static byte[] BitmapSourceToByteArray(BitmapSource bitmapSource)
         {
             using var stream = new MemoryStream();
             // Используем PngBitmapEncoder для сохранения прозрачности и качества
@@ -56,27 +73,35 @@ namespace QAMP.Dialogs
         }
 
         // Метод для кнопки "Сохранить" (обратите внимание на маленькую 'c' в 'click' в вашем XAML)
-        private void EditPlaylist_Сlick(object sender, RoutedEventArgs e)
+        private void EditPlaylist_Click(object sender, RoutedEventArgs e)
         {
             string newName = PlaylistNameTextBox.Text.Trim();
+            var currentPlaylist = DataContext as Playlist;
+
+            if (currentPlaylist == null) return;
 
             if (string.IsNullOrWhiteSpace(newName))
             {
-                // Используем твое новое кастомное окно вместо MessageBox
                 NotificationWindow.Show("Название не может быть пустым!", this);
                 return;
             }
 
-            // Проверяем, есть ли уже плейлист с таким именем (исключая текущий)
-            var currentPlaylist = DataContext as Playlist;
-            bool exists = MusicLibrary.Instance.Playlists.Any(p =>
-                p.Name.Equals(newName, StringComparison.OrdinalIgnoreCase) && p != currentPlaylist);
+            _ = new DatabaseService();
 
-            if (exists)
+            // Проверяем через базу данных
+            if (DatabaseService.PlaylistExists(newName, currentPlaylist.Id))
             {
                 NotificationWindow.Show("Плейлист с таким названием уже существует!", this);
                 return;
             }
+
+            // Если всё ок, сохраняем изменения в базу
+            DatabaseService.UpdatePlaylist(
+                currentPlaylist.Id,
+                newName,
+                PlaylistDescriptionTextBox.Text,
+                currentPlaylist.CoverImage
+            );
 
             DialogResult = true;
         }

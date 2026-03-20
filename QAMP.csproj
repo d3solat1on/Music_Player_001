@@ -23,7 +23,7 @@
     <None Remove="Resources\play_pause.png" />
     <None Remove="Resources\settings.png" />
     <None Remove="Resources\shuffle.png" />
-    <None Remove ="Resources\shuffle_on.png" />
+    <None Remove="Resources\shuffle_on.png" />
     <None Remove="Resources\stop.png" />
     <None Remove="Resources\add_favorites.png" />
     <None Remove="Resources\remove_favorites.png" />
@@ -41,6 +41,7 @@
 
   <ItemGroup>
     <PackageReference Include="BunLabs.NAudio.Flac" Version="2.0.1" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
     <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="NAudio.Flac" Version="1.0.5702.29018" />
     <PackageReference Include="NAudio.Flac.Unknown" Version="1.0.4" />

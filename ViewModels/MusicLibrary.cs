@@ -3,7 +3,6 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
-using QAMP.Dialogs;
 using QAMP.Models;
 using QAMP.Services;
 
@@ -14,56 +13,19 @@ namespace QAMP.ViewModels
         private static MusicLibrary? _instance;
         public static MusicLibrary Instance => _instance ??= new MusicLibrary();
 
-        // Все треки
-        public ObservableCollection<Track> AllTracks { get; set; } = [];
-
-        // Все плейлисты
-        public ObservableCollection<Playlist> Playlists { get; set; } = [];
-        public const string FavoritesName = "Избранное";
-
-        // Сохраняем ID последнего выбранного плейлиста
-        private int _lastPlaylistId = -1;
-
-        public MusicLibrary()
+        // Коллекция плейлистов
+        private ObservableCollection<Playlist> _playlists = [];
+        public ObservableCollection<Playlist> Playlists
         {
-            Playlists ??= [];
-
-            // Убеждаемся что "Избранное" существует
-            EnsureFavoritesPlaylist();
-
-            // Не выбираем плейлист здесь! Это будет сделано после загрузки
-            OnPropertyChanged(nameof(Playlists));
-        }
-
-        private void EnsureFavoritesPlaylist()
-        {
-            if (!Playlists.Any(p => p.Name == FavoritesName))
+            get => _playlists;
+            set
             {
-                byte[]? defaultImageData = null;
-                try
-                {
-                    var uri = new Uri("pack://application:,,,/Resources/favorites_cover.png");
-                    var info = Application.GetResourceStream(uri);
-                    if (info != null)
-                    {
-                        using var ms = new System.IO.MemoryStream();
-                        info.Stream.CopyTo(ms);
-                        defaultImageData = ms.ToArray();
-                    }
-                }
-                catch { /* Если файл не найден, останется null */ }
-
-                Playlists.Add(new Playlist
-                {
-                    Id = 0,
-                    Name = FavoritesName,
-                    Description = "Ваши любимые треки",
-                    CreatedDate = DateTime.Now,
-                    CoverImage = defaultImageData,
-                    Tracks = []
-                });
+                _playlists = value;
+                OnPropertyChanged(nameof(Playlists));
             }
         }
+
+        public const string FavoritesName = "Избранное";
 
         // Текущий выбранный плейлист
         private Playlist? _currentPlaylist;
@@ -75,25 +37,15 @@ namespace QAMP.ViewModels
                 if (_currentPlaylist != value)
                 {
                     _currentPlaylist = value;
-
-                    // Сохраняем ID выбранного плейлиста
                     if (value != null)
                     {
-                        _lastPlaylistId = value.Id;
-                        // Можно сразу сохранять в StorageService
-                        StorageService.Instance.SaveLastPlaylistId(value.Id);
+                        DatabaseService.SaveSetting("LastPlaylistId", value.Id.ToString());
+                        // При смене плейлиста обновляем очередь воспроизведения
+                        // UpdatePlaybackQueue();
                     }
-
                     OnPropertyChanged(nameof(CurrentPlaylist));
-                    OnPropertyChanged(nameof(CurrentTracks));
                 }
             }
-        }
-
-        // Треки текущего плейлиста
-        public ObservableCollection<Track> CurrentTracks
-        {
-            get => CurrentPlaylist?.Tracks ?? AllTracks;
         }
 
         private ObservableCollection<Track> _playbackQueue = [];
@@ -106,160 +58,135 @@ namespace QAMP.ViewModels
                 OnPropertyChanged(nameof(PlaybackQueue));
             }
         }
-        // Последний проигранный трек
-        private Track? _lastPlayedTrack;
-        public Track? LastPlayedTrack
-        {
-            get => _lastPlayedTrack;
-            set
-            {
-                _lastPlayedTrack = value;
-                OnPropertyChanged(nameof(LastPlayedTrack));
 
-                // Сохраняем путь последнего трека
-                if (value != null)
+
+
+        public Track? CurrentTrack { get; set; }
+
+        // НОВЫЙ МЕТОД: для воспроизведения плейлиста
+        public void PlayPlaylist(Playlist playlist)
+        {
+            if (playlist == null) return;
+
+            System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ПЛЕЙЛИСТА: {playlist.Name} ===");
+
+            // Обновляем очередь воспроизведения
+            PlaybackQueue.Clear();
+            foreach (var track in playlist.Tracks)
+            {
+                PlaybackQueue.Add(track);
+            }
+
+            // Начинаем с первого трека
+            if (PlaybackQueue.Count > 0)
+            {
+                PlayerService.Instance.PlayTrack(PlaybackQueue[0]);
+            }
+        }
+
+        public void PlayTrackFromPlaylist(Track track, Playlist playlist)
+        {
+            if (track == null || playlist == null) return;
+
+            System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ТРЕКА: {track.Name} из плейлиста: {playlist.Name} ===");
+
+            // Обновляем очередь воспроизведения этим плейлистом
+            PlaybackQueue.Clear();
+            foreach (var t in playlist.Tracks)
+            {
+                PlaybackQueue.Add(t);
+            }
+
+            // Если включен Shuffle, обновляем перемешанную очередь
+            if (PlayerService.Instance.IsShuffleEnabled)
+            {
+                var remainingTracks = PlaybackQueue.Where(t => t != track).OrderBy(x => Guid.NewGuid()).ToList();
+                PlayerService.Instance.ShuffledQueue = new List<Track> { track };
+                PlayerService.Instance.ShuffledQueue.AddRange(remainingTracks);
+                System.Diagnostics.Debug.WriteLine($"ShuffledQueue обновлена, Count: {PlayerService.Instance.ShuffledQueue.Count}");
+            }
+
+            // Начинаем с выбранного трека
+            PlayerService.Instance.PlayTrack(track);
+        }
+        public void SyncShuffledQueueWithCurrentTrack()
+        {
+            if (!PlayerService.Instance.IsShuffleEnabled) return;
+
+            var currentTrack = PlayerService.Instance.CurrentTrack;
+            if (currentTrack == null) return;
+
+            // Проверяем, есть ли текущий трек в ShuffledQueue
+            if (!PlayerService.Instance.ShuffledQueue.Contains(currentTrack))
+            {
+                System.Diagnostics.Debug.WriteLine("SyncShuffledQueue: Current track not in ShuffledQueue, rebuilding...");
+
+                // Создаем новую очередь, начиная с текущего трека
+                var remainingTracks = PlaybackQueue
+                    .Where(t => t != currentTrack)
+                    .OrderBy(x => Guid.NewGuid())
+                    .ToList();
+
+                PlayerService.Instance.ShuffledQueue = new List<Track> { currentTrack };
+                PlayerService.Instance.ShuffledQueue.AddRange(remainingTracks);
+
+                System.Diagnostics.Debug.WriteLine($"New ShuffledQueue count: {PlayerService.Instance.ShuffledQueue.Count}");
+            }
+        }
+        public MusicLibrary()
+        {
+            // Подписываемся на изменения коллекции треков в текущем плейлисте
+            PropertyChanged += (s, e) =>
+            {
+                if (e.PropertyName == nameof(CurrentPlaylist) && CurrentPlaylist != null)
                 {
-                    StorageService.Instance.SaveLastTrackPath(value.Path);
+                    // Подписываемся на изменения треков в плейлисте
+                    CurrentPlaylist.Tracks.CollectionChanged += (sender, args) =>
+                    {
+                        UpdatePlaybackQueue();
+                        OnPropertyChanged(nameof(PlaybackQueue));
+                    };
                 }
-            }
-        }
-
-        // Текущий проигрываемый трек
-        private Track? _currentTrack;
-        public Track? CurrentTrack
-        {
-            get => _currentTrack;
-            set
-            {
-                _currentTrack = value;
-                OnPropertyChanged(nameof(CurrentTrack));
-            }
-        }
-
-        public void LoadPlaylists(IEnumerable<Playlist> loadedPlaylists, int lastPlaylistId = -1, string? lastTrackPath = null)
-        {
-            // Очищаем и заполняем
-            Playlists.Clear();
-            if (loadedPlaylists != null)
-            {
-                foreach (var playlist in loadedPlaylists)
-                {
-                    Playlists.Add(playlist);
-                }
-            }
-
-            // Проверяем "Избранное"
-            EnsureFavoritesPlaylist();
-
-            // Восстанавливаем выбор
-            if (lastPlaylistId >= 0)
-                CurrentPlaylist = Playlists.FirstOrDefault(p => p.Id == lastPlaylistId);
-
-            CurrentPlaylist ??= Playlists.FirstOrDefault(p => p.Name == FavoritesName);
-
-            // КРИТИЧНО: Уведомляем UI, что списки обновились
-            OnPropertyChanged(nameof(Playlists));
-            OnPropertyChanged(nameof(CurrentTracks));
-        }
-        public void AddTracks(string[] filePaths)
-        {
-            var tracks = TagReader.ReadTracksFromFiles(filePaths);
-            foreach (var track in tracks)
-            {
-                if (track != null && !AllTracks.Any(t => t.Path == track.Path))
-                    AllTracks.Add(track);
-            }
-        }
-
-        public void AddTracksFromFolder(string folderPath)
-        {
-            var tracks = TagReader.ReadTracksFromFolder(folderPath);
-            foreach (var track in tracks)
-            {
-                if (track != null && !AllTracks.Any(t => t.Path == track.Path))
-                    AllTracks.Add(track);
-            }
-        }
-
-        public Playlist CreatePlaylist(string name, string description = "", byte[]? coverImage = null)
-        {
-            // Генерируем уникальный ID
-            int newId = Playlists.Count > 0 ? Playlists.Max(p => p.Id) + 1 : 1;
-
-            var playlist = new Playlist
-            {
-                Id = newId,
-                Name = name,
-                Description = description,
-                CoverImage = coverImage,
-                CreatedDate = DateTime.Now,
-                Tracks = []
             };
-
-            Playlists.Add(playlist);
-            return playlist;
         }
 
-        public void AddTracksToCurrentPlaylist(string[] filePaths)
+        private void UpdatePlaybackQueue()
         {
-            if (CurrentPlaylist == null)
+            PlaybackQueue.Clear();
+            if (CurrentPlaylist?.Tracks != null)
             {
-                NotificationWindow.Show("Сначала выберите плейлист", Application.Current.MainWindow);
-                return;
+                foreach (var track in CurrentPlaylist.Tracks)
+                {
+                    PlaybackQueue.Add(track);
+                }
+            }
+        }
+
+        public void RefreshPlaylists()
+        {
+            System.Diagnostics.Debug.WriteLine("=== REFRESH PLAYLISTS ===");
+
+            var list = DatabaseService.GetPlaylists();
+            Playlists.Clear();
+
+            foreach (var p in list)
+            {
+                System.Diagnostics.Debug.WriteLine($"Добавляем плейлист: '{p.Name}', треков в коллекции: {p.Tracks.Count}");
+                Playlists.Add(p);
             }
 
-            var tracks = TagReader.ReadTracksFromFiles(filePaths);
-            foreach (var track in tracks)
+            // Восстанавливаем текущий плейлист, если он был выбран
+            if (CurrentPlaylist != null)
             {
-                if (track != null)
+                var restoredPlaylist = Playlists.FirstOrDefault(p => p.Id == CurrentPlaylist.Id);
+                if (restoredPlaylist != null)
                 {
-                    // Добавляем в общую библиотеку, если там ещё нет
-                    if (!AllTracks.Any(t => t.Path == track.Path))
-                    {
-                        AllTracks.Add(track);
-                    }
-                    // Добавляем в текущий плейлист (проверяем дубликаты)
-                    if (!CurrentPlaylist.Tracks.Any(t => t.Path == track.Path))
-                    {
-                        CurrentPlaylist.Tracks.Add(track);
-                    }
+                    System.Diagnostics.Debug.WriteLine($"Восстанавливаем плейлист: '{restoredPlaylist.Name}', треков: {restoredPlaylist.Tracks.Count}");
+                    CurrentPlaylist = restoredPlaylist;
                 }
             }
 
-            OnPropertyChanged(nameof(CurrentTracks));
-        }
-
-        public void AddTracksFromFolderToCurrentPlaylist(string folderPath)
-        {
-            if (CurrentPlaylist == null)
-            {
-                NotificationWindow.Show("Сначала выберите плейлист", Application.Current.MainWindow);
-                return;
-            }
-
-            var tracks = TagReader.ReadTracksFromFolder(folderPath);
-            foreach (var track in tracks)
-            {
-                if (track != null)
-                {
-                    if (!AllTracks.Any(t => t.Path == track.Path))
-                    {
-                        AllTracks.Add(track);
-                    }
-                    if (!CurrentPlaylist.Tracks.Any(t => t.Path == track.Path))
-                    {
-                        CurrentPlaylist.Tracks.Add(track);
-                    }
-                }
-            }
-
-            OnPropertyChanged(nameof(CurrentTracks));
-        }
-
-        public void UpdatePlaylistView()
-        {
-            OnPropertyChanged(nameof(CurrentPlaylist));
-            OnPropertyChanged(nameof(CurrentTracks));
+            OnPropertyChanged(nameof(Playlists));
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

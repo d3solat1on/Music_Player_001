@@ -134,7 +134,7 @@
                                         </Button.Resources>
                                 </Button>
                                 <Button Content="Сохранить"
-                                        Click="EditPlaylist_Сlick"
+                                        Click="EditPlaylist_Click"
                                         Width="100"
                                         Height="35"
                                         Background="#1DB954"

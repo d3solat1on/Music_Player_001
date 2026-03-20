@@ -7,10 +7,60 @@
         Width="450"
         Height="550"
         WindowStartupLocation="CenterOwner">
+    <Window.Resources>
+        <Style x:Key="CustomSliderStyle"
+               TargetType="Slider">
+            <Setter Property="Background"
+                    Value="#333"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Slider">
+                        <Grid>
+                            <Border Height="4"
+                                    Background="#333"
+                                    CornerRadius="2"
+                                    VerticalAlignment="Center"/>
+                            <Track x:Name="PART_Track">
+                                <Track.DecreaseRepeatButton>
+                                    <RepeatButton Command="Slider.DecreaseLarge">
+                                        <RepeatButton.Template>
+                                            <ControlTemplate TargetType="RepeatButton">
+                                                <Border Height="4"
+                                                        Background="#1DB954"
+                                                        CornerRadius="2"/>
+                                            </ControlTemplate>
+                                        </RepeatButton.Template>
+                                    </RepeatButton>
+                                </Track.DecreaseRepeatButton>
+                                <Track.Thumb>
+                                    <Thumb>
+                                        <Thumb.Template>
+                                            <ControlTemplate TargetType="Thumb">
+                                                <Ellipse Width="14"
+                                                         Height="14"
+                                                         Fill="White"/>
+                                            </ControlTemplate>
+                                        </Thumb.Template>
+                                    </Thumb>
+                                </Track.Thumb>
+                            </Track>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
     <Border Background="#1A1A1A"
             CornerRadius="15"
             BorderBrush="#333"
             BorderThickness="1">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15"
+                              Direction="0"
+                              RenderingBias="Quality"
+                              ShadowDepth="0"
+                              Opacity="0.5"/>
+        </Border.Effect>
         <Grid Margin="20">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -58,11 +108,12 @@
                            HorizontalAlignment="Center"
                            FontSize="10"/>
                 <Slider x:Name="ZoomSlider"
-                        Minimum="0.5"
+                        Style="{StaticResource CustomSliderStyle}"
+                        Minimum="0.1"
                         Maximum="3"
                         Value="1"
-                        Width="200"
-                        Margin="10"
+                        Width="250"
+                        Margin="0,10,0,20"
                         ValueChanged="ZoomSlider_ValueChanged"/>
             </StackPanel>
 

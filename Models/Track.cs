@@ -8,6 +8,7 @@ namespace QAMP.Models
 {
     public class Track : INotifyPropertyChanged
     {
+        public int Id { get; set; }
         public string? Extension { get; set; }
         public string? Path { get; set; }
         public string? Name { get; set; }
@@ -18,6 +19,7 @@ namespace QAMP.Models
         public int Bitrate { get; set; }
         public int SampleRate { get; set; }
         public int Year { get; set; }
+
 
         [JsonIgnore]
         private byte[]? _coverImage;
@@ -57,6 +59,5 @@ namespace QAMP.Models
             _coverImage = null;
         }
         public event PropertyChangedEventHandler PropertyChanged;
-
     }
 }
