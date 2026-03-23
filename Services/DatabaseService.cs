@@ -311,43 +311,91 @@ public class DatabaseService
         System.Diagnostics.Debug.WriteLine($"=== СОХРАНЕНИЕ ТРЕКА В ПЛЕЙЛИСТ {playlistId} ===");
         System.Diagnostics.Debug.WriteLine($"Путь: {track.Path}");
         System.Diagnostics.Debug.WriteLine($"Имя: {track.Name}");
+        System.Diagnostics.Debug.WriteLine($"TrackId из объекта: {track.Id}");
 
         using var connection = new SqliteConnection(_connectionString);
         connection.Open();
 
-        // Сохраняем трек
-        var cmdTrack = connection.CreateCommand();
-        cmdTrack.CommandText = @"
-    INSERT OR REPLACE INTO Tracks (Path, Name, Executor, Album, Duration, Genre, Bitrate, SampleRate, Year)
-    VALUES ($path, $name, $exec, $album, $dur, $genre, $bit, $samplerate, $year);";
+        // Сначала проверяем, существует ли трек с таким Path
+        var checkCmd = connection.CreateCommand();
+        checkCmd.CommandText = "SELECT Id FROM Tracks WHERE Path = $path";
+        checkCmd.Parameters.AddWithValue("$path", track.Path);
+        var existingId = checkCmd.ExecuteScalar();
 
-        cmdTrack.Parameters.AddWithValue("$path", track.Path);
-        cmdTrack.Parameters.AddWithValue("$name", (object)track.Name ?? DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$exec", (object)track.Executor ?? DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$album", (object)track.Album ?? DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$dur", (object)track.Duration ?? DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$genre", (object)track.Genre ?? "Неизвестно");
-        cmdTrack.Parameters.AddWithValue("$bit", track.Bitrate > 0 ? track.Bitrate : DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$samplerate", track.SampleRate > 0 ? track.SampleRate : DBNull.Value);
-        cmdTrack.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+        long trackId;
 
-        int rowsAffected = cmdTrack.ExecuteNonQuery();
-        System.Diagnostics.Debug.WriteLine($"Трек сохранен, affected rows: {rowsAffected}");
+        if (existingId != null)
+        {
+            // Трек уже существует, обновляем его данные
+            trackId = (long)existingId;
+            System.Diagnostics.Debug.WriteLine($"Трек уже существует с ID={trackId}, обновляем данные");
 
-        // Получаем ID трека
-        var getIdCmd = connection.CreateCommand();
-        getIdCmd.CommandText = "SELECT Id FROM Tracks WHERE Path = $path";
-        getIdCmd.Parameters.AddWithValue("$path", track.Path);
-        long trackId = (long)getIdCmd.ExecuteScalar();
-        System.Diagnostics.Debug.WriteLine($"ID трека: {trackId}");
+            var updateCmd = connection.CreateCommand();
+            updateCmd.CommandText = @"
+                UPDATE Tracks 
+                SET Name = $name, Executor = $exec, Album = $album, Duration = $dur, 
+                    Genre = $genre, Bitrate = $bit, SampleRate = $samplerate, Year = $year
+                WHERE Id = $id";
 
-        // Добавляем связь с плейлистом
+            updateCmd.Parameters.AddWithValue("$id", trackId);
+            updateCmd.Parameters.AddWithValue("$name", (object)track.Name ?? DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$exec", (object)track.Executor ?? DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$album", (object)track.Album ?? DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$dur", (object)track.Duration ?? DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$genre", (object)track.Genre ?? "Неизвестно");
+            updateCmd.Parameters.AddWithValue("$bit", track.Bitrate > 0 ? track.Bitrate : DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$samplerate", track.SampleRate > 0 ? track.SampleRate : DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+
+            int rowsAffected = updateCmd.ExecuteNonQuery();
+            System.Diagnostics.Debug.WriteLine($"Трек обновлен, affected rows: {rowsAffected}");
+        }
+        else
+        {
+            // Трека нет, создаем новый
+            System.Diagnostics.Debug.WriteLine($"Трек не существует, создаем новый");
+
+            var insertCmd = connection.CreateCommand();
+            insertCmd.CommandText = @"
+                INSERT INTO Tracks (Path, Name, Executor, Album, Duration, Genre, Bitrate, SampleRate, Year)
+                VALUES ($path, $name, $exec, $album, $dur, $genre, $bit, $samplerate, $year)";
+
+            insertCmd.Parameters.AddWithValue("$path", track.Path);
+            insertCmd.Parameters.AddWithValue("$name", (object)track.Name ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$exec", (object)track.Executor ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$album", (object)track.Album ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$dur", (object)track.Duration ?? DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$genre", (object)track.Genre ?? "Неизвестно");
+            insertCmd.Parameters.AddWithValue("$bit", track.Bitrate > 0 ? track.Bitrate : DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$samplerate", track.SampleRate > 0 ? track.SampleRate : DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+
+            int rowsAffected = insertCmd.ExecuteNonQuery();
+            System.Diagnostics.Debug.WriteLine($"Трек вставлен, affected rows: {rowsAffected}");
+
+            // Получаем ID новосозданного трека
+            var getIdCmd = connection.CreateCommand();
+            getIdCmd.CommandText = "SELECT Id FROM Tracks WHERE Path = $path";
+            getIdCmd.Parameters.AddWithValue("$path", track.Path);
+            trackId = (long)getIdCmd.ExecuteScalar();
+        }
+
+        System.Diagnostics.Debug.WriteLine($"Финальный ID трека в БД: {trackId}");
+
+        // Добавляем связь с плейлистом (INSERT OR IGNORE чтобы не дублировать)
         var linkCmd = connection.CreateCommand();
         linkCmd.CommandText = "INSERT OR IGNORE INTO PlaylistTracks (PlaylistId, TrackId) VALUES ($pId, $tId)";
         linkCmd.Parameters.AddWithValue("$pId", playlistId);
         linkCmd.Parameters.AddWithValue("$tId", trackId);
         int linkResult = linkCmd.ExecuteNonQuery();
         System.Diagnostics.Debug.WriteLine($"Связь добавлена, результат: {linkResult}");
+
+        // Проверяем, сколько плейлистов содержат этот трек
+        var countCmd = connection.CreateCommand();
+        countCmd.CommandText = "SELECT COUNT(*) FROM PlaylistTracks WHERE TrackId = $trackId";
+        countCmd.Parameters.AddWithValue("$trackId", trackId);
+        long playlistCount = (long)countCmd.ExecuteScalar();
+        System.Diagnostics.Debug.WriteLine($"ТРЕК СОДЕРЖИТСЯ В {playlistCount} ПЛЕЙЛИСТАХ");
     }
 
     public static void RemoveTrackFromPlaylist(int playlistId, int trackId)

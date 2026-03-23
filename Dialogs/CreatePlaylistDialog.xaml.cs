@@ -15,7 +15,7 @@ namespace QAMP.Dialogs
         public string PlaylistDescription { get; private set; } = "";
         public byte[]? PlaylistCoverImage { get; private set; } 
 
-        public CreatePlaylistDialog(Playlist existingPlaylist = null)
+        public CreatePlaylistDialog(Playlist? existingPlaylist = null)
         {
             InitializeComponent();
             Owner = Application.Current.MainWindow;
@@ -41,7 +41,7 @@ namespace QAMP.Dialogs
             }
         }
 
-        private BitmapImage ByteArrayToBitmapImage(byte[] imageData)
+        private static BitmapImage ByteArrayToBitmapImage(byte[] imageData)
         {
             var bitmap = new BitmapImage();
             using (var mem = new MemoryStream(imageData))
@@ -115,7 +115,7 @@ namespace QAMP.Dialogs
             }
         }
 
-        private byte[] BitmapSourceToByteArray(BitmapSource bitmapSource)
+        private static byte[] BitmapSourceToByteArray(BitmapSource bitmapSource)
         {
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmapSource));

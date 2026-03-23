@@ -3,9 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:svgc="clr-namespace:SharpVectors.Converters;assembly=SharpVectors.Converters.Wpf"
         xmlns:local="clr-namespace:QAMP"
         xmlns:converters="clr-namespace:QAMP.Converters"
         xmlns:viewModels="clr-namespace:QAMP.ViewModels"
+        xmlns:services="clr-namespace:QAMP.Services"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="QAMP"
@@ -14,8 +16,8 @@
         WindowStartupLocation="CenterScreen"
         FontFamily="GOST type A"
         Loaded="MainWindow_Loaded"
-        Background="#141414"
-        Foreground="White">
+        Background="{DynamicResource BackgroundBrush}"
+        Foreground="{DynamicResource ForegroundBrush}">
 
         <WindowChrome.WindowChrome>
                 <WindowChrome CaptionHeight="30"
@@ -41,7 +43,7 @@
 
                 <!-- Строка заголовка -->
                 <Grid Grid.Row="0"
-                      Background="#1A1A1A">
+                      Background="{DynamicResource SecondaryBackgroundBrush}">
                         <!-- Название приложения слева (опционально) -->
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Left"
@@ -49,7 +51,7 @@
                                     Margin="10,0,0,0"
                                     WindowChrome.IsHitTestVisibleInChrome="True">
                                 <TextBlock Text="QAMP"
-                                           Foreground="White"
+                                           Foreground="{DynamicResource ForegroundBrush}"
                                            FontWeight="Bold"/>
                         </StackPanel>
 
@@ -62,9 +64,9 @@
                                          Width="300"
                                          Height="24"
                                          Padding="8,4"
-                                         Background="#2A2A2A"
-                                         Foreground="White"
-                                         BorderBrush="#444"
+                                         Background="{DynamicResource TertiaryBackgroundBrush}"
+                                         Foreground="{DynamicResource ForegroundBrush}"
+                                         BorderBrush="{DynamicResource BorderBrush}"
                                          BorderThickness="1"
                                          VerticalContentAlignment="Center"
                                          Text=""
@@ -73,23 +75,33 @@
                                         Width="30"
                                         Height="24"
                                         Margin="5,0,0,0"
-                                        Background="#2A2A2A"
-                                        BorderBrush="#444"
+                                        Background="{DynamicResource TertiaryBackgroundBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
-                                        Foreground="White"
+                                        Foreground="{DynamicResource ForegroundBrush}"
                                         Click="SearchButton_Click">
-                                        🔍
+                                        <Path Data="{StaticResource searchGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              Width="18"
+                                              Height="18"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </Button>
                                 <Button x:Name="ClearSearchButton"
                                         Width="30"
                                         Height="24"
                                         Margin="5,0,0,0"
-                                        Background="#2A2A2A"
-                                        BorderBrush="#444"
+                                        Background="{DynamicResource TertiaryBackgroundBrush}"
+                                        BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="1"
-                                        Foreground="White"
+                                        Foreground="{DynamicResource ForegroundBrush}"
                                         Click="ClearSearchButton_Click">
-                                        ✕
+                                        <Path Data="{StaticResource closeGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </Button>
                         </StackPanel>
 
@@ -97,24 +109,50 @@
                         <StackPanel Orientation="Horizontal"
                                     HorizontalAlignment="Right"
                                     WindowChrome.IsHitTestVisibleInChrome="True">
+                                <Button x:Name="Settings"
+                                        Style="{StaticResource TitleBarButtonStyle}"
+                                        Click="Settings_Click">
+                                        <Path Data="{StaticResource settingsGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              Width="18"
+                                              Height="18"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
+                                </Button>
                                 <Button x:Name="BtnMinimize"
                                         Style="{StaticResource TitleBarButtonStyle}"
                                         Click="Minimize_Click">
-                                        <Image Source="/Resources/minimize.png"
-                                               Width="12"/>
+                                        <Path Data="{StaticResource minimazeGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              Width="18"
+                                              Height="18"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </Button>
 
                                 <Button x:Name="BtnMaximize"
                                         Style="{StaticResource TitleBarButtonStyle}"
                                         Click="Maximize_Click">
-                                        <Image Source="/Resources/maximize.png"
-                                               Width="12"/>
+                                        <Path Data="{StaticResource maximizeGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              Width="18"
+                                              Height="18"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </Button>
                                 <Button x:Name="BtnClose"
                                         Style="{StaticResource CloseButtonStyle}"
                                         Click="Close_Click">
-                                        <Image Source="/Resources/close.png"
-                                               Width="12"/>
+                                        <Path Data="{StaticResource closeGeometry}"
+                                              Fill="{DynamicResource AccentBrush}"
+                                              Stretch="Uniform"
+                                              Width="18"
+                                              Height="18"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center"/>
                                 </Button>
                         </StackPanel>
                 </Grid>
@@ -124,8 +162,8 @@
                         <Border DockPanel.Dock="Bottom"
                                 ClipToBounds="False"
                                 Height="100"
-                                Background="#181818"
-                                BorderBrush="#333"
+                                Background="{DynamicResource SecondaryBackgroundBrush}"
+                                BorderBrush="{DynamicResource BorderBrush}"
                                 BorderThickness="0,1,0,0"
                                 Padding="15,0">
                                 <Grid>
@@ -147,23 +185,26 @@
                                                         Width="40"
                                                         Height="40"
                                                         Margin="0,0,10,0">
-                                                        <Image x:Name="FavoriteIcon"
-                                                               Source="/Resources/add_favorites.png"
-                                                               Stretch="Uniform"
-                                                               Width="24"
-                                                               Height="24"/>
+                                                        <Path x:Name="FavoriteIcon"
+                                                              Width="45"
+                                                              Height="45"
+                                                              Data="{StaticResource favoriteGeometry}"
+                                                              Fill="{DynamicResource AccentBrush}"
+                                                              Stretch="Uniform"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
                                                 </Button>
 
                                                 <!-- Информация о треке -->
                                                 <StackPanel>
                                                         <TextBlock x:Name="LastTrackName"
                                                                    Text="Track Name"
-                                                                   Foreground="White"
+                                                                   Foreground="{DynamicResource ForegroundBrush}"
                                                                    FontSize="14"
                                                                    FontWeight="Bold"/>
                                                         <TextBlock x:Name="LastTrackExecutor"
                                                                    Text="Artist"
-                                                                   Foreground="Gray"
+                                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
                                                                    FontSize="12"/>
                                                 </StackPanel>
                                         </StackPanel>
@@ -177,41 +218,72 @@
                                                                 Click="ShuffleButton_Click"
                                                                 Width="55"
                                                                 Margin="5,0">
-                                                                <Image x:Name="ShuffleImage"
-                                                                       Source="Resources/shuffle.png"
-                                                                       Stretch="Uniform"
-                                                                       Margin="5"/>
+                                                                <Path x:Name="ShuffleImage"
+                                                                      Width="45"
+                                                                      Height="45"
+                                                                      Margin="5"
+                                                                      Data="{StaticResource shuffleGeometry}"
+                                                                      Fill="{DynamicResource AccentBrush}"
+                                                                      Stretch="Uniform"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
                                                         </Button>
                                                         <Button Style="{StaticResource IconButton}"
                                                                 Width="55"
+                                                                Margin="5,0"
                                                                 Click="PrevButton_Click">
-                                                                <Image Source="/Resources/fast_rewind.png"
-                                                                       Stretch="Uniform"
-                                                                       Margin="5"/>
+                                                                <Path
+                                                                        Width="45"
+                                                                        Height="45"
+                                                                        Margin="5"
+                                                                        Data="{StaticResource fast_rewindGeometry}"
+                                                                        Fill="{DynamicResource AccentBrush}"
+                                                                        Stretch="Uniform"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"/>
                                                         </Button>
                                                         <Button x:Name="PlayPauseButton"
                                                                 Style="{StaticResource IconButton}"
-                                                                FontSize="24"
                                                                 Width="55"
+                                                                Margin="5,0"
                                                                 Click="PlayPauseButton_Click">
-                                                                <Image Source="/Resources/play.png"
-                                                                       Stretch="Uniform"
-                                                                       Margin="5"/>
+                                                                <Path x:Name="PlayPauseIcon"
+                                                                      Width="45"
+                                                                      Height="45"
+                                                                      Margin="5"
+                                                                      Data="{StaticResource playGeometry}"
+                                                                      Fill="{DynamicResource AccentBrush}"
+                                                                      Stretch="Uniform"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
                                                         </Button>
                                                         <Button Style="{StaticResource IconButton}"
                                                                 Width="55"
+                                                                Margin="5,0"
                                                                 Click="NextButton_Click">
-                                                                <Image Source="/Resources/fast_forward.png"
-                                                                       Stretch="Uniform"
-                                                                       Margin="5"/>
+                                                                <Path
+                                                                        Width="45"
+                                                                        Height="45"
+                                                                        Margin="5"
+                                                                        Data="{StaticResource fast_forwardGeometry}"
+                                                                        Fill="{DynamicResource AccentBrush}"
+                                                                        Stretch="Uniform"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"/>
                                                         </Button>
                                                         <Button Style="{StaticResource IconButton}"
                                                                 Click="RepeatButton_Click"
                                                                 Width="55"
                                                                 Margin="5,0">
-                                                                <Image Source="Resources/loop.png"
-                                                                       Stretch="Uniform"
-                                                                       Margin="5"/>
+                                                                <Path
+                                                                        Width="45"
+                                                                        Height="45"
+                                                                        Margin="5"
+                                                                        Data="{StaticResource loopGeometry}"
+                                                                        Fill="{DynamicResource AccentBrush}"
+                                                                        Stretch="Uniform"
+                                                                        HorizontalAlignment="Center"
+                                                                        VerticalAlignment="Center"/>
                                                         </Button>
                                                 </StackPanel>
 
@@ -227,7 +299,7 @@
                                                         <TextBlock x:Name="CurrentTimeText"
                                                                    Grid.Column="0"
                                                                    Text="0:00"
-                                                                   Foreground="#B3B3B3"
+                                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
                                                                    FontSize="12"
                                                                    FontFamily="Segoe UI"
                                                                    VerticalAlignment="Center"
@@ -251,7 +323,7 @@
                                                         <TextBlock x:Name="TotalTimeText"
                                                                    Grid.Column="2"
                                                                    Text="0:00"
-                                                                   Foreground="#B3B3B3"
+                                                                   Foreground="{DynamicResource SecondaryForegroundBrush}"
                                                                    FontSize="12"
                                                                    FontFamily="Segoe UI"
                                                                    VerticalAlignment="Center"
@@ -274,11 +346,14 @@
                                                         Width="32"
                                                         Height="32"
                                                         Padding="0">
-                                                        <Image x:Name="VolumeImage"
-                                                               Source="/Resources/volume.png"
-                                                               Width="18"
-                                                               Height="18"
-                                                               Stretch="Uniform"/>
+                                                        <Path x:Name="VolumeImage"
+                                                              Width="18"
+                                                              Height="18"
+                                                              Data="{StaticResource volumeGeometry}"
+                                                              Fill="{DynamicResource AccentBrush}"
+                                                              Stretch="Uniform"
+                                                              HorizontalAlignment="Center"
+                                                              VerticalAlignment="Center"/>
                                                 </Button>
 
                                                 <!-- Слайдер громкости -->
@@ -294,7 +369,7 @@
                                                 <!-- Процент громкости -->
                                                 <TextBlock x:Name="VolumePercentage"
                                                            Text="50%"
-                                                           Foreground="#B3B3B3"
+                                                           Foreground="{DynamicResource SecondaryForegroundBrush}"
                                                            FontSize="11"
                                                            FontFamily="Segoe UI"
                                                            Width="35"
@@ -315,16 +390,16 @@
 
                                 <!-- Левая колонка - плейлисты -->
                                 <Border Grid.Column="0"
-                                        BorderBrush="Gray"
+                                        BorderBrush="{DynamicResource BorderBrush}"
                                         BorderThickness="0,0,1,0"
                                         Margin="0,0,0,0"
-                                        Background="#121212">
+                                        Background="{DynamicResource TertiaryBackgroundBrush}">
                                         <StackPanel Margin="10">
                                                 <DockPanel Margin="0,0,0,10">
                                                         <TextBlock Text="ПЛЕЙЛИСТЫ"
                                                                    FontSize="24"
                                                                    FontWeight="Bold"
-                                                                   Foreground="White"
+                                                                   Foreground="{DynamicResource ForegroundBrush}"
                                                                    VerticalAlignment="Center"/>
 
                                                         <StackPanel Orientation="Horizontal"
@@ -336,9 +411,12 @@
                                                                         Height="40"
                                                                         Click="CreatePlaylistButton_Click"
                                                                         ToolTip="Создать плейлист">
-                                                                        <Image Source="/Resources/add_new_folder.png"
-                                                                               Stretch="Uniform"
-                                                                               Margin="0,0,5,0"/>
+                                                                        <Path
+                                                                                Data="{StaticResource create_playlistGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
                                                                 </Button>
                                                                 <Button x:Name="RemovePlaylistButton"
                                                                         Background="Transparent"
@@ -348,10 +426,14 @@
                                                                         Click="RemovePlaylist_Click"
                                                                         ToolTip="Удалить выбранный плейлист"
                                                                         IsEnabled="{Binding ElementName=PlaylistsListBox, Path=SelectedItem, Converter={StaticResource NotNullConverter}}">
-                                                                        <Image Source="/Resources/delete_playlist.png"
-                                                                               Stretch="Uniform"/>
+                                                                        <Path
+                                                                                Data="{StaticResource playlist_removeGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
                                                                 </Button>
-                                                                <Button x:Name="AddMusicButton"
+                                                                <Button
                                                                         Background="Transparent"
                                                                         BorderBrush="Transparent"
                                                                         Width="40"
@@ -392,8 +474,12 @@
                                                                                 </ContextMenu>
                                                                         </Button.ContextMenu>
 
-                                                                        <Image Source="/Resources/add_music.png"
-                                                                               Stretch="Uniform"/>
+                                                                        <Path
+                                                                                Data="{StaticResource add_musicGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
                                                                 </Button>
                                                         </StackPanel>
                                                 </DockPanel>
@@ -410,13 +496,13 @@
                                                         <ListBox.ItemContainerStyle>
                                                                 <Style TargetType="ListBoxItem">
                                                                         <EventSetter Event="PreviewMouseMove"
-                                                                                        Handler="Playlist_MouseMove"/>
+                                                                                     Handler="Playlist_MouseMove"/>
                                                                         <EventSetter Event="Drop"
-                                                                                        Handler="Playlist_Drop"/>
+                                                                                     Handler="Playlist_Drop"/>
                                                                         <Setter Property="Background"
-                                                                                        Value="Transparent"/>
+                                                                                Value="Transparent"/>
                                                                         <Setter Property="BorderThickness"
-                                                                                        Value="0"/>
+                                                                                Value="0"/>
                                                                 </Style>
                                                         </ListBox.ItemContainerStyle>
                                                         <ListBox.ItemTemplate>
@@ -437,10 +523,10 @@
                                                                                         <Border Grid.Column="0"
                                                                                                 Width="45"
                                                                                                 Height="45"
-                                                                                                BorderBrush="#444444"
+                                                                                                BorderBrush="{DynamicResource BorderBrush}"
                                                                                                 BorderThickness="1"
                                                                                                 CornerRadius="4"
-                                                                                                Background="#222222">
+                                                                                                Background="{DynamicResource CentralPanelCardBackground}">
                                                                                                 <Grid>
                                                                                                         <!-- Изображение (если есть) -->
                                                                                                         <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
@@ -502,9 +588,9 @@
 
                                                                                                 <StackPanel.ContextMenu>
 
-                                                                                                        <ContextMenu Background="#282828"
-                                                                                                                     Foreground="White"
-                                                                                                                     BorderBrush="#444">
+                                                                                                        <ContextMenu Background="{DynamicResource ContextMenuBackground}"
+                                                                                                                     Foreground="{DynamicResource ForegroundBrush}"
+                                                                                                                     BorderBrush="{DynamicResource ContextMenuBorderBrush}">
                                                                                                                 <ContextMenu.Resources>
                                                                                                                         <!-- 1. Убираем колонку иконок в самом ContextMenu -->
                                                                                                                         <Style TargetType="ContextMenu">
@@ -555,7 +641,7 @@
                                                                                                                 <MenuItem Header="Закрепить"
                                                                                                                           x:Name="PinPlaylistMenuItem"
                                                                                                                           Click="PinPlaylist_Click"/>
-                                                                                                                <Separator Background="#444"/>
+                                                                                                                <Separator Background="{DynamicResource BorderBrush}"/>
                                                                                                                 <MenuItem Header="Удалить"
                                                                                                                           Click="DeletePlaylist_Click"
                                                                                                                           Foreground="Red"/>
@@ -570,12 +656,12 @@
                                                                                                                 <TextBlock.Style>
                                                                                                                         <Style TargetType="TextBlock">
                                                                                                                                 <Setter Property="Visibility"
-                                                                                                                                                Value="Collapsed"/>
+                                                                                                                                        Value="Collapsed"/>
                                                                                                                                 <Style.Triggers>
                                                                                                                                         <DataTrigger Binding="{Binding IsPinned}"
-                                                                                                                                                        Value="True">
+                                                                                                                                                     Value="True">
                                                                                                                                                 <Setter Property="Visibility"
-                                                                                                                                                                Value="Visible"/>
+                                                                                                                                                        Value="Visible"/>
                                                                                                                                         </DataTrigger>
                                                                                                                                 </Style.Triggers>
                                                                                                                         </Style>
@@ -584,13 +670,13 @@
                                                                                                         <TextBlock Text="{Binding Name}"
                                                                                                                    FontWeight="Bold"
                                                                                                                    FontSize="14"
-                                                                                                                   Foreground="White"
+                                                                                                                   Foreground="{DynamicResource ForegroundBrush}"
                                                                                                                    TextTrimming="CharacterEllipsis"/>
                                                                                                 </StackPanel>
                                                                                                 <TextBlock Text="{Binding TrackCount, StringFormat='{}{0} треков'}"
                                                                                                            x:Name="CurrentTracksCountText"
                                                                                                            FontSize="10"
-                                                                                                           Foreground="#999999"
+                                                                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
                                                                                                            Margin="0,2,0,0"/>
                                                                                         </StackPanel>
                                                                                 </Grid>
@@ -603,7 +689,7 @@
 
 
                                 <Grid Grid.Column="1"
-                                      Background="#121212">
+                                      Background="{DynamicResource TertiaryBackgroundBrush}">
                                         <Grid.RowDefinitions>
                                                 <RowDefinition Height="Auto"/>
                                                 <RowDefinition Height="*"/>
@@ -611,15 +697,17 @@
 
                                         <Border Grid.Row="0"
                                                 Padding="20"
-                                                Background="#1a1a1a"
-                                                BorderBrush="#333"
+                                                Background="{DynamicResource CentralPanelHeaderBackground}"
+                                                BorderBrush="{DynamicResource GridHeaderSeperatorBrush}"
                                                 BorderThickness="0,0,0,1">
                                                 <StackPanel Orientation="Horizontal">
 
                                                         <Border Width="150"
                                                                 Height="150"
                                                                 CornerRadius="4"
-                                                                Background="#282828"
+                                                                Background="{DynamicResource CentralPanelCardBackground}"
+                                                                BorderBrush="{DynamicResource CentralPanelCardBorderBrush}"
+                                                                BorderThickness="1"
                                                                 Margin="0,0,20,0">
                                                                 <Image
                                                                         x:Name="CurrentPlaylistCover"
@@ -628,25 +716,25 @@
 
                                                         <StackPanel VerticalAlignment="Bottom">
                                                                 <TextBlock Text="ПЛЕЙЛИСТ"
-                                                                           Foreground="White"
+                                                                           Foreground="{DynamicResource CentralPanelHighlightForeground}"
                                                                            FontSize="12"
                                                                            FontWeight="Bold"
                                                                            Margin="0,0,0,5"/>
 
                                                                 <TextBlock x:Name="CurrentPlaylistNameText"
-                                                                           Foreground="White"
+                                                                           Foreground="{DynamicResource CentralPanelHighlightForeground}"
                                                                            FontSize="48"
                                                                            FontWeight="Black"
                                                                            Margin="0,0,0,10"/>
 
                                                                 <TextBlock x:Name="CurrentPlaylistDescriptionText"
-                                                                           Foreground="Gray"
+                                                                           Foreground="{DynamicResource CentralPanelSecondaryForeground}"
                                                                            FontSize="14"
                                                                            TextWrapping="Wrap"
                                                                            MaxWidth="500"/>
 
                                                                 <TextBlock x:Name="CurrentTracksCountText"
-                                                                           Foreground="LightGray"
+                                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
                                                                            FontSize="14"
                                                                            Margin="0,10,0,0"/>
                                                         </StackPanel>
@@ -662,8 +750,10 @@
                                                   VirtualizingStackPanel.CacheLengthUnit="Page"
                                                   Grid.Row="1"
                                                   Background="Transparent"
-                                                  RowBackground="#121212"
-                                                  Foreground="White"
+                                                  RowBackground="{DynamicResource DataGridRowBackground}"
+                                                  AlternatingRowBackground="{DynamicResource DataGridRowAltBackground}"
+                                                  Foreground="{DynamicResource DataGridCellForeground}"
+                                                  BorderBrush="{DynamicResource DataGridBorderBrush}"
                                                   BorderThickness="0"
                                                   AutoGenerateColumns="False"
                                                   CanUserResizeRows="False"
@@ -676,7 +766,8 @@
                                                   GridLinesVisibility="None">
                                                 <DataGrid.ContextMenu>
 
-                                                        <ContextMenu Background="#282828"
+                                                        <ContextMenu Background="{DynamicResource ContextMenuBackground}"
+                                                                     BorderBrush="{DynamicResource ContextMenuBorderBrush}"
                                                                      Opened="ContextMenu_Opened">
 
                                                                 <MenuItem Header="Воспроизвести"
@@ -702,9 +793,9 @@
                                                         <!-- Стиль для заголовков колонок -->
                                                         <Style TargetType="DataGridColumnHeader">
                                                                 <Setter Property="Background"
-                                                                        Value="#1E1E1E"/>
+                                                                        Value="{DynamicResource DataGridHeaderBackground}"/>
                                                                 <Setter Property="Foreground"
-                                                                        Value="#CCCCCC"/>
+                                                                        Value="{DynamicResource DataGridHeaderForeground}"/>
                                                                 <Setter Property="FontWeight"
                                                                         Value="Bold"/>
                                                                 <Setter Property="FontSize"
@@ -712,7 +803,7 @@
                                                                 <Setter Property="Height"
                                                                         Value="40"/>
                                                                 <Setter Property="BorderBrush"
-                                                                        Value="#333333"/>
+                                                                        Value="{DynamicResource GridHeaderSeperatorBrush}"/>
                                                                 <Setter Property="BorderThickness"
                                                                         Value="0,0,1,1"/>
                                                                 <Setter Property="HorizontalContentAlignment"
@@ -724,9 +815,9 @@
                                                         <!-- Стиль для ячеек -->
                                                         <Style TargetType="DataGridCell">
                                                                 <Setter Property="Background"
-                                                                        Value="Transparent"/>
+                                                                        Value="{DynamicResource DataGridCellBackground}"/>
                                                                 <Setter Property="Foreground"
-                                                                        Value="White"/>
+                                                                        Value="{DynamicResource DataGridCellForeground}"/>
                                                                 <Setter Property="BorderBrush"
                                                                         Value="Transparent"/>
                                                                 <Setter Property="VerticalAlignment"
@@ -739,11 +830,11 @@
                                                                         <Trigger Property="IsSelected"
                                                                                  Value="True">
                                                                                 <Setter Property="Background"
-                                                                                        Value="#2D2D2D"/>
+                                                                                        Value="{DynamicResource DataGridRowSelectedBackground}"/>
                                                                                 <Setter Property="Foreground"
-                                                                                        Value="White"/>
+                                                                                        Value="{DynamicResource DataGridCellSelectedForeground}"/>
                                                                                 <Setter Property="BorderBrush"
-                                                                                        Value="#007ACC"/>
+                                                                                        Value="{DynamicResource DataGridSelectionBorderBrush}"/>
                                                                         </Trigger>
                                                                 </Style.Triggers>
                                                         </Style>
@@ -751,19 +842,19 @@
                                                         <!-- Стиль для строк -->
                                                         <Style TargetType="DataGridRow">
                                                                 <Setter Property="Background"
-                                                                        Value="#141414"/>
+                                                                        Value="{DynamicResource DataGridRowBackground}"/>
                                                                 <Setter Property="MinHeight"
                                                                         Value="35"/>
                                                                 <Style.Triggers>
                                                                         <Trigger Property="AlternationIndex"
                                                                                  Value="1">
                                                                                 <Setter Property="Background"
-                                                                                        Value="#1A1A1A"/>
+                                                                                        Value="{DynamicResource DataGridRowAltBackground}"/>
                                                                         </Trigger>
                                                                         <Trigger Property="IsSelected"
                                                                                  Value="True">
                                                                                 <Setter Property="Background"
-                                                                                        Value="#2D2D2D"/>
+                                                                                        Value="{DynamicResource DataGridRowSelectedBackground}"/>
                                                                         </Trigger>
                                                                 </Style.Triggers>
                                                         </Style>
@@ -779,8 +870,8 @@
                                                                                         Height="75"
                                                                                         CornerRadius="4"
                                                                                         BorderThickness="1"
-                                                                                        BorderBrush="#333"
-                                                                                        Background="#222">
+                                                                                        BorderBrush="{DynamicResource BorderBrush}"
+                                                                                        Background="{DynamicResource CentralPanelCardBackground}">
                                                                                         <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
                                                                                                Stretch="Uniform"
                                                                                                HorizontalAlignment="Center"
@@ -814,9 +905,9 @@
                                                                             Binding="{Binding Name}"
                                                                             Width="3*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="White"/>
+                                                                                        Value="{DynamicResource DataGridCellForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                                 <Setter Property="TextBlock.VerticalAlignment"
@@ -829,9 +920,9 @@
                                                                             Binding="{Binding Executor}"
                                                                             Width="2*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="#CCCCCC"/>
+                                                                                        Value="{DynamicResource CentralPanelSecondaryForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                                 <Setter Property="TextBlock.VerticalAlignment"
@@ -844,9 +935,9 @@
                                                                             Binding="{Binding Album}"
                                                                             Width="2*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="#CCCCCC"/>
+                                                                                        Value="{DynamicResource CentralPanelSecondaryForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                                 <Setter Property="TextBlock.VerticalAlignment"
@@ -859,9 +950,9 @@
                                                                             Binding="{Binding Duration}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="#999999"/>
+                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                                 <Setter Property="TextBlock.VerticalAlignment"
@@ -874,9 +965,9 @@
                                                                             Binding="{Binding Bitrate}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="#999999"/>
+                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                                 <Setter Property="TextBlock.VerticalAlignment"
@@ -888,9 +979,9 @@
                                                                             Binding="{Binding Genre}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
-                                                                        <Style>
+                                                                        <Style TargetType="TextBlock">
                                                                                 <Setter Property="TextBlock.Foreground"
-                                                                                        Value="#999999"/>
+                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
                                                                                 <Setter Property="TextBlock.Margin"
                                                                                         Value="10,0,0,0"/>
                                                                         </Style>
@@ -903,12 +994,12 @@
 
                                 <!-- Правая колонка - NOW PLAYING -->
                                 <Border Grid.Column="2"
-                                        Background="#121212"
+                                        Background="{DynamicResource TertiaryBackgroundBrush}"
                                         BorderThickness="1,0,0,0"
-                                        BorderBrush="#333">
+                                        BorderBrush="{DynamicResource BorderBrush}">
                                         <StackPanel VerticalAlignment="Top">
                                                 <TextBlock Text="NOW PLAYING"
-                                                           Foreground="White"
+                                                           Foreground="{DynamicResource ForegroundBrush}"
                                                            FontSize="20"
                                                            FontWeight="Bold"
                                                            Margin="0,0,0,20"/>
@@ -916,7 +1007,9 @@
                                                 <Border CornerRadius="8"
                                                         ClipToBounds="True"
                                                         Height="275"
-                                                        Background="#121212"
+                                                        Background="{DynamicResource CentralPanelCardBackground}"
+                                                        BorderBrush="{DynamicResource CentralPanelCardBorderBrush}"
+                                                        BorderThickness="1"
                                                         Margin="0,0,0,10">
                                                         <Image x:Name="CurrentTrackImage"
                                                                Stretch="Uniform"
@@ -928,47 +1021,80 @@
                                                            Text="NAME"
                                                            FontSize="22"
                                                            FontWeight="Bold"
-                                                           Foreground="White"
+                                                           Foreground="{DynamicResource CentralPanelHighlightForeground}"
                                                            TextWrapping="Wrap"/>
                                                 <TextBlock x:Name="CurrentTrackExecutor"
                                                            Text="EXECUTOR"
                                                            FontSize="20"
-                                                           Foreground="Gray"
+                                                           Foreground="{DynamicResource CentralPanelSecondaryForeground}"
                                                            Margin="0,5"/>
                                                 <TextBlock x:Name="CurrentTrackAlbum"
                                                            Text="ALBUM"
                                                            FontSize="20"
-                                                           Foreground="Gray"/>
+                                                           Foreground="{DynamicResource CentralPanelSecondaryForeground}"/>
 
                                                 <TextBlock x:Name="CurrentTrackData"
                                                            Text="Genre | 00:00"
                                                            FontSize="16"
-                                                           Foreground="DarkGray"
+                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
                                                            Margin="0,20,0,0"/>
                                                 <TextBlock x:Name="CurrentTrackExtension"
                                                            Text="EXTENSION"
                                                            FontSize="16"
-                                                           Foreground="DarkGray"/>
+                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"/>
                                                 <TextBlock x:Name="CurrentTrackYear"
                                                            Text="YEAR"
                                                            FontSize="16"
-                                                           Foreground="DarkGray"/>
+                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"/>
                                                 <StackPanel x:Name="NextTrackPanel"
                                                             Margin="0,20,0,0">
                                                         <TextBlock Text="СЛЕДУЮЩИЙ ТРЕК:"
                                                                    FontSize="12"
-                                                                   Foreground="Gray"
+                                                                   Foreground="{DynamicResource CentralPanelSecondaryForeground}"
                                                                    FontWeight="Bold"/>
                                                         <TextBlock x:Name="NextTrackName"
                                                                    Text="Название трека..."
                                                                    FontSize="14"
-                                                                   Foreground="White"
+                                                                   Foreground="{DynamicResource ForegroundBrush}"
                                                                    TextWrapping="Wrap"/>
                                                 </StackPanel>
+                                                <!-- <Canvas x:Name="SpectrumCanvas"
+                                                        Height="100"
+                                                        VerticalAlignment="Bottom"
+                                                        Margin="10"
+                                                        Background="Transparent">
+                                                        <Polyline x:Name="SpectrumLine"
+                                                                  Stroke="#1DB954"
+                                                                  StrokeThickness="2"
+                                                                  Points="0,100 400,100"/>
+                                                </Canvas> -->
+                                                <ItemsControl ItemsSource="{Binding PlayService.SpectrumViewModel.Bars}"
+                                                              VerticalAlignment="Bottom"
+                                                              HorizontalAlignment="Stretch"
+                                                              Height="120"
+                                                              Margin="10,0">
+                                                        <ItemsControl.ItemsPanel>
+                                                                <ItemsPanelTemplate>
+                                                                        <UniformGrid Columns="{Binding PlayService.SpectrumViewModel.Bars.Count, 
+                           Source={x:Static services:PlayerService.Instance}}"
+                                                                                     Rows="1"/>
+                                                                </ItemsPanelTemplate>
+                                                        </ItemsControl.ItemsPanel>
+                                                        <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                        <Border Width="Auto"
+                                                                                Margin="1,0"
+                                                                                Background="{DynamicResource AccentBrush}"
+                                                                                VerticalAlignment="Bottom"
+                                                                                CornerRadius="0"
+                                                                                Height="{Binding Value}">
+                                                                        </Border>
+                                                                </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                         </StackPanel>
                                 </Border>
                         </Grid>
-
                 </DockPanel>
         </Grid>
 </Window>

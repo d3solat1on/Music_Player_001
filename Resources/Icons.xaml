@@ -1,0 +1,339 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Geometry x:Key="playlist_removeGeometry">m571-80-43-43 114-113-114-113 43-43 113 114 113-114 43 43-114 113 114 113-43 43-113-114L571-80ZM120-330v-60h300v60H120Zm0-165v-60h470v60H120Zm0-165v-60h470v60H120Z</Geometry>
+    <DrawingGroup x:Key="playlist_removeDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource playlist_removeGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="playlist_removeDrawingImage"
+                  Drawing="{StaticResource playlist_removeDrawingGroup}"/>
+    <Geometry x:Key="shuffleGeometry">M576-160v-60h120L522-393l42-43 176 174v-121h60v223H576Zm-374 0-42-43 538-537H576v-60h224v223h-60v-120L202-160Zm193-363L160-757l43-43 235 234-43 43Z</Geometry>
+    <DrawingGroup x:Key="shuffleDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource shuffleGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="shuffleDrawingImage"
+                  Drawing="{StaticResource shuffleDrawingGroup}"/>
+    <Geometry x:Key="delete_playlistGeometry">M550-280h120q20.83 0 35.42-14.58Q720-309.17 720-330v-205h40v-50H650v-35h-80v35H460v50h40v205q0 20.83 14.58 35.42Q529.17-280 550-280Zm0-255h120v205H550v-205ZM140-160q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h281l60 60h339q23 0 41.5 18.5T880-680v460q0 23-18.5 41.5T820-160H140Zm0-60h680v-460H456l-60-60H140v520Zm0 0v-520 520Z</Geometry>
+    <DrawingGroup x:Key="delete_playlistDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource delete_playlistGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="delete_playlistDrawingImage"
+                  Drawing="{StaticResource delete_playlistDrawingGroup}"/>
+    <Geometry x:Key="default_cover_bigGeometry">M480-316q70 0 120-47.5T650-480q0-71-49.5-120.5T480-650q-69 0-116.5 50T316-480q0 69 47.5 116.5T480-316Zm-28.5-135.5Q440-463 440-480t11.5-28.5Q463-520 480-520t28.5 11.5Q520-497 520-480t-11.5 28.5Q497-440 480-440t-28.5-11.5ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Zm0-60q142 0 241-99.5T820-480q0-142-99-241t-241-99q-141 0-240.5 99T140-480q0 141 99.5 240.5T480-140Zm0-340Z</Geometry>
+    <DrawingGroup x:Key="default_cover_bigDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource default_cover_bigGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="default_cover_bigDrawingImage"
+                  Drawing="{StaticResource default_cover_bigDrawingGroup}"/>
+    <Geometry x:Key="maximizeGeometry">M656-140v-392H140v392h516Zm60-228v-60h104v-392H304v228h-60v-228q0-24 18-42t42-18h516q24 0 42 18t18 42v392q0 24-18 42t-42 18H716ZM140-80q-24 0-42-18t-18-42v-392q0-24 18-42t42-18h504q29.7 0 50.85 20.86Q716-550.29 716-521v381q0 24-18 42t-42 18H140Zm422-617ZM398-336Z</Geometry>
+    <DrawingGroup x:Key="maximizeDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource maximizeGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="maximizeDrawingImage"
+                  Drawing="{StaticResource maximizeDrawingGroup}"/>
+    <Geometry x:Key="stopGeometry">M300-660v360-360Zm-60 420v-480h480v480H240Zm60-60h360v-360H300v360Z</Geometry>
+    <DrawingGroup x:Key="stopDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource stopGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="stopDrawingImage"
+                  Drawing="{StaticResource stopDrawingGroup}"/>
+    <Geometry x:Key="favoriteGeometry">m480-121-41-37q-105.77-97.12-174.88-167.56Q195-396 154-451.5T96.5-552Q80-597 80-643q0-90.15 60.5-150.58Q201-854 290-854q57 0 105.5 27t84.5 78q42-54 89-79.5T670-854q89 0 149.5 60.42Q880-733.15 880-643q0 46-16.5 91T806-451.5Q765-396 695.88-325.56 626.77-255.12 521-158l-41 37Zm0-79q101.24-93 166.62-159.5Q712-426 750.5-476t54-89.14q15.5-39.13 15.5-77.72 0-66.14-42-108.64T670.22-794q-51.52 0-95.37 31.5T504-674h-49q-26-56-69.85-88-43.85-32-95.37-32Q224-794 182-751.5t-42 108.82q0 38.68 15.5 78.18 15.5 39.5 54 90T314-358q66 66 166 158Zm0-297Z</Geometry>
+    <DrawingGroup x:Key="favoriteDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource favoriteGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="favoriteDrawingImage"
+                  Drawing="{StaticResource favoriteDrawingGroup}"/>
+    <Geometry x:Key="play_pauseGeometry">M200-332v-296l220 148-220 148Zm340 12v-320h60v320h-60Zm160 0v-320h60v320h-60Z</Geometry>
+    <DrawingGroup x:Key="play_pauseDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource play_pauseGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="play_pauseDrawingImage"
+                  Drawing="{StaticResource play_pauseDrawingGroup}"/>
+    <Geometry x:Key="library_musicGeometry">M486-333q41 0 70-28.42T585-431v-252h116v-60H545v237q-11-9-26.32-14T486-525q-39.06 0-66.03 27.37-26.97 27.36-26.97 67Q393-391 419.97-362q26.97 29 66.03 29ZM260-200q-24 0-42-18t-18-42v-560q0-24 18-42t42-18h560q24 0 42 18t18 42v560q0 24-18 42t-42 18H260Zm0-60h560v-560H260v560ZM140-80q-24 0-42-18t-18-42v-620h60v620h620v60H140Zm120-740v560-560Z</Geometry>
+    <DrawingGroup x:Key="library_musicDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource library_musicGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="library_musicDrawingImage"
+                  Drawing="{StaticResource library_musicDrawingGroup}"/>
+    <Geometry x:Key="remove_favoritesGeometry">M440-497Zm0 376-99-91q-94-86-152.5-145.5T97-462q-33-45-45-83t-12-80q0-91 61-153t149-62q57 0 105.5 26.5T440-736q41-53 88-78.5T630-840q88 0 148.5 62T839-625q0 29-5.5 54.5T820-530h-64q8-17 15.5-44.5T779-625q0-64-43.5-109.5T630-780q-51 0-95 31t-71 88h-49q-26-56-70-87.5T250-780q-65 0-107.5 44T100-625q0 36 12.5 70t49 80Q198-429 265-364t175 164q32-29 60.5-54t56.5-49l6.5 6.5q6.5 6.5 14.5 14t14.5 14l6.5 6.5q-27 24-56 49t-62 55l-41 37Zm160-289v-60h320v60H600Z</Geometry>
+    <DrawingGroup x:Key="remove_favoritesDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource remove_favoritesGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="remove_favoritesDrawingImage"
+                  Drawing="{StaticResource remove_favoritesDrawingGroup}"/>
+    <Geometry x:Key="repeatGeometry">M280-80 120-240l160-160 42 44-86 86h464v-160h60v220H236l86 86-42 44Zm-80-450v-220h524l-86-86 42-44 160 160-160 160-42-44 86-86H260v160h-60Z</Geometry>
+    <DrawingGroup x:Key="repeatDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource repeatGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="repeatDrawingImage"
+                  Drawing="{StaticResource repeatDrawingGroup}"/>
+    <Geometry x:Key="closeGeometry">m249-207-42-42 231-231-231-231 42-42 231 231 231-231 42 42-231 231 231 231-42 42-231-231-231 231Z</Geometry>
+    <DrawingGroup x:Key="closeDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource closeGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="closeDrawingImage"
+                  Drawing="{StaticResource closeDrawingGroup}"/>
+    <Geometry x:Key="default_coverGeometry">M480-316q70 0 120-47.5T650-480q0-71-49.5-120.5T480-650q-69 0-116.5 50T316-480q0 69 47.5 116.5T480-316Zm-28.5-135.5Q440-463 440-480t11.5-28.5Q463-520 480-520t28.5 11.5Q520-497 520-480t-11.5 28.5Q497-440 480-440t-28.5-11.5ZM480-80q-82 0-155-31.5t-127.5-86Q143-252 111.5-325T80-480q0-83 31.5-156t86-127Q252-817 325-848.5T480-880q83 0 156 31.5T763-763q54 54 85.5 127T880-480q0 82-31.5 155T763-197.5q-54 54.5-127 86T480-80Zm0-60q142 0 241-99.5T820-480q0-142-99-241t-241-99q-141 0-240.5 99T140-480q0 141 99.5 240.5T480-140Zm0-340Z</Geometry>
+    <DrawingGroup x:Key="default_coverDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource default_coverGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="default_coverDrawingImage"
+                  Drawing="{StaticResource default_coverDrawingGroup}"/>
+    <Geometry x:Key="fast_rewindGeometry">M854-240 508-480l346-240v480Zm-402 0L106-480l346-240v480Zm-60-240Zm402 0ZM392-355v-250L211-480l181 125Zm402 0v-250L613-480l181 125Z</Geometry>
+    <DrawingGroup x:Key="fast_rewindDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource fast_rewindGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="fast_rewindDrawingImage"
+                  Drawing="{StaticResource fast_rewindDrawingGroup}"/>
+    <Geometry x:Key="volume_offGeometry">M813-56 681-188q-28 20-60.5 34.5T553-131v-62q23-7 44.5-15.5T638-231L473-397v237L273-360H113v-240h156L49-820l43-43 764 763-43 44Zm-36-232-43-43q20-34 29.5-71.92Q773-440.85 773-481q0-103.32-60-184.66T553-769v-62q124 28 202 125.5T833-481q0 51-14 100t-42 93ZM643-422l-90-90v-130q47 22 73.5 66t26.5 96q0 15-2.5 29.5T643-422ZM473-592 369-696l104-104v208Zm-60 286v-150l-84-84H173v120h126l114 114Zm-42-192Z</Geometry>
+    <DrawingGroup x:Key="volume_offDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource volume_offGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="volume_offDrawingImage"
+                  Drawing="{StaticResource volume_offDrawingGroup}"/>
+    <Geometry x:Key="loopGeometry">M212-260q-90 0-151-65.5T0-482q0-90 61.5-154T212-700q36 0 69.5 12t59.5 37l93 90-42 42-89-87q-18-18-41.5-26t-49.5-8q-64 0-108 46.5T60-482q0 66 43.5 114T212-320q25 0 48.5-8t42.5-25l316-298q26-25 59.5-37t68.5-12q90 0 151.5 64T960-482q0 91-61.5 156.5T747-260q-35 0-69-11.5T619-308l-91-90 42-42 87 87q17 17 41 25t49 8q65 0 109-48t44-114q0-65-44.5-111.5T747-640q-25 0-48.5 9T657-605L341-307q-26 24-60 35.5T212-260Z</Geometry>
+    <DrawingGroup x:Key="loopDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource loopGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="loopDrawingImage"
+                  Drawing="{StaticResource loopDrawingGroup}"/>
+    <Geometry x:Key="favorites_addedGeometry">m718-327-99-99 42-42 57 56 141-141 42 42-183 184ZM440-497Zm0 376-99-91q-87-80-144.5-137T104-452q-35-46-49.5-86.5T40-625q0-90 60.5-152.5T250-840q57 0 105.5 26.5T440-736q42-54 89-79t101-25q81 0 135.5 55T832-652h-59q-9-55-46.5-91.5T630-780q-51 0-95 31t-71 88h-49q-26-56-70-87.5T250-780q-66 0-108 44.5T100-625q0 39 15.5 76t54 84Q208-418 274-355t166 155q32-29 60.5-54t56.5-49l6.5 6.5q6.5 6.5 14.5 14t14.5 14l6.5 6.5q-27 24-56 49t-62 55l-41 37Z</Geometry>
+    <DrawingGroup x:Key="favorites_addedDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource favorites_addedGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="favorites_addedDrawingImage"
+                  Drawing="{StaticResource favorites_addedDrawingGroup}"/>
+    <Geometry x:Key="add_musicGeometry">M369.5-163.5Q326-207 326-270t43.5-106.5Q413-420 476-420q28 0 50.5 8t39.5 22v-450h234v135H626v435q0 63-43.5 106.5T476-120q-63 0-106.5-43.5ZM290-520v-130H160v-60h130v-130h60v130h130v60H350v130h-60Z</Geometry>
+    <DrawingGroup x:Key="add_musicDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource add_musicGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="add_musicDrawingImage"
+                  Drawing="{StaticResource add_musicDrawingGroup}"/>
+    <Geometry x:Key="minimazeGeometry">M240-120v-60h481v60H240Z</Geometry>
+    <DrawingGroup x:Key="minimazeDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource minimazeGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="minimazeDrawingImage"
+                  Drawing="{StaticResource minimazeDrawingGroup}"/>
+    <Geometry x:Key="playGeometry">M320-203v-560l440 280-440 280Zm60-280Zm0 171 269-171-269-171v342Z</Geometry>
+    <DrawingGroup x:Key="playDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource playGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="playDrawingImage"
+                  Drawing="{StaticResource playDrawingGroup}"/>
+    <Geometry x:Key="settingsGeometry">M202-160v-294h-82v-60h224v60h-82v294h-60Zm0-414v-226h60v226h-60Zm166-41v-60h82v-125h60v125h82v60H368Zm82 455v-395h60v395h-60Zm248 0v-127h-82v-60h224v60h-82v127h-60Zm0-247v-393h60v393h-60Z</Geometry>
+    <DrawingGroup x:Key="settingsDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource settingsGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="settingsDrawingImage"
+                  Drawing="{StaticResource settingsDrawingGroup}"/>
+    <Geometry x:Key="pauseGeometry">M525-200v-560h235v560H525Zm-325 0v-560h235v560H200Zm385-60h115v-440H585v440Zm-325 0h115v-440H260v440Zm0-440v440-440Zm325 0v440-440Z</Geometry>
+    <DrawingGroup x:Key="pauseDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource pauseGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="pauseDrawingImage"
+                  Drawing="{StaticResource pauseDrawingGroup}"/>
+    <Geometry x:Key="add_favoritesGeometry">M440-497Zm0 376-99-91q-87-80-144.5-137T104-452q-35-46-49.5-86.5T40-625q0-90 60.5-152.5T250-840q57 0 105.5 26.5T440-736q42-54 89-79t101-25q80.58 0 135.29 55Q820-730 832-652h-59q-9-55-46.5-91.5T630-780q-51 0-95 31t-71 88h-49q-26-56-70-87.5T250-780q-66 0-108 44.5T100-625q0 39 15.5 76t53.89 84.07q38.39 47.06 104.5 110Q340-292 440-200q32-29 60.5-54t56.5-49l6.63 6.47q6.63 6.48 14.37 14.03 7.74 7.55 14.37 14.03L599-262q-27 24-56 49t-62 55l-41 37Zm290-159v-130H600v-60h130v-130h60v130h130v60H790v130h-60Z</Geometry>
+    <DrawingGroup x:Key="add_favoritesDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource add_favoritesGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="add_favoritesDrawingImage"
+                  Drawing="{StaticResource add_favoritesDrawingGroup}"/>
+    <Geometry x:Key="fast_forwardGeometry">M104-240v-480l346 240-346 240Zm407 0v-480l346 240-346 240ZM164-480Zm407 0ZM164-355l181-125-181-125v250Zm407 0 181-125-181-125v250Z</Geometry>
+    <DrawingGroup x:Key="fast_forwardDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource fast_forwardGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="fast_forwardDrawingImage"
+                  Drawing="{StaticResource fast_forwardDrawingGroup}"/>
+    <Geometry x:Key="add_new_folderGeometry">M550-320h60v-90h90v-60h-90v-90h-60v90h-90v60h90v90ZM140-160q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h281l60 60h339q23 0 41.5 18.5T880-680v460q0 23-18.5 41.5T820-160H140Zm0-60h680v-460H456l-60-60H140v520Zm0 0v-520 520Z</Geometry>
+    <DrawingGroup x:Key="add_new_folderDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource add_new_folderGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="add_new_folderDrawingImage"
+                  Drawing="{StaticResource add_new_folderDrawingGroup}"/>
+    <Geometry x:Key="searchGeometry">M796-121 533-384q-30 26-70 40.5T378-329q-108 0-183-75t-75-181q0-106 75-181t182-75q106 0 180.5 75T632-585q0 43-14 83t-42 75l264 262-44 44ZM377-389q81 0 138-57.5T572-585q0-81-57-138.5T377-781q-82 0-139.5 57.5T180-585q0 81 57.5 138.5T377-389Z</Geometry>
+    <DrawingGroup x:Key="searchDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource searchGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="searchDrawingImage"
+                  Drawing="{StaticResource searchDrawingGroup}"/>
+    <Geometry x:Key="volumeGeometry">M280-360v-240h160l200-200v640L440-360H280Zm60-60h127l113 109v-337L467-540H340v120Zm119-60Z</Geometry>
+    <DrawingGroup x:Key="volumeDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource volumeGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="volumeDrawingImage"
+                  Drawing="{StaticResource volumeDrawingGroup}"/>
+    <Geometry x:Key="create_playlistGeometry">M120-330v-60h300v60H120Zm0-165v-60h470v60H120Zm0-165v-60h470v60H120Zm530 500v-170H480v-60h170v-170h60v170h170v60H710v170h-60Z</Geometry>
+    <DrawingGroup x:Key="create_playlistDrawingGroup"
+                  ClipGeometry="M0,-960 V0 H960 V0 H-960 Z">
+        <DrawingGroup.Transform>
+            <TranslateTransform X="0"
+                                Y="960"/>
+        </DrawingGroup.Transform>
+        <GeometryDrawing Brush="#FFE3E3E3"
+                         Geometry="{StaticResource create_playlistGeometry}"/>
+    </DrawingGroup>
+    <DrawingImage x:Key="create_playlistDrawingImage"
+                  Drawing="{StaticResource create_playlistDrawingGroup}"/>
+</ResourceDictionary>

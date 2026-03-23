@@ -11,28 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Resources\default_cover.png" />
-    <None Remove="Resources\add_music.png" />
-    <None Remove="Resources\add_new_folder.png" />
-    <None Remove="Resources\delete_playlist.png" />
-    <None Remove="Resources\fast_forward.png" />
-    <None Remove="Resources\fast_rewind.png" />
-    <None Remove="Resources\loop.png" />
-    <None Remove="Resources\pause.png" />
-    <None Remove="Resources\play.png" />
-    <None Remove="Resources\play_pause.png" />
-    <None Remove="Resources\settings.png" />
-    <None Remove="Resources\shuffle.png" />
-    <None Remove="Resources\shuffle_on.png" />
-    <None Remove="Resources\stop.png" />
-    <None Remove="Resources\add_favorites.png" />
-    <None Remove="Resources\remove_favorites.png" />
-    <None Remove="Resurces\favorite_cover.png" />
-    <None Remove="Resources\volume.png" />
-    <None Remove="Resources\volume_off.png" />
-    <None Remove="Resources\close.png" />
-    <None Remove="Resources\minimize.png" />
-    <None Remove="Resources\maximize.png" />
+     <None Remove="Resources\**\*.png" />
+    <None Remove="Resources\**\*.svg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,32 +26,13 @@
     <PackageReference Include="NAudio.Flac" Version="1.0.5702.29018" />
     <PackageReference Include="NAudio.Flac.Unknown" Version="1.0.4" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageReference Include="SharpVectors.Wpf" Version="1.8.5" />
     <PackageReference Include="TagLibSharp" Version="2.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Resources\default_cover.png" />
-    <Resource Include="Resources\add_music.png" />
-    <Resource Include="Resources\add_new_folder.png" />
-    <Resource Include="Resources\delete_playlist.png" />
-    <Resource Include="Resources\fast_forward.png" />
-    <Resource Include="Resources\fast_rewind.png" />
-    <Resource Include="Resources\loop.png" />
-    <Resource Include="Resources\pause.png" />
-    <Resource Include="Resources\play.png" />
-    <Resource Include="Resources\play_pause.png" />
-    <Resource Include="Resources\settings.png" />
-    <Resource Include="Resources\shuffle.png" />
-    <Resource Include="Resources\shuffle_on.png" />
-    <Resource Include="Resources\stop.png" />
-    <Resource Include="Resources\add_favorites.png" />
-    <Resource Include="Resources\remove_favorites.png" />
-    <Resource Include="Resources\favorite_cover.png" />
-    <Resource Include="Resources\volume.png" />
-    <Resource Include="Resources\volume_off.png" />
-    <Resource Include="Resources\close.png" />
-    <Resource Include="Resources\minimize.png" />
-    <Resource Include="Resources\maximize.png" />
+    <Resource Include="Resources\**\*.png" />
+    <Resource Include="Resources\**\*.svg" />
   </ItemGroup>
 
 </Project>

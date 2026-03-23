@@ -7,6 +7,8 @@ using QAMP.ViewModels;
 using QAMP.Dialogs;
 using System.IO;
 using System.Collections.ObjectModel;
+using QAMP.Visualization;
+using QAMP.Audio;
 
 namespace QAMP.Services
 {
@@ -14,6 +16,10 @@ namespace QAMP.Services
     {
         private static PlayerService? _instance;
         public static PlayerService Instance => _instance ??= new PlayerService();
+       public float[] EqGains { get; set; } = new float[10]; 
+        public EqualizerFilter CurrentEqualizer { get; private set; }
+        private readonly SpectrumViewModel _spectrumViewModel;
+        public SpectrumViewModel SpectrumViewModel => _spectrumViewModel;
 
         // NAudio компоненты
         private WaveStream _audioFileReader;
@@ -103,6 +109,7 @@ namespace QAMP.Services
         private string? _tempFilePath;
         private PlayerService()
         {
+            _spectrumViewModel = new SpectrumViewModel();
             _positionTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(200)
@@ -113,27 +120,58 @@ namespace QAMP.Services
         public void PlayTrack(Track track)
         {
             MusicLibrary.Instance.PlaybackQueue = new ObservableCollection<Track>(MusicLibrary.Instance.PlaybackQueue);
-            // CurrentTrack = track;
             try
             {
                 Stop();
                 CurrentTrack = track;
 
                 string extension = Path.GetExtension(track.Path).ToLowerInvariant();
+                ISampleProvider sampleProvider;
 
                 if (extension == ".flac")
                 {
-                    // Используем тот самый рабочий ридер
-                    _audioFileReader = new FlacReader(track.Path);
+                    var flacReader = new FlacReader(track.Path);
+                    _audioFileReader = flacReader;
+                    sampleProvider = flacReader.ToSampleProvider();
                 }
                 else
                 {
-                    // Для MP3 и прочего используем стандартный путь
-                    _audioFileReader = new AudioFileReader(track.Path);
+                    var reader = new AudioFileReader(track.Path);
+                    _audioFileReader = reader;
+                    sampleProvider = reader;
                 }
 
+                // --- ВСТАВКА ЭКВАЛАЙЗЕРА ---
+                // Частоты для 10-полосного эквалайзера (стандарт)
+                float[] frequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+
+                // Создаем фильтр. Он встает ПОСЛЕ ридера
+                CurrentEqualizer = new EqualizerFilter(sampleProvider, frequencies);
+
+                // Если у тебя есть сохраненные настройки Gain в памяти, 
+                // здесь их можно применить циклом: CurrentEqualizer.SetGain(i, savedGain);
+                // ---------------------------
+
+                // --- ВСТАВКА ДЛЯ СПЕКТРА ---
+                // ВАЖНО: передаем в агрегатор CurrentEqualizer, чтобы видеть эффект на спектре
+                var aggregator = new SampleAggregator(CurrentEqualizer, 512);
+
+                aggregator.FftCalculated += (s, fftData) =>
+                {
+                    Application.Current.Dispatcher.BeginInvoke(
+                        new Action(() =>
+                        {
+                            SpectrumViewModel?.Update(fftData);
+                        }),
+                        DispatcherPriority.Background);
+                };
+                // ---------------------------
+
                 _waveOutEvent = new WaveOutEvent();
-                _waveOutEvent.Init(_audioFileReader);
+
+                // Инициализируем через aggregator
+                _waveOutEvent.Init(aggregator);
+
                 _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
 
@@ -247,44 +285,44 @@ namespace QAMP.Services
         }
 
         public Track? GetNextTrack()
-{
-    // Если включен Shuffle
-    if (IsShuffleEnabled)
-    {
-        if (ShuffledQueue.Count > 0)
         {
-            int currentIndex = ShuffledQueue.IndexOf(CurrentTrack);
-            System.Diagnostics.Debug.WriteLine($"GetNextTrack (Shuffle): currentIndex = {currentIndex}, Count = {ShuffledQueue.Count}");
-            
-            if (currentIndex != -1 && currentIndex < ShuffledQueue.Count - 1)
+            // Если включен Shuffle
+            if (IsShuffleEnabled)
             {
-                return ShuffledQueue[currentIndex + 1];
+                if (ShuffledQueue.Count > 0)
+                {
+                    int currentIndex = ShuffledQueue.IndexOf(CurrentTrack);
+                    System.Diagnostics.Debug.WriteLine($"GetNextTrack (Shuffle): currentIndex = {currentIndex}, Count = {ShuffledQueue.Count}");
+
+                    if (currentIndex != -1 && currentIndex < ShuffledQueue.Count - 1)
+                    {
+                        return ShuffledQueue[currentIndex + 1];
+                    }
+                    else if (currentIndex == ShuffledQueue.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
+                    {
+                        return ShuffledQueue[0];
+                    }
+                }
+                return null;
             }
-            else if (currentIndex == ShuffledQueue.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
+
+            // Обычный режим
+            var activeList = MusicLibrary.Instance.PlaybackQueue.ToList();
+            if (activeList.Count == 0) return null;
+
+            int index = activeList.IndexOf(CurrentTrack);
+
+            if (index != -1 && index < activeList.Count - 1)
             {
-                return ShuffledQueue[0];
+                return activeList[index + 1];
             }
+            else if (index == activeList.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
+            {
+                return activeList[0];
+            }
+
+            return null;
         }
-        return null;
-    }
-    
-    // Обычный режим
-    var activeList = MusicLibrary.Instance.PlaybackQueue.ToList();
-    if (activeList.Count == 0) return null;
-    
-    int index = activeList.IndexOf(CurrentTrack);
-    
-    if (index != -1 && index < activeList.Count - 1)
-    {
-        return activeList[index + 1];
-    }
-    else if (index == activeList.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
-    {
-        return activeList[0];
-    }
-    
-    return null;
-}
 
         public void PlayPreviousTrack()
         {

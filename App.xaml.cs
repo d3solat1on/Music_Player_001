@@ -12,6 +12,8 @@ namespace QAMP
             base.OnStartup(e);
             // DatabaseService.EnsureDatabaseCreated();
 
+            // Применить тему при запуске
+            ThemeManager.ApplyTheme(SettingsManager.Instance.Config.ColorScheme);
         }
     }
 }

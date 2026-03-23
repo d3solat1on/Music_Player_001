@@ -1,9 +1,11 @@
 using Microsoft.Win32;
 using Newtonsoft.Json;
+using QAMP;
 using QAMP.Dialogs;
 using QAMP.Models;
 using QAMP.Services;
 using QAMP.ViewModels;
+using QAMP.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
@@ -89,6 +91,9 @@ namespace QAMP
 
         private void LoadApplicationSettings()
         {
+            // Применить тему
+            ThemeManager.ApplyTheme(SettingsManager.Instance.Config.ColorScheme);
+
             string savedVolume = DatabaseService.GetSetting("Volume", "0.5");
             if (double.TryParse(savedVolume, out double vol))
             {
@@ -154,9 +159,9 @@ namespace QAMP
                 var favorites = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
                 bool isFavorite = favorites?.Tracks.Any(t => t.Path == track.Path) ?? false;
 
-                FavoriteIcon.Source = new BitmapImage(new Uri(isFavorite
-                    ? "pack://application:,,,/Resources/remove_favorites.png"
-                    : "pack://application:,,,/Resources/add_favorites.png"));
+                // FavoriteIcon.Source = new BitmapImage(new Uri(isFavorite
+                //     ? "pack://application:,,,/Resources/remove_favorites.png"
+                //     : "pack://application:,,,/Resources/add_favorites.png"));
 
                 UpdateCurrentTrackCover(track);
                 TotalTimeText.Text = totalTime;
@@ -242,17 +247,10 @@ namespace QAMP
 
         private void UpdatePlayPauseIcon(bool isPlaying)
         {
-            if (PlayPauseButton.Content is Image image)
-            {
-                if (isPlaying)
-                {
-                    image.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/pause.png"));
-                }
-                else
-                {
-                    image.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/play.png"));
-                }
-            }
+
+            PlayPauseIcon.Data = isPlaying
+                ? (Geometry)Application.Current.Resources["pauseGeometry"]
+                : (Geometry)Application.Current.Resources["playGeometry"];
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
@@ -434,13 +432,13 @@ namespace QAMP
                     System.Diagnostics.Debug.WriteLine($"  {i}: {_playService.ShuffledQueue[i].Name}");
                 }
 
-                ShuffleImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/shuffle_on.png"));
+                ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
                 UpdateNextTrackUI();
             }
             else
             {
                 _playService.ShuffledQueue.Clear();
-                ShuffleImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/shuffle.png"));
+                // ShuffleImage.Fill = (Brush)Application.Current.Resources[""];
                 UpdateNextTrackUI();
             }
         }
@@ -833,11 +831,11 @@ namespace QAMP
 
                 if (VolumeSlider.Value == 0)
                 {
-                    VolumeImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/volume_off.png"));
+                    VolumeImage.Data = (Geometry)Application.Current.Resources["volume_offGeometry"];
                 }
                 else
                 {
-                    VolumeImage.Source = new BitmapImage(new Uri("pack://application:,,,/Resources/volume.png"));
+                    VolumeImage.Data = (Geometry)Application.Current.Resources["volumeGeometry"];
                 }
 
                 if (VolumePercentage != null)
@@ -1054,11 +1052,36 @@ namespace QAMP
                 NotificationWindow.Show("Удалено из Избранного", this);
             }
 
-            if (Library.CurrentPlaylist?.Id == favoritePlaylist.Id)
+            // Обновляем плейлисты из БД
+            var previousPlaylistId = Library.CurrentPlaylist?.Id;
+            var previousTracksCount = Library.CurrentPlaylist?.Tracks.Count ?? 0;
+
+            System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПЕРЕД RefreshPlaylists: плейлист ID={previousPlaylistId}, треков={previousTracksCount}");
+
+            Library.RefreshPlaylists();
+
+            // Восстанавливаем выбор текущего плейлиста, если он был выбран
+            if (previousPlaylistId.HasValue)
             {
-                Library.RefreshPlaylists();
-                PlaylistsListBox.SelectedItem = Library.Playlists
-                    .FirstOrDefault(p => p.Id == favoritePlaylist.Id);
+                var restoredPlaylist = Library.Playlists
+                    .FirstOrDefault(p => p.Id == previousPlaylistId.Value);
+
+                if (restoredPlaylist != null)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПОСЛЕ RefreshPlaylists: восстановленный плейлист ID={restoredPlaylist.Id}, треков={restoredPlaylist.Tracks.Count}");
+
+                    // Устанавливаем текущий плейлист в MusicLibrary
+                    Library.CurrentPlaylist = restoredPlaylist;
+
+                    // Явно обновляем выбор в ListBox (это вызовет SelectionChanged)
+                    PlaylistsListBox.SelectedItem = restoredPlaylist;
+
+                    // Явно обновляем ItemsSource DataGrid с новой коллекцией
+                    TracksDataGrid.ItemsSource = null;
+                    TracksDataGrid.ItemsSource = restoredPlaylist.Tracks;
+
+                    System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПОСЛЕ обновления UI: в DataGrid должно быть {restoredPlaylist.Tracks.Count} треков");
+                }
             }
         }
 
@@ -1082,14 +1105,20 @@ namespace QAMP
                 isFavorite = false;
             }
 
-            string iconPath = isFavorite
-                ? "/Resources/favorites_added.png"
-                : "/Resources/add_favorites.png";
+            FavoriteIcon.Data = isFavorite
+                ? (Geometry)Application.Current.Resources["favorites_addedGeometry"]
+                : (Geometry)Application.Current.Resources["add_favoritesGeometry"];
 
-            FavoriteIcon.Source = new BitmapImage(new Uri(iconPath, UriKind.RelativeOrAbsolute));
-            FavoriteButton.ToolTip = isFavorite
-                ? "Удалить из избранного"
-                : "Добавить в избранное";
+            if (isFavorite)
+            {
+                FavoriteButton.ToolTip = "Удалить из избранного";
+            }
+            else
+            {
+                FavoriteButton.ToolTip = "Добавить в избранное";
+            }
+            FavoriteIcon.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+
         }
 
         private void UpdateCurrentTrackCover(Track track)
@@ -1357,6 +1386,15 @@ namespace QAMP
                 return false;
             }
         }
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new Settings(this._playService)
+            {
+                Owner = this
+            };
+            settingsWindow.ShowDialog();
+        }
+
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
         private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
         private void Maximize_Click(object sender, RoutedEventArgs e)

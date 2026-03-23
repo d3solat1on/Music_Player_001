@@ -13,6 +13,9 @@ namespace QAMP.ViewModels
         private static MusicLibrary? _instance;
         public static MusicLibrary Instance => _instance ??= new MusicLibrary();
 
+        // Доступ к PlayerService для привязок в UI
+        public PlayerService PlayService => PlayerService.Instance;
+
         // Коллекция плейлистов
         private ObservableCollection<Playlist> _playlists = [];
         public ObservableCollection<Playlist> Playlists
@@ -165,6 +168,16 @@ namespace QAMP.ViewModels
             System.Diagnostics.Debug.WriteLine("=== REFRESH PLAYLISTS ===");
 
             var list = DatabaseService.GetPlaylists();
+            System.Diagnostics.Debug.WriteLine($"Загружено плейлистов из БД: {list.Count}");
+            foreach (var p in list)
+            {
+                System.Diagnostics.Debug.WriteLine($"  - {p.Name} (ID={p.Id}): {p.Tracks.Count} треков");
+            }
+
+            var previousPlaylistId = CurrentPlaylist?.Id;
+            var previousTracksCount = CurrentPlaylist?.Tracks.Count ?? 0;
+            System.Diagnostics.Debug.WriteLine($"Текущий плейлист ПЕРЕД очисткой: ID={previousPlaylistId}, треков={previousTracksCount}");
+
             Playlists.Clear();
 
             foreach (var p in list)
@@ -179,11 +192,16 @@ namespace QAMP.ViewModels
                 var restoredPlaylist = Playlists.FirstOrDefault(p => p.Id == CurrentPlaylist.Id);
                 if (restoredPlaylist != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Восстанавливаем плейлист: '{restoredPlaylist.Name}', треков: {restoredPlaylist.Tracks.Count}");
+                    System.Diagnostics.Debug.WriteLine($"Восстанавливаем плейлист: '{restoredPlaylist.Name}' (ID={restoredPlaylist.Id}), треков: {restoredPlaylist.Tracks.Count}");
                     CurrentPlaylist = restoredPlaylist;
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"ОШИБКА: Плейлист с ID={CurrentPlaylist.Id} не найден в восстановленном списке!");
                 }
             }
 
+            System.Diagnostics.Debug.WriteLine($"=== КОНЕЦ REFRESH PLAYLISTS ===");
             OnPropertyChanged(nameof(Playlists));
         }
 
