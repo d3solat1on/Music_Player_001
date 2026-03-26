@@ -178,22 +178,24 @@
                                                     VerticalAlignment="Center">
 
                                                 <!-- Кнопка избранного -->
-                                                <Button x:Name="FavoriteButton"
-                                                        Style="{StaticResource IconButton}"
-                                                        Click="FavoriteButton_Click"
-                                                        ToolTip="Добавить в избранное"
-                                                        Width="40"
-                                                        Height="40"
-                                                        Margin="0,0,10,0">
-                                                        <Path x:Name="FavoriteIcon"
-                                                              Width="45"
-                                                              Height="45"
-                                                              Data="{StaticResource favoriteGeometry}"
-                                                              Fill="{DynamicResource AccentBrush}"
-                                                              Stretch="Uniform"
-                                                              HorizontalAlignment="Center"
-                                                              VerticalAlignment="Center"/>
-                                                </Button>
+                                                <Grid Height="40">
+                                                        <Button x:Name="FavoriteButton"
+                                                                Style="{StaticResource IconButton}"
+                                                                Click="FavoriteButton_Click"
+                                                                ToolTip="Добавить в избранное"
+                                                                Width="40"
+                                                                Height="40"
+                                                                Margin="0,0,10,0">
+                                                                <Path x:Name="FavoriteIcon"
+                                                                      Width="25"
+                                                                      Height="25"
+                                                                      Data="{StaticResource favoriteGeometry}"
+                                                                      Fill="{DynamicResource AccentBrush}"
+                                                                      Stretch="Uniform"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                        </Button>
+                                                </Grid>
 
                                                 <!-- Информация о треке -->
                                                 <StackPanel>
@@ -214,77 +216,91 @@
                                                     VerticalAlignment="Center">
                                                 <StackPanel Orientation="Horizontal"
                                                             HorizontalAlignment="Center">
-                                                        <Button Style="{StaticResource IconButton}"
-                                                                Click="ShuffleButton_Click"
-                                                                Width="55"
-                                                                Margin="5,0">
-                                                                <Path x:Name="ShuffleImage"
-                                                                      Width="45"
-                                                                      Height="45"
-                                                                      Margin="5"
-                                                                      Data="{StaticResource shuffleGeometry}"
-                                                                      Fill="{DynamicResource AccentBrush}"
-                                                                      Stretch="Uniform"
-                                                                      HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"/>
-                                                        </Button>
-                                                        <Button Style="{StaticResource IconButton}"
-                                                                Width="55"
-                                                                Margin="5,0"
-                                                                Click="PrevButton_Click">
-                                                                <Path
-                                                                        Width="45"
-                                                                        Height="45"
-                                                                        Margin="5"
-                                                                        Data="{StaticResource fast_rewindGeometry}"
-                                                                        Fill="{DynamicResource AccentBrush}"
-                                                                        Stretch="Uniform"
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
-                                                        </Button>
-                                                        <Button x:Name="PlayPauseButton"
-                                                                Style="{StaticResource IconButton}"
-                                                                Width="55"
-                                                                Margin="5,0"
-                                                                Click="PlayPauseButton_Click">
-                                                                <Path x:Name="PlayPauseIcon"
-                                                                      Width="45"
-                                                                      Height="45"
-                                                                      Margin="5"
-                                                                      Data="{StaticResource playGeometry}"
-                                                                      Fill="{DynamicResource AccentBrush}"
-                                                                      Stretch="Uniform"
-                                                                      HorizontalAlignment="Center"
-                                                                      VerticalAlignment="Center"/>
-                                                        </Button>
-                                                        <Button Style="{StaticResource IconButton}"
-                                                                Width="55"
-                                                                Margin="5,0"
-                                                                Click="NextButton_Click">
-                                                                <Path
-                                                                        Width="45"
-                                                                        Height="45"
-                                                                        Margin="5"
-                                                                        Data="{StaticResource fast_forwardGeometry}"
-                                                                        Fill="{DynamicResource AccentBrush}"
-                                                                        Stretch="Uniform"
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
-                                                        </Button>
-                                                        <Button Style="{StaticResource IconButton}"
-                                                                Click="RepeatButton_Click"
-                                                                Width="55"
-                                                                Margin="5,0">
-                                                                <Path
-                                                                        Width="45"
-                                                                        Height="45"
-                                                                        Margin="5"
-                                                                        Data="{StaticResource loopGeometry}"
-                                                                        Fill="{DynamicResource AccentBrush}"
-                                                                        Stretch="Uniform"
-                                                                        HorizontalAlignment="Center"
-                                                                        VerticalAlignment="Center"/>
-                                                        </Button>
+                                                        <Grid Height="40">
+                                                                <Button x:Name="Shuffle_button"
+                                                                        Style="{StaticResource IconButton}"
+                                                                        Click="ShuffleButton_Click"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Margin="5,0">
+                                                                        <Path x:Name="ShuffleImage"
+                                                                              Width="25"
+                                                                              Height="25"
+                                                                              Margin="5"
+                                                                              Data="{StaticResource shuffleGeometry}"
+                                                                              Fill="{DynamicResource AccentBrush}"
+                                                                              Stretch="Uniform"/>
+                                                                </Button>
+                                                        </Grid>
+                                                        <Grid Height="40">
+                                                                <Button Style="{StaticResource IconButton}"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Margin="5,0"
+                                                                        Click="PrevButton_Click">
+                                                                        <Path
+                                                                                Width="25"
+                                                                                Height="25"
+                                                                                Margin="5"
+                                                                                Data="{StaticResource fast_rewindGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
+                                                                </Button>
+                                                        </Grid>
+                                                        <Grid Height="40">
+                                                                <Button x:Name="PlayPauseButton"
+                                                                        Style="{StaticResource IconButton}"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Margin="5,0"
+                                                                        Click="PlayPauseButton_Click">
+                                                                        <Path x:Name="PlayPauseIcon"
+                                                                              Width="25"
+                                                                              Height="25"
+                                                                              Margin="5"
+                                                                              Data="{StaticResource playGeometry}"
+                                                                              Fill="{DynamicResource AccentBrush}"
+                                                                              Stretch="Uniform"
+                                                                              HorizontalAlignment="Center"
+                                                                              VerticalAlignment="Center"/>
+                                                                </Button>
+                                                        </Grid>
+                                                        <Grid Height="40">
+                                                                <Button Style="{StaticResource IconButton}"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Margin="5,0"
+                                                                        Click="NextButton_Click">
+                                                                        <Path
+                                                                                Width="25"
+                                                                                Height="25"
+                                                                                Margin="5"
+                                                                                Data="{StaticResource fast_forwardGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
+                                                                </Button>
+                                                        </Grid>
+                                                        <Grid Height="40">
+                                                                <Button Style="{StaticResource IconButton}"
+                                                                        Click="RepeatButton_Click"
+                                                                        Width="40"
+                                                                        Height="40"
+                                                                        Margin="5,0">
+                                                                        <Path
+                                                                                Width="25"
+                                                                                Height="25"
+                                                                                Margin="5"
+                                                                                Data="{StaticResource loopGeometry}"
+                                                                                Fill="{DynamicResource AccentBrush}"
+                                                                                Stretch="Uniform"
+                                                                                HorizontalAlignment="Center"
+                                                                                VerticalAlignment="Center"/>
+                                                                </Button>
+                                                        </Grid>
                                                 </StackPanel>
 
                                                 <Grid Margin="20,5"
@@ -1007,6 +1023,7 @@
                                                 <Border CornerRadius="8"
                                                         ClipToBounds="True"
                                                         Height="275"
+                                                        Width="275"
                                                         Background="{DynamicResource CentralPanelCardBackground}"
                                                         BorderBrush="{DynamicResource CentralPanelCardBorderBrush}"
                                                         BorderThickness="1"
@@ -1016,6 +1033,7 @@
                                                                HorizontalAlignment="Center"
                                                                VerticalAlignment="Center"
                                                                Source="{Binding ElementName=TracksDataGrid, Path=SelectedItem.CoverImage, Converter={StaticResource LargeTrackImageConverter}}"/>
+                                                        <!-- XD moment  -->
                                                 </Border>
                                                 <TextBlock x:Name="CurrentTrackName"
                                                            Text="NAME"

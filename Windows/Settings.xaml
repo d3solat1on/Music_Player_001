@@ -251,6 +251,11 @@
                                 <ComboBoxItem Content="Rock"/>
                                 <ComboBoxItem Content="Classical"/>
                                 <ComboBoxItem Content="Pop"/>
+                                <ComboBoxItem Content="Lo-Fi"/>
+                                <ComboBoxItem Content="Electronic"/>
+                                <ComboBoxItem Content="Vocal"/>
+                                <ComboBoxItem Content="Metal"/>
+                                <ComboBoxItem Content="808"/>
                             </ComboBox>
 
                             <Button Content="Сбросить"

@@ -19,3 +19,4 @@ appsettings.Development.json
 *.csproj.DotSettings
 .teamcity/
 .fake
+settings.json

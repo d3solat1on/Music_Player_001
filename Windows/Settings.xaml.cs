@@ -13,7 +13,7 @@ namespace QAMP.Windows
         private string? originalColorScheme;
         private string? originalAccentColor;
         private double[]? originalEqGains;
-        private string? originalPreset; 
+        private string? originalPreset;
         private bool originalVisualizerEnabled;
         private int originalBarCount;
         private bool originalCloseToTray;
@@ -54,13 +54,21 @@ namespace QAMP.Windows
 
         private void EqSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
-            if (sender is Slider slider && slider.DataContext is EqBandViewModel band && _player != null)
+            if (sender is Slider slider && slider.DataContext is EqBandViewModel band)
             {
                 float newValue = (float)e.NewValue;
-                _player.CurrentEqualizer?.SetGain(band.Index, newValue);
-                // Сохраняем в конфиг для сохранения после перезагрузки
-                SettingsManager.Instance.Config.EqualizerGains[band.Index] = newValue;
-                _player.EqGains[band.Index] = newValue;
+
+                // Обновляем эквалайзер в плеере
+                if (_player != null)
+                {
+                    _player.CurrentEqualizer?.SetGain(band.Index, newValue);
+                    _player.EqGains[band.Index] = newValue;
+                }
+
+                // Сохраняем в конфиг
+                var config = SettingsManager.Instance.Config;
+                config.EqualizerGains[band.Index] = newValue;
+
                 // Обновляем график АЧХ
                 DrawEqGraph();
             }
@@ -85,27 +93,65 @@ namespace QAMP.Windows
                     case "Pop":
                         ApplyPreset([-2, -1, 1, 2, 4, 4, 3, 1, -1, -2]);
                         break;
+                    case "Lo-Fi":
+                        ApplyPreset([4, 3, 2, 2, 3, 4, 3, 1, -3, -5]);
+                        break;
+                    case "Electronic":
+                        ApplyPreset([7, 6, 3, -1, -3, -3, 0, 4, 7, 8]);
+                        break;
+                    case "Vocal":
+                        ApplyPreset([-5, -4, -2, 2, 5, 6, 4, 2, 0, -2]);
+                        break;
+                    case "Metal":
+                        ApplyPreset([6, 5, 2, -2, -3, -1, 3, 5, 4, 2]);
+                        break;
+                    case "808":
+                        ApplyPreset([12, 11, 8, 2, -2, -1, 1, 4, 8, 10]);
+                        break;
                     default:
                         break;
                 }
-                // Сохраняем выбранный режим
+
                 SettingsManager.Instance.Config.EqualizerPreset = presetName;
+                SettingsManager.Instance.Save();
             }
         }
 
         private void ApplyPreset(float[] gains)
         {
-            if (EqItemsControl.ItemsSource is List<EqBandViewModel> bands && _player != null)
+            if (EqItemsControl.ItemsSource is List<EqBandViewModel> bands)
             {
                 for (int i = 0; i < bands.Count && i < gains.Length; i++)
                 {
-                    bands[i].Gain = gains[i]; // Слайдеры в UI обновятся сами через Binding
-                    _player.CurrentEqualizer?.SetGain(i, gains[i]);
-                    _player.EqGains[i] = gains[i];
+                    bands[i].Gain = gains[i]; // Обновляет UI через Binding
                 }
-                // Обновляем график АЧХ
+
+                // Применяем к плееру
+                if (_player != null)
+                {
+                    _player.UpdateEqualizerGains(gains);
+                }
+
+                // Сохраняем в конфиг
+                var config = SettingsManager.Instance.Config;
+                for (int i = 0; i < gains.Length; i++)
+                {
+                    config.EqualizerGains[i] = gains[i];
+                }
+                config.EqualizerPreset = GetCurrentPresetName();
+                SettingsManager.Instance.Save();
+
+                // Обновляем график
                 DrawEqGraph();
             }
+        }
+        private string GetCurrentPresetName()
+        {
+            if (PresetComboBox.SelectedItem is ComboBoxItem item)
+            {
+                return item.Content?.ToString() ?? "Пользовательский";
+            }
+            return "Пользовательский";
         }
 
         private void ResetEq_Click(object sender, RoutedEventArgs e)
@@ -146,7 +192,6 @@ namespace QAMP.Windows
             var config = SettingsManager.Instance.Config;
             originalColorScheme = config.ColorScheme;
             originalAccentColor = config.AccentColor;
-            // Сохраняем оригинальные значения эквалайзера
             originalEqGains = (double[])config.EqualizerGains.Clone();
             originalPreset = config.EqualizerPreset;
             originalVisualizerEnabled = config.IsVisualizerEnabled;
@@ -158,7 +203,7 @@ namespace QAMP.Windows
             VisualizerDisabled.IsChecked = !config.IsVisualizerEnabled;
             SetBarCountComboValue(config.VisualizerBarCount);
 
-            // Установить выбранную тему (без повторного применения в событие)
+            // Установить выбранную тему
             switch (config.ColorScheme)
             {
                 case "Dark":
@@ -177,16 +222,20 @@ namespace QAMP.Windows
             UpdateColorPreview();
 
             // Загружаем выбранное действие при закрытии
-            if (config.CloseToTray)
-            {
-                CloseToTrayRadio.IsChecked = true;
-            }
-            else
-            {
-                CloseAppRadio.IsChecked = true;
-            }
+            CloseToTrayRadio.IsChecked = config.CloseToTray;
+            CloseAppRadio.IsChecked = !config.CloseToTray;
 
             isInitializing = false;
+
+            // Синхронизируем эквалайзер с плеером
+            if (_player != null && _player.CurrentEqualizer != null)
+            {
+                for (int i = 0; i < config.EqualizerGains.Length; i++)
+                {
+                    _player.CurrentEqualizer.SetGain(i, (float)config.EqualizerGains[i]);
+                    _player.EqGains[i] = (float)config.EqualizerGains[i];
+                }
+            }
 
             // Рисуем график АЧХ
             Dispatcher.InvokeAsync(() => DrawEqGraph(), System.Windows.Threading.DispatcherPriority.Loaded);
@@ -286,10 +335,10 @@ namespace QAMP.Windows
             // Восстановить оригинальные значения спектрограммы
             config.IsVisualizerEnabled = originalVisualizerEnabled;
             config.VisualizerBarCount = originalBarCount;
-            
+
             // Восстановить оригинальное значение "Сворачивать в трей"
             config.CloseToTray = originalCloseToTray;
-            
+
             // Обновляем RadioButton при восстановлении
             if (originalCloseToTray)
             {
@@ -299,7 +348,7 @@ namespace QAMP.Windows
             {
                 CloseAppRadio.IsChecked = true;
             }
-            
+
             if (_player?.SpectrumViewModel != null)
             {
                 _player.SpectrumViewModel.BarCount = originalBarCount;

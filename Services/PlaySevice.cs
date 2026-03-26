@@ -9,6 +9,7 @@ using System.IO;
 using System.Collections.ObjectModel;
 using QAMP.Visualization;
 using QAMP.Audio;
+using QAMP.Windows;
 
 namespace QAMP.Services
 {
@@ -16,7 +17,7 @@ namespace QAMP.Services
     {
         private static PlayerService? _instance;
         public static PlayerService Instance => _instance ??= new PlayerService();
-       public float[] EqGains { get; set; } = new float[10]; 
+        public float[] EqGains { get; set; } = new float[10];
         public EqualizerFilter CurrentEqualizer { get; private set; }
         private readonly SpectrumViewModel _spectrumViewModel;
         public SpectrumViewModel SpectrumViewModel => _spectrumViewModel;
@@ -115,6 +116,19 @@ namespace QAMP.Services
                 Interval = TimeSpan.FromMilliseconds(200)
             };
             _positionTimer.Tick += PositionTimer_Tick;
+
+            // Инициализируем массив EqGains
+            EqGains = new float[10];
+
+            // Загружаем сохраненные настройки
+            var config = SettingsManager.Instance.Config;
+            if (config.EqualizerGains != null)
+            {
+                for (int i = 0; i < config.EqualizerGains.Length && i < EqGains.Length; i++)
+                {
+                    EqGains[i] = (float)config.EqualizerGains[i];
+                }
+            }
         }
 
         public void PlayTrack(Track track)
@@ -141,20 +155,15 @@ namespace QAMP.Services
                     sampleProvider = reader;
                 }
 
-                // --- ВСТАВКА ЭКВАЛАЙЗЕРА ---
-                // Частоты для 10-полосного эквалайзера (стандарт)
                 float[] frequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
-                // Создаем фильтр. Он встает ПОСЛЕ ридера
+                // Создаем новый эквалайзер
                 CurrentEqualizer = new EqualizerFilter(sampleProvider, frequencies);
 
-                // Если у тебя есть сохраненные настройки Gain в памяти, 
-                // здесь их можно применить циклом: CurrentEqualizer.SetGain(i, savedGain);
-                // ---------------------------
+                // ВАЖНО: Применяем сохраненные настройки к новому эквалайзеру
+                ApplySavedEqualizerSettings();
 
-                // --- ВСТАВКА ДЛЯ СПЕКТРА ---
-                // ВАЖНО: передаем в агрегатор CurrentEqualizer, чтобы видеть эффект на спектре
-                var aggregator = new SampleAggregator(CurrentEqualizer, 512);
+                var aggregator = new SampleAggregator(CurrentEqualizer, 256);
 
                 aggregator.FftCalculated += (s, fftData) =>
                 {
@@ -165,13 +174,9 @@ namespace QAMP.Services
                         }),
                         DispatcherPriority.Background);
                 };
-                // ---------------------------
 
                 _waveOutEvent = new WaveOutEvent();
-
-                // Инициализируем через aggregator
                 _waveOutEvent.Init(aggregator);
-
                 _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
 
@@ -188,8 +193,39 @@ namespace QAMP.Services
                 Stop();
             }
         }
+        private void ApplySavedEqualizerSettings()
+        {
+            if (CurrentEqualizer == null) return;
 
+            var config = SettingsManager.Instance.Config;
+            if (config.EqualizerGains == null) return;
 
+            // Применяем сохраненные значения
+            for (int i = 0; i < config.EqualizerGains.Length && i < EqGains.Length; i++)
+            {
+                float gain = (float)config.EqualizerGains[i];
+                CurrentEqualizer.SetGain(i, gain);
+                EqGains[i] = gain;
+            }
+        }
+        public void UpdateEqualizerGains(float[] gains)
+        {
+            if (CurrentEqualizer == null) return;
+
+            for (int i = 0; i < gains.Length && i < EqGains.Length; i++)
+            {
+                CurrentEqualizer.SetGain(i, gains[i]);
+                EqGains[i] = gains[i];
+            }
+
+            // Сохраняем в конфиг
+            var config = SettingsManager.Instance.Config;
+            for (int i = 0; i < gains.Length; i++)
+            {
+                config.EqualizerGains[i] = gains[i];
+            }
+            SettingsManager.Instance.Save();
+        }
         private void OnPlaybackStopped(object sender, StoppedEventArgs e)
         {
             Application.Current.Dispatcher.Invoke(() =>

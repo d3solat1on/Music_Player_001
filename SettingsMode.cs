@@ -10,6 +10,7 @@ public class AppSettings
     public string ColorScheme { get; set; } = "Dark"; // "Dark", "Light", "Custom"
     public string AccentColor { get; set; } = "#1db954"; // Главный цвет приложения
     public double[] EqualizerGains { get; set; } = new double[10]; // Значения эквалайзера
+    public double[] CurrentEqualizerValues { get; set; } = new double[10]; 
     public string EqualizerPreset { get; set; } = "Пользовательский"; // Текущий выбранный режим
 }
 public class SettingsManager

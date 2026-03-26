@@ -1,15 +1,6 @@
-using Microsoft.Win32;
-using Newtonsoft.Json;
-using QAMP;
-using QAMP.Dialogs;
-using QAMP.Models;
-using QAMP.Services;
-using QAMP.ViewModels;
-using QAMP.Windows;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -18,6 +9,12 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using Microsoft.Win32;
+using QAMP.Dialogs;
+using QAMP.Models;
+using QAMP.Services;
+using QAMP.ViewModels;
+using QAMP.Windows;
 using static QAMP.Dialogs.NotificationWindow;
 using static QAMP.Services.PlayerService;
 using Track = QAMP.Models.Track;
@@ -28,7 +25,7 @@ namespace QAMP
     {
         private readonly PlayerService _playService = Instance;
         private readonly DispatcherTimer _memoryCleanupTimer;
-        private System.Windows.Forms.NotifyIcon? _notifyIcon; 
+        private System.Windows.Forms.NotifyIcon? _notifyIcon;
         public static MusicLibrary Library => MusicLibrary.Instance;
         private static PlayerService Player => Instance;
         private bool _isSliderDragging = false;
@@ -38,9 +35,7 @@ namespace QAMP
         public MainWindow()
         {
             InitializeComponent();
-
             SetupTrayIcon();
-
             // Отладочная информация о пути к БД
             System.Diagnostics.Debug.WriteLine("=== ПУТЬ К БАЗЕ ДАННЫХ ===");
             System.Diagnostics.Debug.WriteLine($"Путь: {DatabaseService.DatabasePath}");
@@ -63,6 +58,7 @@ namespace QAMP
             Player.DurationChanged += OnDurationChanged;
             _playService.TrackChanged += UpdateNextTrackUI;
             PlaylistsListBox.MouseDoubleClick += PlaylistsListBox_MouseDoubleClick;
+            KeyDown += Window_KeyDown;
 
             _memoryCleanupTimer = new DispatcherTimer
             {
@@ -413,20 +409,16 @@ namespace QAMP
 
             if (_playService.IsShuffleEnabled)
             {
-                // Создаем перемешанную копию текущей очереди
                 var shuffledList = MusicLibrary.Instance.PlaybackQueue.ToList();
 
-                // Если есть текущий трек, удаляем его из списка для перемешивания
                 Track? currentTrack = Player.CurrentTrack;
                 if (currentTrack != null && shuffledList.Contains(currentTrack))
                 {
                     shuffledList.Remove(currentTrack);
                 }
 
-                // Перемешиваем остальные треки
-                shuffledList = shuffledList.OrderBy(x => Guid.NewGuid()).ToList();
+                shuffledList = [.. shuffledList.OrderBy(x => Guid.NewGuid())];
 
-                // Вставляем текущий трек в начало
                 if (currentTrack != null)
                 {
                     shuffledList.Insert(0, currentTrack);
@@ -434,20 +426,15 @@ namespace QAMP
 
                 _playService.ShuffledQueue = shuffledList;
 
-                System.Diagnostics.Debug.WriteLine($"=== ВКЛЮЧЕН SHUFFLE ===");
-                System.Diagnostics.Debug.WriteLine($"ShuffledQueue.Count: {_playService.ShuffledQueue.Count}");
-                for (int i = 0; i < Math.Min(5, _playService.ShuffledQueue.Count); i++)
-                {
-                    System.Diagnostics.Debug.WriteLine($"  {i}: {_playService.ShuffledQueue[i].Name}");
-                }
-
+                ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffle_OnGeometry"];
                 ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
                 UpdateNextTrackUI();
             }
             else
             {
                 _playService.ShuffledQueue.Clear();
-                // ShuffleImage.Fill = (Brush)Application.Current.Resources[""];
+                ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffleGeometry"];
+                ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
                 UpdateNextTrackUI();
             }
         }
@@ -1147,8 +1134,15 @@ namespace QAMP
                 }
                 else
                 {
-                    var uri = new Uri("pack://application:,,,/Resources/default_cover.png");
-                    CurrentTrackImage.Source = new BitmapImage(uri);
+                    var geometry = (Geometry)Application.Current.Resources["default_coverGeometry"];
+                    var accentBrush = (Brush)Application.Current.Resources["AccentBrush"];
+
+                    var drawing = new GeometryDrawing(accentBrush, null, geometry);
+
+                    var drawingImage = new DrawingImage(drawing);
+                    drawingImage.Freeze();
+
+                    CurrentTrackImage.Source = drawingImage;
                 }
             }
             catch (Exception ex)
@@ -1454,7 +1448,7 @@ namespace QAMP
         protected override void OnClosing(CancelEventArgs e)
         {
 #pragma warning disable CA1416
-            var config = SettingsManager.Instance.Config; 
+            var config = SettingsManager.Instance.Config;
 
             if (config.CloseToTray)
             {
