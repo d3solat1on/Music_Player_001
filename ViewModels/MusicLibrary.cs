@@ -205,6 +205,45 @@ namespace QAMP.ViewModels
             OnPropertyChanged(nameof(Playlists));
         }
 
+        public void UpdatePlaylist(Playlist updatedPlaylist)
+        {
+            // Находим существующий плейлист в коллекции
+            var existingPlaylist = Playlists.FirstOrDefault(p => p.Id == updatedPlaylist.Id);
+            if (existingPlaylist != null)
+            {
+                // Обновляем свойства
+                existingPlaylist.Name = updatedPlaylist.Name;
+                existingPlaylist.Description = updatedPlaylist.Description;
+                existingPlaylist.CoverImage = updatedPlaylist.CoverImage;
+
+                // Обновляем коллекцию треков
+                existingPlaylist.Tracks.Clear();
+                foreach (var track in updatedPlaylist.Tracks)
+                {
+                    existingPlaylist.Tracks.Add(track);
+                }
+
+                // Если это текущий плейлист, обновляем отображение
+                if (CurrentPlaylist?.Id == updatedPlaylist.Id)
+                {
+                    OnPropertyChanged(nameof(CurrentPlaylist));
+                }
+            }
+            else
+            {
+                // Если плейлиста нет, добавляем новый
+                Playlists.Add(updatedPlaylist);
+            }
+        }
+        public void RefreshSinglePlaylist(int playlistId)
+        {
+            // Загружаем только один плейлист из базы
+            var freshPlaylist = DatabaseService.GetPlaylists().FirstOrDefault(p => p.Id == playlistId);
+            if (freshPlaylist != null)
+            {
+                UpdatePlaylist(freshPlaylist);
+            }
+        }
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
         {

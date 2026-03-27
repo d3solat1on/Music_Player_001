@@ -511,41 +511,29 @@ namespace QAMP
 
             if (folderDialog.ShowDialog() == true)
             {
-                DatabaseService.AddFolderToPlaylist(MusicLibrary.Instance.CurrentPlaylist.Id, folderDialog.FolderName);
+                var files = Directory.GetFiles(folderDialog.FolderName, "*.*", SearchOption.AllDirectories)
+                    .Where(f => f.EndsWith(".mp3") || f.EndsWith(".wav") || f.EndsWith(".flac"))
+                    .ToArray();
 
-                // Обновляем плейлисты
-                MusicLibrary.Instance.RefreshPlaylists();
+                var tracks = TagReader.ReadTracksFromFiles(files);
+                int addedCount = 0;
 
-                // Находим обновленный плейлист
-                var updatedPlaylist = MusicLibrary.Instance.Playlists
-                    .FirstOrDefault(p => p.Id == MusicLibrary.Instance.CurrentPlaylist.Id);
-
-                if (updatedPlaylist != null)
+                foreach (var track in tracks)
                 {
-                    // Выбираем обновленный плейлист в списке
-                    PlaylistsListBox.SelectedItem = updatedPlaylist;
-
-                    // Если Shuffle включен, обновляем перемешанную очередь
-                    if (_playService.IsShuffleEnabled)
+                    if (track != null)
                     {
-                        // Создаем перемешанную копию
-                        var shuffledList = updatedPlaylist.Tracks.OrderBy(x => Guid.NewGuid()).ToList();
-                        _playService.ShuffledQueue = shuffledList;
-
-                        // Если есть текущий трек, перемещаем его в начало
-                        if (Player.CurrentTrack != null && _playService.ShuffledQueue.Contains(Player.CurrentTrack))
-                        {
-                            int currentIndex = _playService.ShuffledQueue.IndexOf(Player.CurrentTrack);
-                            var current = _playService.ShuffledQueue[currentIndex];
-                            _playService.ShuffledQueue.RemoveAt(currentIndex);
-                            _playService.ShuffledQueue.Insert(0, current);
-                        }
-
-                        UpdateNextTrackUI();
+                        DatabaseService.SaveTrackToPlaylist(MusicLibrary.Instance.CurrentPlaylist.Id, track);
+                        MusicLibrary.Instance.CurrentPlaylist.Tracks.Add(track);
+                        addedCount++;
                     }
                 }
 
-                NotificationWindow.Show("Папка успешно добавлена!", this);
+                // Обновляем отображение
+                TracksDataGrid.ItemsSource = null;
+                TracksDataGrid.ItemsSource = MusicLibrary.Instance.CurrentPlaylist.Tracks;
+                CurrentTracksCountText.Text = $"{MusicLibrary.Instance.CurrentPlaylist.Tracks.Count} треков";
+
+                NotificationWindow.Show($"Добавлено {addedCount} треков", this);
             }
         }
 
@@ -553,7 +541,7 @@ namespace QAMP
         {
             if (PlaylistsListBox.SelectedItem is not Playlist selectedPlaylist) return;
 
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Multiselect = true,
                 Filter = "Music files (*.mp3;*.wav;*.flac)|*.mp3;*.wav;*.flac"
@@ -568,44 +556,52 @@ namespace QAMP
                     if (newTrack != null)
                     {
                         DatabaseService.SaveTrackToPlaylist(selectedPlaylist.Id, newTrack);
+
+                        // Добавляем в локальную коллекцию
+                        selectedPlaylist.Tracks.Add(newTrack);
                         addedCount++;
                     }
                 }
 
-                // Обновляем плейлисты
-                MusicLibrary.Instance.RefreshPlaylists();
-
-                // Находим обновленный плейлист
-                var updatedPlaylist = MusicLibrary.Instance.Playlists
-                    .FirstOrDefault(p => p.Id == selectedPlaylist.Id);
-
-                if (updatedPlaylist != null)
+                // Обновляем DataGrid, если это текущий плейлист
+                if (MusicLibrary.Instance.CurrentPlaylist?.Id == selectedPlaylist.Id)
                 {
-                    // Выбираем обновленный плейлист в списке
-                    PlaylistsListBox.SelectedItem = updatedPlaylist;
-
-                    // Если Shuffle включен и это текущий воспроизводимый плейлист, обновляем перемешанную очередь
-                    if (_playService.IsShuffleEnabled && MusicLibrary.Instance.CurrentPlaylist?.Id == updatedPlaylist.Id)
+                    TracksDataGrid.ItemsSource = null;
+                    TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
+                    CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
+                }
+                else
+                {
+                    // Обновляем только счетчик в списке плейлистов
+                    var listBoxItem = PlaylistsListBox.ItemContainerGenerator.ContainerFromItem(selectedPlaylist) as ListBoxItem;
+                    if (listBoxItem != null)
                     {
-                        // Создаем перемешанную копию
-                        var shuffledList = updatedPlaylist.Tracks.OrderBy(x => Guid.NewGuid()).ToList();
-                        _playService.ShuffledQueue = shuffledList;
-
-                        // Если есть текущий трек, перемещаем его в начало
-                        if (Player.CurrentTrack != null && _playService.ShuffledQueue.Contains(Player.CurrentTrack))
+                        // Находим TextBlock с количеством треков и обновляем
+                        var trackCountText = FindVisualChild<TextBlock>(listBoxItem, "CurrentTracksCountText");
+                        if (trackCountText != null)
                         {
-                            int currentIndex = _playService.ShuffledQueue.IndexOf(Player.CurrentTrack);
-                            var current = _playService.ShuffledQueue[currentIndex];
-                            _playService.ShuffledQueue.RemoveAt(currentIndex);
-                            _playService.ShuffledQueue.Insert(0, current);
+                            trackCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
                         }
-
-                        UpdateNextTrackUI();
                     }
                 }
 
                 NotificationWindow.Show($"Добавлено {addedCount} треков", this);
             }
+        }
+
+        private T FindVisualChild<T>(DependencyObject parent, string name) where T : FrameworkElement
+        {
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                if (child is T element && element.Name == name)
+                    return element;
+
+                var result = FindVisualChild<T>(child, name);
+                if (result != null)
+                    return result;
+            }
+            return null;
         }
 
         private void CreatePlaylistButton_Click(object sender, RoutedEventArgs e)
@@ -767,7 +763,7 @@ namespace QAMP
         {
             if (Library.CurrentPlaylist == null)
             {
-                NotificationWindow.Show("Сначала выберите плейлист", Application.Current.MainWindow);
+                NotificationWindow.Show("Сначала выберите плейлист", this);
                 return;
             }
 
@@ -783,12 +779,13 @@ namespace QAMP
                 {
                     DatabaseService.RemoveTrackFromPlaylist(selectedPlaylist.Id, selectedTrack.Id);
 
-                    // Обновляем плейлисты
-                    MusicLibrary.Instance.RefreshPlaylists();
+                    // Удаляем из локальной коллекции
+                    selectedPlaylist.Tracks.Remove(selectedTrack);
 
-                    // Восстанавливаем текущий плейлист
-                    PlaylistsListBox.SelectedItem = MusicLibrary.Instance.Playlists
-                        .FirstOrDefault(p => p.Id == selectedPlaylist.Id);
+                    // Обновляем отображение
+                    TracksDataGrid.ItemsSource = null;
+                    TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
+                    CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
 
                     UpdateNextTrackUI();
                 }
@@ -1020,6 +1017,7 @@ namespace QAMP
 
             var favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
 
+            // Если плейлиста "Избранное" ещё нет, создаём его
             if (favoritePlaylist == null)
             {
                 byte[]? favCover = null;
@@ -1037,8 +1035,25 @@ namespace QAMP
                 catch { }
 
                 long newId = DatabaseService.CreatePlaylist(MusicLibrary.FavoritesName, "Ваши любимые треки", favCover);
-                Library.RefreshPlaylists();
-                favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Id == (int)newId);
+
+                // Обновляем только список плейлистов, не трогая очередь
+                var newPlaylist = new Playlist
+                {
+                    Id = (int)newId,
+                    Name = MusicLibrary.FavoritesName,
+                    Description = "Ваши любимые треки",
+                    CoverImage = favCover
+                };
+
+                // Загружаем треки для нового плейлиста
+                var tracks = DatabaseService.GetTracksForPlaylist((int)newId);
+                foreach (var track in tracks)
+                {
+                    newPlaylist.Tracks.Add(track);
+                }
+
+                Library.Playlists.Add(newPlaylist);
+                favoritePlaylist = newPlaylist;
             }
 
             if (favoritePlaylist == null) return;
@@ -1047,48 +1062,44 @@ namespace QAMP
 
             if (!isAlreadyFavorite)
             {
+                // Добавляем в базу
                 DatabaseService.SaveTrackToPlaylist(favoritePlaylist.Id, Player.CurrentTrack);
+
+                // Обновляем локальную коллекцию
+                favoritePlaylist.Tracks.Add(Player.CurrentTrack);
+
                 UpdateFavoriteIcon(Player.CurrentTrack, true);
                 NotificationWindow.Show("Добавлено в Избранное", this);
             }
             else
             {
+                // Удаляем из базы
                 DatabaseService.RemoveTrackFromPlaylist(favoritePlaylist.Id, Player.CurrentTrack.Id);
+
+                // Обновляем локальную коллекцию
+                var trackToRemove = favoritePlaylist.Tracks.FirstOrDefault(t => t.Id == Player.CurrentTrack.Id);
+                if (trackToRemove != null)
+                {
+                    favoritePlaylist.Tracks.Remove(trackToRemove);
+                }
+
                 UpdateFavoriteIcon(Player.CurrentTrack, false);
                 NotificationWindow.Show("Удалено из Избранного", this);
             }
 
-            // Обновляем плейлисты из БД
-            var previousPlaylistId = Library.CurrentPlaylist?.Id;
-            var previousTracksCount = Library.CurrentPlaylist?.Tracks.Count ?? 0;
-
-            System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПЕРЕД RefreshPlaylists: плейлист ID={previousPlaylistId}, треков={previousTracksCount}");
-
-            Library.RefreshPlaylists();
-
-            // Восстанавливаем выбор текущего плейлиста, если он был выбран
-            if (previousPlaylistId.HasValue)
+            // Обновляем отображение, если мы сейчас в плейлисте "Избранное"
+            if (Library.CurrentPlaylist?.Id == favoritePlaylist.Id)
             {
-                var restoredPlaylist = Library.Playlists
-                    .FirstOrDefault(p => p.Id == previousPlaylistId.Value);
+                // Обновляем DataGrid без полной перезагрузки
+                TracksDataGrid.ItemsSource = null;
+                TracksDataGrid.ItemsSource = favoritePlaylist.Tracks;
 
-                if (restoredPlaylist != null)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПОСЛЕ RefreshPlaylists: восстановленный плейлист ID={restoredPlaylist.Id}, треков={restoredPlaylist.Tracks.Count}");
-
-                    // Устанавливаем текущий плейлист в MusicLibrary
-                    Library.CurrentPlaylist = restoredPlaylist;
-
-                    // Явно обновляем выбор в ListBox (это вызовет SelectionChanged)
-                    PlaylistsListBox.SelectedItem = restoredPlaylist;
-
-                    // Явно обновляем ItemsSource DataGrid с новой коллекцией
-                    TracksDataGrid.ItemsSource = null;
-                    TracksDataGrid.ItemsSource = restoredPlaylist.Tracks;
-
-                    System.Diagnostics.Debug.WriteLine($"[FavoriteButton] ПОСЛЕ обновления UI: в DataGrid должно быть {restoredPlaylist.Tracks.Count} треков");
-                }
+                // Обновляем счетчик
+                CurrentTracksCountText.Text = $"{favoritePlaylist.Tracks.Count} треков";
             }
+
+            // Обновляем иконку избранного в нижней панели
+            UpdateFavoriteIcon(Player.CurrentTrack);
         }
 
         private void UpdateFavoriteIcon(Track track, bool? forceState = null)
@@ -1612,7 +1623,7 @@ namespace QAMP
 
             e.Handled = true;
         }
-        
+
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
         private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
         private void Maximize_Click(object sender, RoutedEventArgs e)
