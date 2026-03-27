@@ -20,3 +20,6 @@ appsettings.Development.json
 .teamcity/
 .fake
 settings.json
+*.db
+*.db-journal
+*.log
