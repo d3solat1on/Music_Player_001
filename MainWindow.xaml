@@ -8,6 +8,7 @@
         xmlns:converters="clr-namespace:QAMP.Converters"
         xmlns:viewModels="clr-namespace:QAMP.ViewModels"
         xmlns:services="clr-namespace:QAMP.Services"
+        xmlns:models="clr-namespace:QAMP.Models"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="QAMP"
@@ -30,6 +31,9 @@
                 <converters:NotNullConverter x:Key="NotNullConverter"/>
                 <converters:LargeTrackImageConverter x:Key="LargeTrackImageConverter"/>
                 <converters:PercentOfConverter x:Key="PercentOfConverter"/>
+                <BooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+                <converters:BindingProxy x:Key="Proxy" 
+                        Data="{Binding Source={x:Static models:SettingsManager.Instance}, Path=Config}"/>
         </Window.Resources>
 
         <Grid>
@@ -910,6 +914,9 @@
 
                                                         <!-- В DataGrid.Columns, перед колонкой NAME -->
                                                         <DataGridTemplateColumn Header=""
+                                                                                Visibility="{Binding Data.IsCompactMode, 
+                 Source={StaticResource Proxy}, 
+                 Converter={StaticResource InverseBoolToVisConverter}}"
                                                                                 Width="75">
                                                                 <DataGridTemplateColumn.CellTemplate>
                                                                         <DataTemplate>
@@ -1017,6 +1024,9 @@
 
                                                         <DataGridTextColumn Header="BITRATE"
                                                                             Binding="{Binding Bitrate}"
+                                                                            Visibility="{Binding Data.IsCompactMode, 
+                 Source={StaticResource Proxy}, 
+                 Converter={StaticResource InverseBoolToVisConverter}}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
                                                                         <Style TargetType="TextBlock">
@@ -1031,6 +1041,9 @@
                                                         </DataGridTextColumn>
                                                         <DataGridTextColumn Header="GENRE"
                                                                             Binding="{Binding Genre}"
+                                                                       Visibility="{Binding Data.IsCompactMode, 
+                 Source={StaticResource Proxy}, 
+                 Converter={StaticResource InverseBoolToVisConverter}}"
                                                                             Width="1*">
                                                                 <DataGridTextColumn.ElementStyle>
                                                                         <Style TargetType="TextBlock">

@@ -2,6 +2,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using QAMP.Models;
 using QAMP.Services;
 using QAMP.ViewModels;
 
@@ -239,6 +240,10 @@ namespace QAMP.Windows
 
             // Рисуем график АЧХ
             Dispatcher.InvokeAsync(() => DrawEqGraph(), System.Windows.Threading.DispatcherPriority.Loaded);
+            if (config.IsCompactMode)
+                CompactModeRadio.IsChecked = true;
+            else
+                DefaultModeRadio.IsChecked = true;
         }
 
         private void ThemeRadio_Checked(object sender, RoutedEventArgs e)
@@ -270,7 +275,16 @@ namespace QAMP.Windows
 
             ThemeManager.ApplyTheme(theme);
         }
+        private void Format_Checked(object sender, RoutedEventArgs e)
+        {
+            if (isInitializing || sender is not RadioButton radio) return;
 
+            bool isCompact = radio.Name == "CompactModeRadio";
+
+            var config = SettingsManager.Instance.Config;
+            config.IsCompactMode = isCompact;
+
+        }
         private void CloseAction_Checked(object sender, RoutedEventArgs e)
         {
             if (isInitializing) return;

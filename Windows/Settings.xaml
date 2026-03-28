@@ -116,6 +116,7 @@
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <TextBlock Text="Настройки"
@@ -205,11 +206,10 @@
                                        Margin="0,0,0,5"/>
                             <ComboBox x:Name="BarCountCombo"
                                       Width="100"
-                                      
                                       SelectionChanged="BarCountCombo_SelectionChanged">
                                 <ComboBoxItem Content="32"/>
                                 <ComboBoxItem Content="64"/>
-                                              <!-- IsSelected="True"/> -->
+                                <!-- IsSelected="True"/> -->
                                 <ComboBoxItem Content="128"/>
                                 <ComboBoxItem Content="256"/>
                             </ComboBox>
@@ -245,7 +245,7 @@
                                       Background="{DynamicResource TertiaryBackgroundBrush}"
                                       BorderBrush="{DynamicResource BorderBrush}">
                                 <ComboBoxItem Content="Пользовательский"/>
-                                              <!-- IsSelected="True"/> -->
+                                <!-- IsSelected="True"/> -->
                                 <ComboBoxItem Content="Bass Boost"/>
                                 <ComboBoxItem Content="Rock"/>
                                 <ComboBoxItem Content="Classical"/>
@@ -296,7 +296,7 @@
                                                     IsSnapToTickEnabled="True"
                                                     ValueChanged="EqSlider_ValueChanged"
                                                     HorizontalAlignment="Center"/>
-                                                     <!-- Style="{StaticResource CustomSliderStyle}" -->
+                                            <!-- Style="{StaticResource CustomSliderStyle}" -->
 
                                             <TextBlock Text="{Binding Frequency}"
                                                        FontSize="10"
@@ -314,6 +314,24 @@
             </GroupBox>
 
             <GroupBox Grid.Row="5"
+                      Header="Формат библиотеки"
+                      Margin="0,0,0,20"
+                      Foreground="{DynamicResource ForegroundBrush}">
+                <StackPanel Margin="10">
+                    <RadioButton x:Name="DefaultModeRadio"
+                                 Content="Компактный"
+                                 GroupName="Format"
+                                 Margin="0,0,0,10"
+                                 Foreground="{DynamicResource ForegroundBrush}"
+                                 Checked="Format_Checked"/>
+                    <RadioButton x:Name="CompactModeRadio"
+                                 Content="Обычный"
+                                 GroupName="Format"
+                                 Foreground="{DynamicResource ForegroundBrush}"
+                                 Checked="Format_Checked"/>
+                </StackPanel>
+            </GroupBox>
+            <GroupBox Grid.Row="6"
                       Header="Системные настройки"
                       Margin="0,0,0,20"
                       Foreground="{DynamicResource ForegroundBrush}">
@@ -332,7 +350,7 @@
                 </StackPanel>
 
             </GroupBox>
-            <StackPanel Grid.Row="6"
+            <StackPanel Grid.Row="7"
                         Orientation="Horizontal"
                         HorizontalAlignment="Right">
                 <Button x:Name="CancelButton"

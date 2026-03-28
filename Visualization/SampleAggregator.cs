@@ -1,6 +1,7 @@
 using System;
 using NAudio.Dsp;
 using NAudio.Wave;
+using QAMP.Models;
 
 namespace QAMP.Visualization
 {

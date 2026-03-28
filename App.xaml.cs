@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Windows;
 using System.Windows.Threading;
+using QAMP.Models;
 using QAMP.Services;
 
 namespace QAMP

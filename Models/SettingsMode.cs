@@ -1,8 +1,9 @@
+using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
-namespace QAMP;
+namespace QAMP.Models;
 
-public class AppSettings
+public class AppSettings : INotifyPropertyChanged
 {
     public bool CloseToTray { get; set; } = true;
     public bool IsVisualizerEnabled { get; set; } = true;
@@ -10,8 +11,20 @@ public class AppSettings
     public string ColorScheme { get; set; } = "Dark"; // "Dark", "Light", "Custom"
     public string AccentColor { get; set; } = "#1db954"; // Главный цвет приложения
     public double[] EqualizerGains { get; set; } = new double[10]; // Значения эквалайзера
-    public double[] CurrentEqualizerValues { get; set; } = new double[10]; 
+    public double[] CurrentEqualizerValues { get; set; } = new double[10];
     public string EqualizerPreset { get; set; } = "Пользовательский"; // Текущий выбранный режим
+    private bool _isCompactMode = true;
+    public bool IsCompactMode 
+    { 
+        get => _isCompactMode;
+        set { 
+            _isCompactMode = value; 
+            OnPropertyChanged(nameof(IsCompactMode)); 
+        } 
+    }
+    public event PropertyChangedEventHandler? PropertyChanged;
+    protected void OnPropertyChanged(string name) => 
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 public class SettingsManager
 {

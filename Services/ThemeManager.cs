@@ -1,8 +1,9 @@
 using System;
 using System.Linq;
 using System.Windows;
+using QAMP.Models;
 
-namespace QAMP
+namespace QAMP.Services
 {
     public static class ThemeManager
     {
