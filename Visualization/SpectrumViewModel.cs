@@ -6,7 +6,7 @@ namespace QAMP.Visualization
     {
         public ObservableCollection<BarItem> Bars { get; }
         private int _barCount = 64;
-        private readonly object _barsLock = new object(); // Для синхронизации многопоточного доступа
+        private readonly Lock _barsLock = new(); // Для синхронизации многопоточного доступа
 
         public int BarCount
         {

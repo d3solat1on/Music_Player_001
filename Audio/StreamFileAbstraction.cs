@@ -1,16 +1,9 @@
 namespace QAMP.Audio;
-public class StreamFileAbstraction : TagLib.File.IFileAbstraction
+public class StreamFileAbstraction(string name, System.IO.Stream readStream, System.IO.Stream writeStream) : TagLib.File.IFileAbstraction
 {
-    public string Name { get; }
-    public System.IO.Stream ReadStream { get; }
-    public System.IO.Stream WriteStream { get; }
-
-    public StreamFileAbstraction(string name, System.IO.Stream readStream, System.IO.Stream writeStream)
-    {
-        Name = name;
-        ReadStream = readStream;
-        WriteStream = writeStream;
-    }
+    public string Name { get; } = name;
+    public System.IO.Stream ReadStream { get; } = readStream;
+    public System.IO.Stream WriteStream { get; } = writeStream;
 
     public void CloseStream(System.IO.Stream stream)
     {

@@ -1,0 +1,551 @@
+using System;
+using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using QAMP.Dialogs;
+using QAMP.Models;
+using QAMP.Services;
+using QAMP.ViewModels;
+using QAMP.Windows;
+using static QAMP.Dialogs.NotificationWindow;
+
+namespace QAMP
+{
+    public partial class MainWindow
+    {
+        private void RemoveFromPlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (Library.CurrentPlaylist == null)
+            {
+                NotificationWindow.Show("Сначала выберите плейлист", this);
+                return;
+            }
+
+            if (TracksDataGrid.SelectedItem is Track selectedTrack &&
+                PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
+            {
+                var result = NotificationWindow.Show(
+                   $"Удалить трек \"{selectedTrack.Name}\" из плейлиста \"{Library.CurrentPlaylist.Name}\"?",
+                   this,
+                   NotificationMode.Confirm);
+
+                if (result == true)
+                {
+                    DatabaseService.RemoveTrackFromPlaylist(selectedPlaylist.Id, selectedTrack.Id);
+                    selectedPlaylist.Tracks.Remove(selectedTrack);
+                    TracksDataGrid.ItemsSource = null;
+                    TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
+                    CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
+                    UpdateNextTrackUI();
+                }
+            }
+        }
+
+        private void RemovePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
+            {
+                if (selectedPlaylist.Name == MusicLibrary.FavoritesName)
+                {
+                    NotificationWindow.Show("Системный плейлист нельзя удалить", this);
+                    return;
+                }
+
+                if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
+                {
+                    DatabaseService.DeletePlaylist(selectedPlaylist.Id);
+
+                    if (MusicLibrary.Instance.CurrentPlaylist?.Id == selectedPlaylist.Id)
+                    {
+                        MusicLibrary.Instance.CurrentPlaylist = null;
+                    }
+
+                    MusicLibrary.Instance.RefreshPlaylists();
+                    PlaylistsListBox.SelectedItem = null;
+                    CurrentPlaylistNameText.Text = "";
+                    CurrentPlaylistDescriptionText.Text = "";
+                    CurrentPlaylistCover.Source = null;
+                    CurrentTracksCountText.Text = "0 треков";
+
+                    NotificationWindow.Show("Плейлист удален", this);
+                }
+            }
+        }
+
+        private void VolumeSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            if (Player != null)
+            {
+                double volume = VolumeSlider.Value / 100.0;
+                Player.Volume = volume;
+                DatabaseService.SaveSetting("Volume", volume.ToString(System.Globalization.CultureInfo.InvariantCulture));
+
+                if (VolumeSlider.Value == 0)
+                {
+                    VolumeImage.Data = (Geometry)Application.Current.Resources["volume_offGeometry"];
+                }
+                else
+                {
+                    VolumeImage.Data = (Geometry)Application.Current.Resources["volumeGeometry"];
+                }
+
+                if (VolumePercentage != null)
+                {
+                    VolumePercentage.Text = $"{VolumeSlider.Value:F0}%";
+                }
+            }
+        }
+
+        private void VolumeButton_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            if (VolumeSlider.Value > 0)
+            {
+                _lastVolume = VolumeSlider.Value;
+                VolumeSlider.Value = 0;
+            }
+            else
+            {
+                VolumeSlider.Value = _lastVolume;
+            }
+        }
+
+        private void RepeatButton_Click(object sender, RoutedEventArgs e)
+        {
+            switch (Player.RepeatMode)
+            {
+                case RepeatMode.NoRepeat:
+                    Player.RepeatMode = RepeatMode.RepeatAll;
+                    break;
+                case RepeatMode.RepeatAll:
+                    Player.RepeatMode = RepeatMode.RepeatOne;
+                    break;
+                case RepeatMode.RepeatOne:
+                    Player.RepeatMode = RepeatMode.NoRepeat;
+                    break;
+            }
+            UpdateNextTrackUI();
+        }
+
+        private void DeletePlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
+            {
+                if (selectedPlaylist.Name == MusicLibrary.FavoritesName)
+                {
+                    NotificationWindow.Show("Системный плейлист нельзя удалить", this);
+                    return;
+                }
+
+                if (NotificationWindow.Show($"Удалить плейлист \"{selectedPlaylist.Name}\"?", this, NotificationMode.Confirm) == true)
+                {
+                    DatabaseService.DeletePlaylist(selectedPlaylist.Id);
+
+                    if (MusicLibrary.Instance.CurrentPlaylist?.Id == selectedPlaylist.Id)
+                    {
+                        MusicLibrary.Instance.CurrentPlaylist = null;
+                        MusicLibrary.Instance.PlaybackQueue.Clear();
+                    }
+
+                    MusicLibrary.Instance.RefreshPlaylists();
+                    PlaylistsListBox.SelectedItem = null;
+
+                    NotificationWindow.Show("Плейлист удален", this);
+                }
+            }
+        }
+
+        private void PinPlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.DataContext is Playlist selectedPlaylist)
+            {
+                bool newPinnedState = !selectedPlaylist.IsPinned;
+                DatabaseService.UpdatePlaylistPinnedState(selectedPlaylist.Id, newPinnedState);
+                selectedPlaylist.IsPinned = newPinnedState;
+                MusicLibrary.Instance.RefreshPlaylists();
+                PlaylistsListBox.SelectedItem = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == selectedPlaylist.Id);
+                var message = newPinnedState ? "Плейлист закреплен" : "Плейлист откреплен";
+                NotificationWindow.Show(message, this);
+            }
+        }
+
+        private void Playlist_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed && sender is ListBoxItem item)
+            {
+                DragDrop.DoDragDrop(item, item.DataContext, DragDropEffects.Move);
+            }
+        }
+
+        private void Playlist_Drop(object sender, DragEventArgs e)
+        {
+            if (e.Data.GetData(typeof(Playlist)) is Playlist droppedPlaylist && sender is ListBoxItem { DataContext: Playlist targetPlaylist } && droppedPlaylist != targetPlaylist)
+            {
+                var playlists = MusicLibrary.Instance.Playlists;
+                int oldIndex = playlists.IndexOf(droppedPlaylist);
+                int newIndex = playlists.IndexOf(targetPlaylist);
+
+                if (oldIndex != -1 && newIndex != -1)
+                {
+                    playlists.Move(oldIndex, newIndex);
+                    DatabaseService.SavePlaylistsOrder();
+                }
+            }
+        }
+
+        private void EditPlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.DataContext is Playlist selectedPlaylist)
+            {
+                var dialog = new EditPlaylistDialog
+                {
+                    Owner = this,
+                    DataContext = selectedPlaylist
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    MusicLibrary.Instance.RefreshPlaylists();
+                    PlaylistsListBox.SelectedItem = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == selectedPlaylist.Id);
+                }
+            }
+        }
+
+        private void ShowTrackInfo_Click(object sender, RoutedEventArgs e)
+        {
+            if (TracksDataGrid.SelectedItem is Track selectedTrack)
+            {
+                var fullInfo = TagReader.GetFullTrackInfo(selectedTrack.Path);
+                if (fullInfo != null)
+                {
+                    var infoWindow = new Windows.ShowTrackInfo(fullInfo)
+                    {
+                        Owner = this
+                    };
+                    infoWindow.ShowDialog();
+                }
+            }
+        }
+
+        private void PlayTrackMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            if (TracksDataGrid.SelectedItem is Track selectedTrack)
+            {
+                Player.PlayTrack(selectedTrack);
+                UpdateNextTrackUI();
+            }
+        }
+
+        private void FavoriteButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Player.CurrentTrack == null)
+            {
+                NotificationWindow.Show("Нет трека для добавления в Избранное", this);
+                return;
+            }
+
+            var favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
+            if (favoritePlaylist == null)
+            {
+                byte[]? favCover = null;
+                try
+                {
+                    var uri = new Uri("pack://application:,,,/Resources/favorite_cover.png");
+                    var resourceStream = Application.GetResourceStream(uri);
+                    if (resourceStream != null)
+                    {
+                        using var ms = new MemoryStream();
+                        resourceStream.Stream.CopyTo(ms);
+                        favCover = ms.ToArray();
+                    }
+                }
+                catch { }
+
+                long newId = DatabaseService.CreatePlaylist(MusicLibrary.FavoritesName, "Ваши любимые треки", favCover);
+                var newPlaylist = new Playlist
+                {
+                    Id = (int)newId,
+                    Name = MusicLibrary.FavoritesName,
+                    Description = "Ваши любимые треки",
+                    CoverImage = favCover
+                };
+
+                var tracks = DatabaseService.GetTracksForPlaylist((int)newId);
+                foreach (var track in tracks)
+                {
+                    newPlaylist.Tracks.Add(track);
+                }
+
+                Library.Playlists.Add(newPlaylist);
+                favoritePlaylist = newPlaylist;
+            }
+
+            if (favoritePlaylist == null) return;
+
+            bool isAlreadyFavorite = favoritePlaylist.Tracks.Any(t => t.Path == Player.CurrentTrack.Path);
+            if (!isAlreadyFavorite)
+            {
+                DatabaseService.SaveTrackToPlaylist(favoritePlaylist.Id, Player.CurrentTrack);
+                favoritePlaylist.Tracks.Add(Player.CurrentTrack);
+                UpdateFavoriteIcon(Player.CurrentTrack, true);
+                NotificationWindow.Show("Добавлено в Избранное", this);
+            }
+            else
+            {
+                DatabaseService.RemoveTrackFromPlaylist(favoritePlaylist.Id, Player.CurrentTrack.Id);
+                var trackToRemove = favoritePlaylist.Tracks.FirstOrDefault(t => t.Id == Player.CurrentTrack.Id);
+                if (trackToRemove != null)
+                {
+                    favoritePlaylist.Tracks.Remove(trackToRemove);
+                }
+                UpdateFavoriteIcon(Player.CurrentTrack, false);
+                NotificationWindow.Show("Удалено из Избранного", this);
+            }
+
+            if (Library.CurrentPlaylist?.Id == favoritePlaylist.Id)
+            {
+                TracksDataGrid.ItemsSource = null;
+                TracksDataGrid.ItemsSource = favoritePlaylist.Tracks;
+                CurrentTracksCountText.Text = $"{favoritePlaylist.Tracks.Count} треков";
+            }
+
+            UpdateFavoriteIcon(Player.CurrentTrack);
+        }
+
+        private void UpdateFavoriteIcon(Track track, bool? forceState = null)
+        {
+            if (FavoriteIcon == null) return;
+
+            bool isFavorite;
+            if (forceState.HasValue)
+            {
+                isFavorite = forceState.Value;
+            }
+            else if (track != null)
+            {
+                var favoritePlaylist = Library.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
+                isFavorite = favoritePlaylist?.Tracks.Contains(track) ?? false;
+            }
+            else
+            {
+                isFavorite = false;
+            }
+
+            FavoriteIcon.Data = isFavorite
+                ? (Geometry)Application.Current.Resources["favorites_addedGeometry"]
+                : (Geometry)Application.Current.Resources["add_favoritesGeometry"];
+
+            FavoriteButton.ToolTip = isFavorite ? "Удалить из избранного" : "Добавить в избранное";
+            FavoriteIcon.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+        }
+
+        private void UpdateCurrentTrackCover(Track track)
+        {
+            try
+            {
+                if (track?.CoverImage != null && track.CoverImage.Length > 0)
+                {
+                    using var ms = new MemoryStream(track.CoverImage);
+                    var bitmap = new BitmapImage();
+                    bitmap.BeginInit();
+                    bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmap.StreamSource = ms;
+                    bitmap.EndInit();
+                    bitmap.Freeze();
+                    CurrentTrackImage.Source = bitmap;
+                }
+                else
+                {
+                    var geometry = (Geometry)Application.Current.Resources["default_coverGeometry"];
+                    var accentBrush = (Brush)Application.Current.Resources["AccentBrush"];
+                    var drawing = new GeometryDrawing(accentBrush, null, geometry);
+                    var drawingImage = new DrawingImage(drawing);
+                    drawingImage.Freeze();
+                    CurrentTrackImage.Source = drawingImage;
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Ошибка загрузки обложки: {ex.Message}");
+                CurrentTrackImage.Source = null;
+            }
+        }
+
+        private static void LoadPlaylists()
+        {
+            System.Diagnostics.Debug.WriteLine("=== НАЧАЛО ЗАГРУЗКИ ПЛЕЙЛИСТОВ ===");
+            MusicLibrary.Instance.RefreshPlaylists();
+            System.Diagnostics.Debug.WriteLine("=== КОНЕЦ ЗАГРУЗКИ ПЛЕЙЛИСТОВ ===");
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            PerformSearch();
+        }
+
+        private void SearchBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Return)
+            {
+                PerformSearch();
+                e.Handled = true;
+            }
+        }
+
+        private void ClearSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            SearchBox.Clear();
+            if (PlaylistsListBox.SelectedItem is Playlist currentPlaylist)
+            {
+                TracksDataGrid.ItemsSource = currentPlaylist.Tracks;
+                CurrentPlaylistNameText.Text = currentPlaylist.Name;
+                CurrentPlaylistDescriptionText.Text = currentPlaylist.Description;
+                CurrentTracksCountText.Text = $"{currentPlaylist.Tracks.Count} треков";
+            }
+        }
+
+        private void PerformSearch()
+        {
+            string searchQuery = SearchBox.Text.Trim();
+            if (string.IsNullOrWhiteSpace(searchQuery))
+            {
+                NotificationWindow.Show("Введите текст для поиска", this);
+                return;
+            }
+
+            var searchResults = new List<Track>();
+            string searchLower = searchQuery.ToLower();
+
+            foreach (var playlist in MusicLibrary.Instance.Playlists)
+            {
+                foreach (var track in playlist.Tracks)
+                {
+                    if (track.Name.ToLower().Contains(searchLower) ||
+                        track.Executor.ToLower().Contains(searchLower) ||
+                        track.Album.ToLower().Contains(searchLower) ||
+                        track.Genre.ToLower().Contains(searchLower))
+                    {
+                        if (!searchResults.Any(t => t.Path == track.Path))
+                        {
+                            searchResults.Add(track);
+                        }
+                    }
+                }
+            }
+
+            ShowSearchResults(searchResults, searchQuery);
+        }
+
+        private void ShowSearchResults(List<Track> results, string searchQuery)
+        {
+            if (results.Count == 0)
+            {
+                NotificationWindow.Show($"По запросу \"{searchQuery}\" ничего не найдено", this);
+                return;
+            }
+
+            CurrentPlaylistNameText.Text = "Результаты поиска";
+            CurrentPlaylistDescriptionText.Text = $"По запросу: \"{searchQuery}\" найдено {results.Count} треков";
+            CurrentTracksCountText.Text = $"{results.Count} треков";
+            CurrentPlaylistCover.Source = null;
+
+            TracksDataGrid.ItemsSource = new ObservableCollection<Track>(results);
+        }
+
+        private void AddToPlaylistSubMenu_SubmenuOpened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not MenuItem subMenu) return;
+            subMenu.Items.Clear();
+            if (MusicLibrary.Instance.Playlists.Count == 0)
+            {
+                subMenu.Items.Add(new MenuItem { Header = "Нет плейлистов", IsEnabled = false });
+                return;
+            }
+
+            foreach (var playlist in MusicLibrary.Instance.Playlists)
+            {
+                MenuItem item = new() { Header = playlist.Name, DataContext = playlist, Tag = playlist.Id };
+                item.Click += AddToSpecificPlaylist_Click;
+                subMenu.Items.Add(item);
+            }
+        }
+
+        private void ContextMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not ContextMenu menu) return;
+            var subMenu = menu.Items.OfType<MenuItem>().FirstOrDefault(m => m.Header != null && m.Header.ToString().Contains("Добавить в плейлист"));
+            if (subMenu == null) return;
+
+            subMenu.ItemsSource = null;
+            subMenu.Items.Clear();
+
+            var playlists = MusicLibrary.Instance.Playlists;
+            if (playlists == null || playlists.Count == 0)
+            {
+                subMenu.Items.Add(new MenuItem { Header = "Нет доступных плейлистов", IsEnabled = false });
+            }
+            else
+            {
+                foreach (var p in playlists)
+                {
+                    var item = new MenuItem { Header = p.Name, DataContext = p };
+                    item.Click += AddToSpecificPlaylist_Click;
+                    subMenu.Items.Add(item);
+                }
+            }
+            subMenu.IsEnabled = true;
+        }
+
+        private void AddToSpecificPlaylist_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is MenuItem menuItem && menuItem.DataContext is Playlist targetPlaylist)
+            {
+                if (TracksDataGrid.SelectedItem is Track selectedTrack)
+                {
+                    if (string.IsNullOrEmpty(selectedTrack.Path))
+                    {
+                        NotificationWindow.Show("Ошибка: путь трека не определен", this);
+                        return;
+                    }
+
+                    if (IsTrackInPlaylist(targetPlaylist.Id, selectedTrack.Id))
+                    {
+                        NotificationWindow.Show($"Трек уже есть в плейлисте \"{targetPlaylist.Name}\"!", this);
+                        return;
+                    }
+
+                    DatabaseService.AddTrackToPlaylist(targetPlaylist.Id, selectedTrack.Path);
+                    var tracksFromDb = DatabaseService.GetTracksForPlaylist(targetPlaylist.Id);
+                    targetPlaylist.Tracks = new ObservableCollection<Track>(tracksFromDb);
+
+                    NotificationWindow.Show($"Добавлено в \"{targetPlaylist.Name}\"", this);
+                }
+            }
+        }
+
+        private static bool IsTrackInPlaylist(int playlistId, int trackId)
+        {
+            try
+            {
+                return DatabaseService.IsTrackInPlaylist(playlistId, trackId);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new Settings(_playService)
+            {
+                Owner = this
+            };
+            settingsWindow.ShowDialog();
+        }
+    }
+}

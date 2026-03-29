@@ -197,6 +197,23 @@ public class DatabaseService
         linkCommand.ExecuteNonQuery();
     }
 
+    public static bool IsTrackInPlaylist(int playlistId, int trackId)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+
+        var command = connection.CreateCommand();
+        command.CommandText = @"
+            SELECT COUNT(*)
+            FROM PlaylistTracks
+            WHERE PlaylistId = $playlistId AND TrackId = $trackId";
+        command.Parameters.AddWithValue("$playlistId", playlistId);
+        command.Parameters.AddWithValue("$trackId", trackId);
+
+        long count = (long)command.ExecuteScalar();
+        return count > 0;
+    }
+
     public static void AddFolderToPlaylist(int playlistId, string folderPath)
     {
         var files = Directory.GetFiles(folderPath, "*.*", SearchOption.AllDirectories)
