@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
+using System.Security.Cryptography.Xml;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -38,7 +39,6 @@ namespace QAMP
         {
             InitializeComponent();
             SetupTrayIcon();
-            // Отладочная информация о пути к БД
             System.Diagnostics.Debug.WriteLine("=== ПУТЬ К БАЗЕ ДАННЫХ ===");
             System.Diagnostics.Debug.WriteLine($"Путь: {DatabaseService.DatabasePath}");
             System.Diagnostics.Debug.WriteLine($"Папка существует: {Directory.Exists(Path.GetDirectoryName(DatabaseService.DatabasePath))}");
@@ -48,9 +48,8 @@ namespace QAMP
 
             // Проверяем, создался ли файл
             System.Diagnostics.Debug.WriteLine($"Файл БД существует: {File.Exists(DatabaseService.DatabasePath)}");
-
-            LoadApplicationSettings();
             LoadPlaylists();
+            LoadApplicationSettings();
             DataContext = MusicLibrary.Instance;
 
             Player.TrackChanged += OnTrackChanged;
@@ -60,7 +59,7 @@ namespace QAMP
             Player.DurationChanged += OnDurationChanged;
             _playService.TrackChanged += UpdateNextTrackUI;
             PlaylistsListBox.MouseDoubleClick += PlaylistsListBox_MouseDoubleClick;
-            KeyDown += Window_KeyDown;
+            PreviewKeyDown += Window_KeyDown;
 
             _memoryCleanupTimer = new DispatcherTimer
             {
@@ -84,12 +83,6 @@ namespace QAMP
                 VolumePercentage.Text = $"{VolumeSlider.Value:F0}%";
             }
         }
-
-        // protected override void OnClosing(CancelEventArgs e)
-        // {
-        //     DatabaseService.SaveSetting("Volume", _playService.Volume.ToString());
-        //     base.OnClosing(e);
-        // }
 
         private void LoadApplicationSettings()
         {
@@ -160,10 +153,6 @@ namespace QAMP
 
                 var favorites = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Name == MusicLibrary.FavoritesName);
                 bool isFavorite = favorites?.Tracks.Any(t => t.Path == track.Path) ?? false;
-
-                // FavoriteIcon.Source = new BitmapImage(new Uri(isFavorite
-                //     ? "pack://application:,,,/Resources/remove_favorites.png"
-                //     : "pack://application:,,,/Resources/add_favorites.png"));
 
                 UpdateCurrentTrackCover(track);
                 TotalTimeText.Text = totalTime;
@@ -832,6 +821,7 @@ namespace QAMP
             {
                 double volume = VolumeSlider.Value / 100.0;
                 Player.Volume = volume;
+                DatabaseService.SaveSetting("Volume", volume.ToString(System.Globalization.CultureInfo.InvariantCulture));
 
                 if (VolumeSlider.Value == 0)
                 {
@@ -964,7 +954,7 @@ namespace QAMP
                     // Сохраняем новый порядок в БД
 
                     DatabaseService service = new();
-                    service.SavePlaylistsOrder();
+                    DatabaseService.SavePlaylistsOrder();
                 }
             }
         }
@@ -1454,6 +1444,41 @@ namespace QAMP
                 TogglePlayPause();
                 e.Handled = true;
             }
+            switch (e.Key)
+            {
+                case Key.Space:
+                    TogglePlayPause();
+                    e.Handled = true;
+                    break;
+
+                case Key.Right:
+                    _playService.SeekRelative(5);
+                    e.Handled = true;
+                    break;
+
+                case Key.Left:
+                    _playService.SeekRelative(-5);
+                    e.Handled = true;
+                    break;
+
+                case Key.Up:
+                    _playService.Volume += 0.05;
+                    e.Handled = true;
+                    break;
+
+                case Key.Down:
+                    _playService.Volume -= 0.05;
+                    e.Handled = true;
+                    break;
+
+                case Key.N:
+                    if (Keyboard.Modifiers == ModifierKeys.Control)
+                    {
+                        _playService.PlayNextTrack();
+                        e.Handled = true;
+                    }
+                    break;
+            }
         }
         private static readonly OSDWindow _osd = new();
 
@@ -1470,7 +1495,8 @@ namespace QAMP
         {
 #pragma warning disable CA1416
             var config = SettingsManager.Instance.Config;
-
+            string volumeStr = _playService.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            DatabaseService.SaveSetting("Volume", volumeStr);
             if (config.CloseToTray)
             {
                 e.Cancel = true;

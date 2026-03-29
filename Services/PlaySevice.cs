@@ -340,6 +340,14 @@ namespace QAMP.Services
                 Position = seconds;
             }
         }
+        public void SeekRelative(double deltaSeconds)
+        {
+            if (_audioFileReader != null)
+            {
+                double newPosition = _audioFileReader.CurrentTime.TotalSeconds + deltaSeconds;
+                Seek(newPosition);
+            }
+        }
 
         public Track? GetNextTrack()
         {

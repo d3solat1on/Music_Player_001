@@ -565,30 +565,26 @@ public class DatabaseService
         cmd.Parameters.AddWithValue("$id", playlistId);
         cmd.ExecuteNonQuery();
     }
-    public void SavePlaylistsOrder()
+    public static void SavePlaylistsOrder()
     {
         var playlists = MusicLibrary.Instance.Playlists;
 
-        using (var connection = new SqliteConnection(_connectionString))
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        using var transaction = connection.BeginTransaction();
+        var command = connection.CreateCommand();
+        command.CommandText = "UPDATE Playlists SET SortOrder = @order WHERE Id = @id";
+
+        var orderParam = command.Parameters.Add("@order", SqliteType.Integer);
+        var idParam = command.Parameters.Add("@id", SqliteType.Integer);
+
+        for (int i = 0; i < playlists.Count; i++)
         {
-            connection.Open();
-            using (var transaction = connection.BeginTransaction())
-            {
-                var command = connection.CreateCommand();
-                command.CommandText = "UPDATE Playlists SET SortOrder = @order WHERE Id = @id";
-
-                var orderParam = command.Parameters.Add("@order", SqliteType.Integer);
-                var idParam = command.Parameters.Add("@id", SqliteType.Integer);
-
-                for (int i = 0; i < playlists.Count; i++)
-                {
-                    orderParam.Value = i;
-                    idParam.Value = playlists[i].Id;
-                    command.ExecuteNonQuery();
-                }
-                transaction.Commit();
-            }
+            orderParam.Value = i;
+            idParam.Value = playlists[i].Id;
+            command.ExecuteNonQuery();
         }
+        transaction.Commit();
     }
 
     public static void SaveSetting(string key, string value)
