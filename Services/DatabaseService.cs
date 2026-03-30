@@ -67,7 +67,8 @@ public class DatabaseService
             var columnsToAdd = new Dictionary<string, string>
             {
                 { "IsPinned", "INTEGER DEFAULT 0" },
-                { "SortOrder", "INTEGER DEFAULT 0" }
+                { "SortOrder", "INTEGER DEFAULT 0" },
+                { "SortType", "INTEGER DEFAULT 0" }  // 0 = AddedDate, 1 = AlbumAZ, 2 = ExecutorAZ, 3 = NameAZ
             };
 
             foreach (var column in columnsToAdd)
@@ -112,6 +113,33 @@ public class DatabaseService
             {
                 System.Diagnostics.Debug.WriteLine("Колонка AddedDate уже существует в PlaylistTracks");
             }
+
+            // Проверяем колонки в таблице Tracks
+            var tracksCmd = connection.CreateCommand();
+            tracksCmd.CommandText = "PRAGMA table_info(Tracks)";
+
+            var tracksColumns = new HashSet<string>();
+            using (var reader = tracksCmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    tracksColumns.Add(reader.GetString(1));
+                }
+            }
+
+            // Проверяем и добавляем недостающие колонки в Tracks
+            if (!tracksColumns.Contains("TrackNumber"))
+            {
+                System.Diagnostics.Debug.WriteLine("Добавляем колонку TrackNumber в таблицу Tracks...");
+                var alterCmd = connection.CreateCommand();
+                alterCmd.CommandText = "ALTER TABLE Tracks ADD COLUMN TrackNumber INTEGER DEFAULT 0";
+                alterCmd.ExecuteNonQuery();
+                System.Diagnostics.Debug.WriteLine("Колонка TrackNumber успешно добавлена");
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Колонка TrackNumber уже существует в Tracks");
+            }
         }
         catch (Exception ex)
         {
@@ -137,7 +165,8 @@ public class DatabaseService
             CoverImage BLOB, 
             CreatedDate TEXT,
             IsPinned INTEGER DEFAULT 0,
-            SortOrder INTEGER DEFAULT 0
+            SortOrder INTEGER DEFAULT 0,
+            SortType INTEGER DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS Tracks (
             Id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -149,7 +178,8 @@ public class DatabaseService
             Genre TEXT,
             Bitrate INTEGER,
             SampleRate INTEGER,
-            Year INTEGER
+            Year INTEGER,
+            TrackNumber INTEGER DEFAULT 0
         );
         CREATE TABLE IF NOT EXISTS PlaylistTracks (
             PlaylistId INTEGER,
@@ -283,8 +313,8 @@ public class DatabaseService
 
             try
             {
-                // Правильный порядок колонок: Id, Name, Description, CoverImage, IsPinned, SortOrder
-                command.CommandText = "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC";
+                // Правильный порядок колонок: Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType
+                command.CommandText = "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC";
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -303,7 +333,7 @@ public class DatabaseService
                         playlist.SortOrder = reader.GetInt32(5);
                     }
 
-                    // Дата создания (CreatedDate) - теперь правильно читаем из колонки 6
+                    // Дата создания (CreatedDate)
                     if (!reader.IsDBNull(6))
                     {
                         string dateString = reader.GetString(6);
@@ -328,6 +358,12 @@ public class DatabaseService
                         playlist.CreatedDate = DateTime.Now;
                     }
 
+                    // Тип сортировки (SortType)
+                    if (!reader.IsDBNull(7))
+                    {
+                        playlist.SortType = (TrackSortType)reader.GetInt32(7);
+                    }
+
                     // Загружаем треки для этого плейлиста
                     var tracks = GetTracksForPlaylist(playlist.Id);
                     System.Diagnostics.Debug.WriteLine($"Загружаем треки для плейлиста '{playlist.Name}' (ID={playlist.Id}): {tracks.Count} треков, pinned={playlist.IsPinned}");
@@ -347,7 +383,7 @@ public class DatabaseService
                 MigrateDatabase();
 
                 // Повторяем запрос уже с колонкой
-                command.CommandText = "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC";
+                command.CommandText = "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC";
                 using var reader = command.ExecuteReader();
                 while (reader.Read())
                 {
@@ -386,6 +422,12 @@ public class DatabaseService
                         playlist.CreatedDate = DateTime.Now;
                     }
 
+                    // Тип сортировки (SortType)
+                    if (!reader.IsDBNull(7))
+                    {
+                        playlist.SortType = (TrackSortType)reader.GetInt32(7);
+                    }
+
                     var tracks = GetTracksForPlaylist(playlist.Id);
                     foreach (var track in tracks)
                     {
@@ -411,6 +453,7 @@ public class DatabaseService
         System.Diagnostics.Debug.WriteLine($"=== СОХРАНЕНИЕ ТРЕКА В ПЛЕЙЛИСТ {playlistId} ===");
         System.Diagnostics.Debug.WriteLine($"Путь: {track.Path}");
         System.Diagnostics.Debug.WriteLine($"Имя: {track.Name}");
+        System.Diagnostics.Debug.WriteLine($"TrackNumber: {track.TrackNumber}");
         System.Diagnostics.Debug.WriteLine($"TrackId из объекта: {track.Id}");
 
         using var connection = new SqliteConnection(_connectionString);
@@ -434,7 +477,7 @@ public class DatabaseService
             updateCmd.CommandText = @"
                 UPDATE Tracks 
                 SET Name = $name, Executor = $exec, Album = $album, Duration = $dur, 
-                    Genre = $genre, Bitrate = $bit, SampleRate = $samplerate, Year = $year
+                    Genre = $genre, Bitrate = $bit, SampleRate = $samplerate, Year = $year, TrackNumber = $trackNum
                 WHERE Id = $id";
 
             updateCmd.Parameters.AddWithValue("$id", trackId);
@@ -446,6 +489,7 @@ public class DatabaseService
             updateCmd.Parameters.AddWithValue("$bit", track.Bitrate > 0 ? track.Bitrate : DBNull.Value);
             updateCmd.Parameters.AddWithValue("$samplerate", track.SampleRate > 0 ? track.SampleRate : DBNull.Value);
             updateCmd.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+            updateCmd.Parameters.AddWithValue("$trackNum", track.TrackNumber > 0 ? track.TrackNumber : 0);
 
             int rowsAffected = updateCmd.ExecuteNonQuery();
             System.Diagnostics.Debug.WriteLine($"Трек обновлен, affected rows: {rowsAffected}");
@@ -457,8 +501,8 @@ public class DatabaseService
 
             var insertCmd = connection.CreateCommand();
             insertCmd.CommandText = @"
-                INSERT INTO Tracks (Path, Name, Executor, Album, Duration, Genre, Bitrate, SampleRate, Year)
-                VALUES ($path, $name, $exec, $album, $dur, $genre, $bit, $samplerate, $year)";
+                INSERT INTO Tracks (Path, Name, Executor, Album, Duration, Genre, Bitrate, SampleRate, Year, TrackNumber)
+                VALUES ($path, $name, $exec, $album, $dur, $genre, $bit, $samplerate, $year, $trackNum)";
 
             insertCmd.Parameters.AddWithValue("$path", track.Path);
             insertCmd.Parameters.AddWithValue("$name", (object)track.Name ?? DBNull.Value);
@@ -469,6 +513,7 @@ public class DatabaseService
             insertCmd.Parameters.AddWithValue("$bit", track.Bitrate > 0 ? track.Bitrate : DBNull.Value);
             insertCmd.Parameters.AddWithValue("$samplerate", track.SampleRate > 0 ? track.SampleRate : DBNull.Value);
             insertCmd.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+            insertCmd.Parameters.AddWithValue("$trackNum", track.TrackNumber > 0 ? track.TrackNumber : 0);
 
             int rowsAffected = insertCmd.ExecuteNonQuery();
             System.Diagnostics.Debug.WriteLine($"Трек вставлен, affected rows: {rowsAffected}");
@@ -551,39 +596,85 @@ public class DatabaseService
                 return tracks;
             }
 
-            var command = connection.CreateCommand();
-            command.CommandText = @"
-            SELECT t.Id, t.Path, t.Name, t.Executor, t.Album, t.Duration, t.Genre, t.Bitrate, t.SampleRate, t.Year, pt.AddedDate
-            FROM Tracks t
-            INNER JOIN PlaylistTracks pt ON t.Id = pt.TrackId
-            WHERE pt.PlaylistId = $pId";
-
-            command.Parameters.AddWithValue("$pId", playlistId);
-
-            using var reader = command.ExecuteReader();
-            int count = 0;
-            while (reader.Read())
+            try
             {
-                var track = new Track
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                SELECT t.Id, t.Path, t.Name, t.Executor, t.Album, t.Duration, t.Genre, t.Bitrate, t.SampleRate, t.Year, t.TrackNumber, pt.AddedDate
+                FROM Tracks t
+                INNER JOIN PlaylistTracks pt ON t.Id = pt.TrackId
+                WHERE pt.PlaylistId = $pId";
+
+                command.Parameters.AddWithValue("$pId", playlistId);
+
+                using var reader = command.ExecuteReader();
+                int count = 0;
+                while (reader.Read())
                 {
-                    Id = reader.GetInt32(0),
-                    Path = reader.GetString(1),
-                    Name = reader.IsDBNull(2) ? "Без названия" : reader.GetString(2),
-                    Executor = reader.IsDBNull(3) ? "Неизвестен" : reader.GetString(3),
-                    Album = reader.IsDBNull(4) ? "" : reader.GetString(4),
-                    Duration = reader.IsDBNull(5) ? "00:00" : reader.GetString(5),
-                    Genre = reader.IsDBNull(6) ? "Неизвестно" : reader.GetString(6),
-                    Bitrate = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
-                    SampleRate = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
-                    Year = reader.IsDBNull(9) ? 0 : reader.GetInt16(9),
-                    AddedDate = reader.IsDBNull(10) ? DateTime.Now : DateTime.Parse(reader.GetString(10))
-                };
+                    var track = new Track
+                    {
+                        Id = reader.GetInt32(0),
+                        Path = reader.GetString(1),
+                        Name = reader.IsDBNull(2) ? "Без названия" : reader.GetString(2),
+                        Executor = reader.IsDBNull(3) ? "Неизвестен" : reader.GetString(3),
+                        Album = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                        Duration = reader.IsDBNull(5) ? "00:00" : reader.GetString(5),
+                        Genre = reader.IsDBNull(6) ? "Неизвестно" : reader.GetString(6),
+                        Bitrate = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                        SampleRate = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
+                        Year = reader.IsDBNull(9) ? 0 : reader.GetInt16(9),
+                        TrackNumber = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                        AddedDate = reader.IsDBNull(11) ? DateTime.Now : DateTime.Parse(reader.GetString(11))
+                    };
 
-                System.Diagnostics.Debug.WriteLine($"  Трек {++count}: ID={track.Id}, Name={track.Name}, Executor={track.Executor}, AddedDate={track.AddedDate:dd.MM.yyyy HH:mm}");
-                tracks.Add(track);
+                    System.Diagnostics.Debug.WriteLine($"  Трек {++count}: ID={track.Id}, Name={track.Name}, Executor={track.Executor}, TrackNumber={track.TrackNumber}, AddedDate={track.AddedDate:dd.MM.yyyy HH:mm}");
+                    tracks.Add(track);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Всего треков загружено: {tracks.Count}");
             }
+            catch (SqliteException ex) when (ex.Message.Contains("no such column: t.TrackNumber"))
+            {
+                // Если колонки TrackNumber нет (старая БД), выполняем миграцию
+                System.Diagnostics.Debug.WriteLine($"Колонка TrackNumber не найдена, выполняем миграцию: {ex.Message}");
+                MigrateDatabase();
 
-            System.Diagnostics.Debug.WriteLine($"Всего треков загружено: {tracks.Count}");
+                // Пытаемся еще раз с правильным SELECT
+                var command = connection.CreateCommand();
+                command.CommandText = @"
+                SELECT t.Id, t.Path, t.Name, t.Executor, t.Album, t.Duration, t.Genre, t.Bitrate, t.SampleRate, t.Year, t.TrackNumber, pt.AddedDate
+                FROM Tracks t
+                INNER JOIN PlaylistTracks pt ON t.Id = pt.TrackId
+                WHERE pt.PlaylistId = $pId";
+
+                command.Parameters.AddWithValue("$pId", playlistId);
+
+                using var reader = command.ExecuteReader();
+                int count = 0;
+                while (reader.Read())
+                {
+                    var track = new Track
+                    {
+                        Id = reader.GetInt32(0),
+                        Path = reader.GetString(1),
+                        Name = reader.IsDBNull(2) ? "Без названия" : reader.GetString(2),
+                        Executor = reader.IsDBNull(3) ? "Неизвестен" : reader.GetString(3),
+                        Album = reader.IsDBNull(4) ? "" : reader.GetString(4),
+                        Duration = reader.IsDBNull(5) ? "00:00" : reader.GetString(5),
+                        Genre = reader.IsDBNull(6) ? "Неизвестно" : reader.GetString(6),
+                        Bitrate = reader.IsDBNull(7) ? 0 : reader.GetInt32(7),
+                        SampleRate = reader.IsDBNull(8) ? 0 : reader.GetInt32(8),
+                        Year = reader.IsDBNull(9) ? 0 : reader.GetInt16(9),
+                        TrackNumber = reader.IsDBNull(10) ? 0 : reader.GetInt32(10),
+                        AddedDate = reader.IsDBNull(11) ? DateTime.Now : DateTime.Parse(reader.GetString(11))
+                    };
+
+                    System.Diagnostics.Debug.WriteLine($"  Трек {++count}: ID={track.Id}, Name={track.Name}, Executor={track.Executor}, TrackNumber={track.TrackNumber}, AddedDate={track.AddedDate:dd.MM.yyyy HH:mm}");
+                    tracks.Add(track);
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Всего треков загружено: {tracks.Count}");
+            }
         }
         return tracks;
     }
@@ -749,6 +840,28 @@ public class DatabaseService
                     System.Diagnostics.Debug.WriteLine($"    - {trackReader.GetString(0)} by {trackReader.GetString(1)}");
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Обновляет тип сортировки для плейлиста
+    /// </summary>
+    public static void UpdatePlaylistSortType(int playlistId, TrackSortType sortType)
+    {
+        try
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "UPDATE Playlists SET SortType = $sortType WHERE Id = $id";
+            cmd.Parameters.AddWithValue("$sortType", (int)sortType);
+            cmd.Parameters.AddWithValue("$id", playlistId);
+            cmd.ExecuteNonQuery();
+            System.Diagnostics.Debug.WriteLine($"Плейлист {playlistId}: тип сортировки изменен на {sortType}");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Ошибка при обновлении типа сортировки: {ex.Message}");
         }
     }
 }

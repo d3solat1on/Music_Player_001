@@ -50,11 +50,66 @@ namespace QAMP
             TogglePlayPause();
         }
 
+        private void PlayPlaylistButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (Library.CurrentPlaylist == null || Library.CurrentPlaylist.Tracks.Count == 0)
+            {
+                NotificationWindow.Show("Плейлист пуст!", this);
+                return;
+            }
+
+            if (Player.IsPlaying)
+            {
+                Player.Pause();
+                UpdatePlayPauseIcon(false);
+                UpdateOSD();
+                return;
+            }
+
+            if (Player.CurrentTrack != null && Library.CurrentPlaylist.Tracks.Contains(Player.CurrentTrack))
+            {
+                Player.Resume(); 
+                UpdatePlayPauseIcon(true);
+                UpdateOSD();
+                return;
+            }
+
+            var firstTrack = Library.CurrentPlaylist.Tracks[0];
+            Player.PlayTrack(firstTrack);
+
+            Library.PlaybackQueue.Clear();
+            foreach (var track in Library.CurrentPlaylist.Tracks)
+            {
+                Library.PlaybackQueue.Add(track);
+            }
+            if (_playService.IsShuffleEnabled)
+            {
+                var shuffledList = Library.PlaybackQueue.ToList();
+                if (firstTrack != null && shuffledList.Contains(firstTrack))
+                {
+                    shuffledList.Remove(firstTrack);
+                }
+                shuffledList = [.. shuffledList.OrderBy(x => Guid.NewGuid())];
+                if (firstTrack != null)
+                {
+                    shuffledList.Insert(0, firstTrack);
+                }
+                _playService.ShuffledQueue = shuffledList;
+            }
+            UpdatePlayPauseIcon(true); 
+            UpdateNextTrackUI();
+            UpdateOSD();
+        }
+
         private void UpdatePlayPauseIcon(bool isPlaying)
         {
-            PlayPauseIcon.Data = isPlaying
-                ? (Geometry)Application.Current.Resources["pauseGeometry"]
-                : (Geometry)Application.Current.Resources["playGeometry"];
+            var geometry = isPlaying
+        ? (Geometry)Application.Current.Resources["pauseGeometry"]
+        : (Geometry)Application.Current.Resources["playGeometry"];
+
+            PlayPauseIcon.Data = geometry;
+
+            PlayPauseIcon1.Data = geometry;
         }
 
         private void PrevButton_Click(object sender, RoutedEventArgs e)
@@ -80,7 +135,7 @@ namespace QAMP
                         .OrderBy(x => Guid.NewGuid())
                         .ToList();
 
-                    _playService.ShuffledQueue = [Player.CurrentTrack, ..remainingTracks];
+                    _playService.ShuffledQueue = [Player.CurrentTrack, .. remainingTracks];
 
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && _playService.ShuffledQueue.Count > 1)
                     {
@@ -145,7 +200,7 @@ namespace QAMP
                         .OrderBy(x => Guid.NewGuid())
                         .ToList();
 
-                    _playService.ShuffledQueue = [Player.CurrentTrack, ..remainingTracks];
+                    _playService.ShuffledQueue = [Player.CurrentTrack, .. remainingTracks];
                     if (_playService.ShuffledQueue.Count > 1)
                     {
                         var nextTrack = _playService.ShuffledQueue[1];
@@ -209,7 +264,7 @@ namespace QAMP
                     shuffledList.Remove(currentTrack);
                 }
 
-                shuffledList = [..shuffledList.OrderBy(x => Guid.NewGuid())];
+                shuffledList = [.. shuffledList.OrderBy(x => Guid.NewGuid())];
 
                 if (currentTrack != null)
                 {
@@ -218,15 +273,33 @@ namespace QAMP
 
                 _playService.ShuffledQueue = shuffledList;
 
-                ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffle_OnGeometry"];
-                ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                // Обновляем обе иконки (верхняя и нижняя панель)
+                if (ShuffleImage != null)
+                {
+                    ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffle_OnGeometry"];
+                    ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                }
+                if (ShuffleImage1 != null)
+                {
+                    ShuffleImage1.Data = (Geometry)Application.Current.Resources["shuffle_OnGeometry"];
+                    ShuffleImage1.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                }
                 UpdateNextTrackUI();
             }
             else
             {
                 _playService.ShuffledQueue.Clear();
-                ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffleGeometry"];
-                ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                // Обновляем обе иконки (верхняя и нижняя панель)
+                if (ShuffleImage != null)
+                {
+                    ShuffleImage.Data = (Geometry)Application.Current.Resources["shuffleGeometry"];
+                    ShuffleImage.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                }
+                if (ShuffleImage1 != null)
+                {
+                    ShuffleImage1.Data = (Geometry)Application.Current.Resources["shuffleGeometry"];
+                    ShuffleImage1.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                }
                 UpdateNextTrackUI();
             }
         }
@@ -254,6 +327,108 @@ namespace QAMP
             double relativePosition = point.X / slider.ActualWidth;
             double newValue = slider.Minimum + (relativePosition * (slider.Maximum - slider.Minimum));
             slider.Value = newValue;
+        }
+
+        private void SortButton_Click(object sender, RoutedEventArgs e) // Обработчик кнопки сортировки
+        {
+            if (Library.CurrentPlaylist == null)
+            {
+                NotificationWindow.Show("Сначала выберите плейлист!", this);
+                return;
+            }
+            var contextMenu = new ContextMenu();
+
+            // По дате добавления
+            var menuItemDate = new MenuItem { Header = "По дате добавления" };
+            menuItemDate.Click += (s, args) => ApplySort(TrackSortType.AddedDate);
+            contextMenu.Items.Add(menuItemDate);
+
+            // По альбому 
+            var menuItemAlbum = new MenuItem { Header = "По альбому (A-Z)" };
+            menuItemAlbum.Click += (s, args) => ApplySort(TrackSortType.AlbumAZ);
+            contextMenu.Items.Add(menuItemAlbum);
+
+            // По исполнителю 
+            var menuItemExecutor = new MenuItem { Header = "По исполнителю (A-Z)" };
+            menuItemExecutor.Click += (s, args) => ApplySort(TrackSortType.ExecutorAZ);
+            contextMenu.Items.Add(menuItemExecutor);
+
+            //По названию 
+            var menuItemName = new MenuItem { Header = "По названию (A-Z)" };
+            menuItemName.Click += (s, args) => ApplySort(TrackSortType.NameAZ);
+            contextMenu.Items.Add(menuItemName);
+
+            if (sender is Button button)
+            {
+                contextMenu.PlacementTarget = button;
+                contextMenu.Placement = PlacementMode.Bottom;
+                contextMenu.IsOpen = true;
+            }
+        }
+
+        private void ApplySort(TrackSortType sortType)
+        {
+            if (Library.CurrentPlaylist == null) return;
+
+            // Сохраняем тип сортировки в плейлисте
+            Library.CurrentPlaylist.SortType = sortType;
+
+            // Сохраняем в БД
+            DatabaseService.UpdatePlaylistSortType(Library.CurrentPlaylist.Id, sortType);
+
+            // Применяем сортировку к трекам
+            var sortedTracks = SortTracks([.. Library.CurrentPlaylist.Tracks], sortType);
+
+            // Обновляем коллекцию (очищаем и добавляем заново)
+            Library.CurrentPlaylist.Tracks.Clear();
+            foreach (var track in sortedTracks)
+            {
+                Library.CurrentPlaylist.Tracks.Add(track);
+            }
+
+            TracksDataGrid.ItemsSource = null;
+            TracksDataGrid.ItemsSource = Library.CurrentPlaylist.Tracks;
+
+            var brushColor = sortType == TrackSortType.AddedDate
+                ? ((Brush)Application.Current.Resources["DisabledBrush"] ?? Brushes.Gray)
+                : (Brush)Application.Current.Resources["AccentBrush"];
+
+            // if (sortImage != null)
+            //     sortImage.Fill = brushColor;
+            // if (sortImage1 != null)
+            //     sortImage1.Fill = brushColor;
+
+            string sortName = sortType switch
+            {
+                TrackSortType.AddedDate => "по дате добавления",
+                TrackSortType.AlbumAZ => "по альбому (A-Z)",
+                TrackSortType.ExecutorAZ => "по исполнителю (A-Z)",
+                TrackSortType.NameAZ => "по названию (A-Z)",
+                _ => "неизвестно"
+            };
+            NotificationWindow.Show($"Плейлист отсортирован {sortName}", this);
+        }
+
+        /// <summary>
+        /// Сортирует список треков по выбранному критерию
+        /// </summary>
+        private static List<Track> SortTracks(List<Track> tracks, TrackSortType sortType)
+        {
+            return sortType switch
+            {
+                TrackSortType.AddedDate => [.. tracks.OrderBy(t => t.AddedDate)],
+                // Сначала по альбому, потом по номеру трека в альбоме
+                TrackSortType.AlbumAZ => [.. tracks
+                    .OrderBy(t => t.Album ?? "")
+                    .ThenBy(t => t.TrackNumber)],
+                // Сначала по исполнителю, потом по альбому, потом по номеру трека
+                TrackSortType.ExecutorAZ => [.. tracks
+                    .OrderBy(t => t.Executor ?? "")
+                    .ThenBy(t => t.Album ?? "")
+                    .ThenBy(t => t.TrackNumber)],
+                TrackSortType.NameAZ => [.. tracks.OrderBy(t => t.Name ?? "")],
+                _ => tracks
+            };
         }
     }
 }

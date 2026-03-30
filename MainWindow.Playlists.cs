@@ -212,6 +212,7 @@ namespace QAMP
             if (PlaylistsListBox.SelectedItem is Playlist selected)
             {
                 System.Diagnostics.Debug.WriteLine($"=== ПРОСМОТР ПЛЕЙЛИСТА: {selected.Name} ===");
+                System.Diagnostics.Debug.WriteLine($"SortType из БД: {selected.SortType}");
                 MusicLibrary.Instance.CurrentPlaylist = selected;
 
                 CurrentPlaylistNameText.Text = selected.Name;
@@ -233,7 +234,68 @@ namespace QAMP
                 {
                     CurrentPlaylistCover.Source = null;
                 }
-                TracksDataGrid.ItemsSource = selected.Tracks;
+
+                // Применяем сохраненный тип сортировки к трекам
+                // ApplySortToPlaylist сама будет обновлять ItemsSource после сортировки
+                ApplySortToPlaylist(selected);
+
+                // Если сортировка по дате добавления (по умолчанию), просто устанавливаем ItemsSource
+                if (selected.SortType == TrackSortType.AddedDate)
+                {
+                    System.Diagnostics.Debug.WriteLine("Устанавливаю ItemsSource для дефолтной сортировки");
+                    TracksDataGrid.ItemsSource = selected.Tracks;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Применяет сохраненный тип сортировки к плейлисту
+        /// </summary>
+        private void ApplySortToPlaylist(Playlist playlist)
+        {
+            System.Diagnostics.Debug.WriteLine($"=== ApplySortToPlaylist ===");
+            System.Diagnostics.Debug.WriteLine($"Плейлист: {playlist.Name}");
+            System.Diagnostics.Debug.WriteLine($"SortType: {playlist.SortType}");
+            System.Diagnostics.Debug.WriteLine($"Треков в коллекции: {playlist.Tracks.Count}");
+            
+            if (playlist.SortType != TrackSortType.AddedDate)
+            {
+                System.Diagnostics.Debug.WriteLine($"Применяю сортировку: {playlist.SortType}");
+                var sortedTracks = SortTracks(playlist.Tracks.ToList(), playlist.SortType);
+                
+                // Выводим первые 3 трека до и после сортировки
+                System.Diagnostics.Debug.WriteLine("После сортировки:");
+                for (int i = 0; i < Math.Min(3, sortedTracks.Count); i++)
+                {
+                    System.Diagnostics.Debug.WriteLine($"  {i}: {sortedTracks[i].Name} ({sortedTracks[i].Album}) #{sortedTracks[i].TrackNumber}");
+                }
+                
+                playlist.Tracks.Clear();
+                foreach (var track in sortedTracks)
+                {
+                    playlist.Tracks.Add(track);
+                }
+
+                // Обновляем DataGrid для отображения отсортированных треков
+                System.Diagnostics.Debug.WriteLine("Переустанавливаю ItemsSource для DataGrid");
+                TracksDataGrid.ItemsSource = null;
+                TracksDataGrid.ItemsSource = playlist.Tracks;
+
+                // Обновляем иконку сортировки (светит при активной сортировке)
+                if (sortImage1 != null)
+                {
+                    sortImage1.Fill = (Brush)Application.Current.Resources["AccentBrush"];
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("Сортировка по умолчанию (AddedDate), не применяю");
+                // Иконка тусклая при дефолтной сортировке
+                if (sortImage1 != null)
+                {
+                    sortImage1.Fill = (Brush)Application.Current.Resources["DisabledBrush"] ?? 
+                                     (Brush)Application.Current.Resources["AccentBrush"];
+                }
             }
         }
 
@@ -262,6 +324,18 @@ namespace QAMP
             {
                 if (PlaylistsListBox.SelectedItem is Playlist currentPlaylist)
                 {
+                    // Проверяем, воспроизводится ли музыка из другого плейлиста
+                    var playbackPlaylist = MusicLibrary.Instance.CurrentPlaylist;
+                    var isPlayingFromOtherPlaylist = playbackPlaylist != null && playbackPlaylist.Id != currentPlaylist.Id;
+                    
+                    if (isPlayingFromOtherPlaylist && PlayerService.Instance.IsPlaying)
+                    {
+                        // Уведомляем пользователя и не переключаемся
+                        NotificationWindow.Show($"Воспроизведение из плейлиста '{playbackPlaylist.Name}'", this);
+                        return;
+                    }
+                    
+                    // Разрешаем воспроизведение если это тот же плейлист или ничего не играет
                     MusicLibrary.Instance.PlayTrackFromPlaylist(selectedTrack, currentPlaylist);
                     UpdateNextTrackUI();
                 }

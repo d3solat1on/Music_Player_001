@@ -5,6 +5,14 @@ using Newtonsoft.Json;
 
 namespace QAMP.Models
 {
+    public enum TrackSortType
+    {
+        AddedDate = 0,          // По дате добавления (по умолчанию)
+        AlbumAZ = 1,            // По альбому (A-Z)
+        ExecutorAZ = 2,         // По исполнителю (A-Z)
+        NameAZ = 3              // По названию (A-Z)
+    }
+
     public class Playlist : INotifyPropertyChanged
     {
         private string? _name;
@@ -44,6 +52,19 @@ namespace QAMP.Models
         }
 
         public int SortOrder { get; set; }
+        
+        // Тип сортировки треков в плейлисте
+        private TrackSortType _sortType = TrackSortType.AddedDate;
+        public TrackSortType SortType
+        {
+            get => _sortType;
+            set
+            {
+                _sortType = value;
+                OnPropertyChanged(nameof(SortType));
+            }
+        }
+        
         public byte[] CoverImage
         {
             get => _coverImage;

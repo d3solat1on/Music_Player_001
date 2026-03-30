@@ -28,6 +28,7 @@ namespace QAMP.Services
                     Genre = file.Tag.FirstGenre ?? "Неизвестный жанр",
                     Extension = extension,
                     Year = (int)file.Tag.Year,
+                    TrackNumber = (int)file.Tag.Track,
                     AddedDate = DateTime.Now
                 };
             }

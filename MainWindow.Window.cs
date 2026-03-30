@@ -203,6 +203,7 @@ namespace QAMP
                 TracksDataGrid.Visibility = Visibility.Collapsed;
                 PlaylistsListBox.Visibility = Visibility.Collapsed;
                 LeftZona.Visibility = Visibility.Collapsed;
+                ControlsPanel.Visibility = Visibility.Collapsed;
                 LyricsOverlay.Visibility = Visibility.Visible;
             }
             else
@@ -210,6 +211,7 @@ namespace QAMP
                 TracksDataGrid.Visibility = Visibility.Visible;
                 PlaylistsListBox.Visibility = Visibility.Visible;
                 LeftZona.Visibility = Visibility.Visible;
+                ControlsPanel.Visibility = Visibility.Visible;
                 LyricsOverlay.Visibility = Visibility.Collapsed;
             }
         }
