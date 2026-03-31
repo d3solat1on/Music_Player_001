@@ -26,6 +26,8 @@ namespace QAMP.Services
         private WaveStream _audioFileReader;
         private WaveOutEvent _waveOutEvent;
         private DispatcherTimer? _positionTimer;
+        private FadeInOutProvider _fadeProvider;
+        private bool _fadingOut;
 
         // События
         public event Action<Track> TrackChanged;
@@ -176,11 +178,12 @@ namespace QAMP.Services
                         }),
                         DispatcherPriority.Background);
                 };
-
+                _fadeProvider = new FadeInOutProvider(aggregator);
                 _waveOutEvent = new WaveOutEvent();
-                _waveOutEvent.Init(aggregator);
+                _waveOutEvent.Init(_fadeProvider);
                 _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
+                _fadeProvider.BeginFadeIn(500);
 
                 Duration = _audioFileReader.TotalTime.TotalSeconds;
                 IsPlaying = true;
@@ -350,10 +353,13 @@ namespace QAMP.Services
             }
         }
 
-        public void Pause()
+        public async Task PauseAsync()
         {
             if (_waveOutEvent != null && IsPlaying)
             {
+                _fadeProvider.BeginFadeOut(300); // Быстрое затухание на 0.3 сек
+
+                await Task.Delay(350);
                 _waveOutEvent.Pause();
                 IsPlaying = false;
                 _positionTimer.Stop();
@@ -363,12 +369,26 @@ namespace QAMP.Services
 
         public void Resume()
         {
+            // Проверяем, инициализирован ли фейдер и плеер
             if (_waveOutEvent != null && !IsPlaying && CurrentTrack != null)
             {
+                // Добавляем ПРОВЕРКУ на null для провайдера
+                if (_fadeProvider != null)
+                {
+                    _fadeProvider.ResetGain();
+                    _fadeProvider.BeginFadeIn(300);
+                }
+
                 _waveOutEvent.Play();
+
                 IsPlaying = true;
                 _positionTimer.Start();
                 PlaybackPaused?.Invoke(false);
+            }
+            else if (CurrentTrack != null)
+            {
+                // Если плеер пуст, но трек выбран — просто запускаем его нормально
+                PlayTrack(CurrentTrack);
             }
         }
 

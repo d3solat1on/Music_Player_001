@@ -73,12 +73,12 @@ namespace QAMP.Dialogs
                     var bitmap = new BitmapImage(new Uri(openFileDialog.FileName));
                     
                     // 2. Проверяем размер файла (не более 2 МБ)
-                    var fileInfo = new FileInfo(openFileDialog.FileName);
-                    if (fileInfo.Length > 2 * 1024 * 1024)
-                    {
-                        NotificationWindow.Show("Изображение слишком большое. Максимальный размер - 2 МБ.", this);
-                        return;
-                    }
+                    // var fileInfo = new FileInfo(openFileDialog.FileName);
+                    // if (fileInfo.Length > 2 * 1024 * 1024)
+                    // {
+                    //     NotificationWindow.Show("Изображение слишком большое. Максимальный размер - 2 МБ.", this);
+                    //     return;
+                    // }
 
                     // 3. Проверяем, является ли оно квадратным (допуск 2 пикселя)
                     if (Math.Abs(bitmap.PixelWidth - bitmap.PixelHeight) < 2)

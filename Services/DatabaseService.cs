@@ -68,7 +68,8 @@ public class DatabaseService
             {
                 { "IsPinned", "INTEGER DEFAULT 0" },
                 { "SortOrder", "INTEGER DEFAULT 0" },
-                { "SortType", "INTEGER DEFAULT 0" }  // 0 = AddedDate, 1 = AlbumAZ, 2 = ExecutorAZ, 3 = NameAZ
+                { "SortType", "INTEGER DEFAULT 0" },  // 0 = AddedDate, 1 = AlbumAZ, 2 = ExecutorAZ, 3 = NameAZ
+                { "CreatedDate", "TEXT" }  // Дата создания плейлиста
             };
 
             foreach (var column in columnsToAdd)

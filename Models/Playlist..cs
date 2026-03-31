@@ -52,7 +52,7 @@ namespace QAMP.Models
         }
 
         public int SortOrder { get; set; }
-        
+
         // Тип сортировки треков в плейлисте
         private TrackSortType _sortType = TrackSortType.AddedDate;
         public TrackSortType SortType
@@ -64,7 +64,7 @@ namespace QAMP.Models
                 OnPropertyChanged(nameof(SortType));
             }
         }
-        
+
         public byte[] CoverImage
         {
             get => _coverImage;
@@ -90,7 +90,16 @@ namespace QAMP.Models
             }
         }
         // Дата создания
-        public DateTime CreatedDate { get; set; } 
+        private DateTime _createdDate;
+        public DateTime CreatedDate
+        {
+            get => _createdDate;
+            set
+            {
+                _createdDate = value;
+                OnPropertyChanged(nameof(CreatedDate));
+            }
+        }
         public string CreatedDateDisplay => $"Дата создания: {CreatedDate:dd.MM.yyyy}";
 
         public string TrackCountDisplay => $"Треков: {Tracks.Count}";
@@ -121,6 +130,9 @@ namespace QAMP.Models
                 return total;
             }
         }
+        public string TotalDurationDisplay => TotalDuration.TotalHours >= 1
+    ? $"{(int)TotalDuration.TotalHours}:{TotalDuration.Minutes:D2}:{TotalDuration.Seconds:D2}"
+    : TotalDuration.ToString(@"mm\:ss");
 
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string propertyName)
@@ -130,6 +142,7 @@ namespace QAMP.Models
 
         public Playlist()
         {
+            _createdDate = DateTime.Now;
             Tracks = [];
             Tracks.CollectionChanged += (s, e) =>
             {

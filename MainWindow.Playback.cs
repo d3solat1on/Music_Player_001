@@ -36,7 +36,7 @@ namespace QAMP
             }
             else if (Player.IsPlaying)
             {
-                Player.Pause();
+                Player.PauseAsync();
             }
             else
             {
@@ -60,8 +60,20 @@ namespace QAMP
 
             if (Player.IsPlaying)
             {
-                Player.Pause();
+                Player.PauseAsync();
                 UpdatePlayPauseIcon(false);
+                UpdateOSD();
+                return;
+            }
+
+            // Проверяем, если музыка воспроизводится из другого плейлиста, 
+            // не переключаемся - просто воспроизводим паузированную музыку
+            if (Player.CurrentTrack != null && Library.PlayingPlaylist != null && 
+                Library.PlayingPlaylist.Id != Library.CurrentPlaylist.Id)
+            {
+                // Воспроизводим текущий трек из другого плейлиста
+                Player.Resume();
+                UpdatePlayPauseIcon(true);
                 UpdateOSD();
                 return;
             }
@@ -73,6 +85,9 @@ namespace QAMP
                 UpdateOSD();
                 return;
             }
+
+            // Устанавливаем текущий плейлист как плейлист для воспроизведения
+            Library.PlayingPlaylist = Library.CurrentPlaylist;
 
             var firstTrack = Library.CurrentPlaylist.Tracks[0];
             Player.PlayTrack(firstTrack);

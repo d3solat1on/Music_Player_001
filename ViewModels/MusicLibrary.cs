@@ -62,7 +62,20 @@ namespace QAMP.ViewModels
             }
         }
 
-
+        // Плейлист из которого воспроизводится музыка (отличается от CurrentPlaylist который для просмотра)
+        private Playlist? _playingPlaylist;
+        public Playlist? PlayingPlaylist
+        {
+            get => _playingPlaylist;
+            set
+            {
+                if (_playingPlaylist != value)
+                {
+                    _playingPlaylist = value;
+                    OnPropertyChanged(nameof(PlayingPlaylist));
+                }
+            }
+        }
 
         public Track? CurrentTrack { get; set; }
 
@@ -72,6 +85,9 @@ namespace QAMP.ViewModels
             if (playlist == null) return;
 
             System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ПЛЕЙЛИСТА: {playlist.Name} ===");
+
+            // Устанавливаем плейлист из которого воспроизводится музыка
+            PlayingPlaylist = playlist;
 
             // Обновляем очередь воспроизведения
             PlaybackQueue.Clear();
@@ -92,6 +108,9 @@ namespace QAMP.ViewModels
             if (track == null || playlist == null) return;
 
             System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ТРЕКА: {track.Name} из плейлиста: {playlist.Name} ===");
+
+            // Устанавливаем плейлист из которого воспроизводится музыка
+            PlayingPlaylist = playlist;
 
             // Обновляем очередь воспроизведения этим плейлистом
             PlaybackQueue.Clear();

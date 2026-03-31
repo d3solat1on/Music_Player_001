@@ -79,7 +79,7 @@ namespace QAMP
 
                 TracksDataGrid.ItemsSource = null;
                 TracksDataGrid.ItemsSource = MusicLibrary.Instance.CurrentPlaylist.Tracks;
-                CurrentTracksCountText.Text = $"{MusicLibrary.Instance.CurrentPlaylist.Tracks.Count} треков";
+                // CurrentTracksCountText.Text = $"{MusicLibrary.Instance.CurrentPlaylist.Tracks.Count} треков";
 
                 NotificationWindow.Show($"Добавлено {addedCount} треков", this);
             }
@@ -89,7 +89,7 @@ namespace QAMP
         {
             if (PlaylistsListBox.SelectedItem is not Playlist selectedPlaylist) return;
 
-            var openFileDialog = new Microsoft.Win32.OpenFileDialog
+            var openFileDialog = new OpenFileDialog
             {
                 Multiselect = true,
                 Filter = "Music files (*.mp3;*.wav;*.flac)|*.mp3;*.wav;*.flac"
@@ -116,12 +116,11 @@ namespace QAMP
                 {
                     TracksDataGrid.ItemsSource = null;
                     TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
-                    CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
+                    // CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
                 }
                 else
                 {
-                    var listBoxItem = PlaylistsListBox.ItemContainerGenerator.ContainerFromItem(selectedPlaylist) as ListBoxItem;
-                    if (listBoxItem != null)
+                    if (PlaylistsListBox.ItemContainerGenerator.ContainerFromItem(selectedPlaylist) is ListBoxItem listBoxItem)
                     {
                         var trackCountText = FindVisualChild<TextBlock>(listBoxItem, "CurrentTracksCountText");
                         if (trackCountText != null)
@@ -166,7 +165,7 @@ namespace QAMP
 
                 // Вместо RefreshPlaylists() загружаем только новый плейлист
                 var newPlaylist = DatabaseService.GetPlaylistById((int)newId);
-                
+
                 if (newPlaylist != null)
                 {
                     // Добавляем новый плейлист в коллекцию (оптимизировано)
@@ -174,21 +173,21 @@ namespace QAMP
 
                     PlaylistsListBox.SelectedItem = newPlaylist;
 
-                    CurrentPlaylistNameText.Text = newPlaylist.Name;
-                    CurrentPlaylistDescriptionText.Text = newPlaylist.Description;
-                    CurrentTracksCountText.Text = "0 треков";
+                    // CurrentPlaylistNameText.Text = newPlaylist.Name;
+                    // CurrentPlaylistDescriptionText.Text = newPlaylist.Description;
+                    // CurrentTracksCountText.Text = "0 треков";
 
                     TracksDataGrid.ItemsSource = newPlaylist.Tracks;
 
                     if (newPlaylist.CoverImage != null && newPlaylist.CoverImage.Length > 0)
                     {
-                        CurrentPlaylistCover.Source = LoadImage(newPlaylist.CoverImage);
+                        // CurrentPlaylistCover.Source = LoadImage(newPlaylist.CoverImage);
                     }
                     else
                     {
-                        CurrentPlaylistCover.Source = null;
+                        // CurrentPlaylistCover.Source = null;
                     }
-                    
+
                     NotificationWindow.Show($"Плейлист \"{dialog.PlaylistName}\" создан", this);
                 }
             }
@@ -210,34 +209,17 @@ namespace QAMP
 
         private void PlaylistsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            // if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is Playlist oldPlaylist)
+            // {
+            //     oldPlaylist.PropertyChanged -= OnCurrentPlaylistPropertyChanged;
+            // }
             if (PlaylistsListBox.SelectedItem is Playlist selected)
             {
                 System.Diagnostics.Debug.WriteLine($"=== ПРОСМОТР ПЛЕЙЛИСТА: {selected.Name} ===");
                 System.Diagnostics.Debug.WriteLine($"SortType из БД: {selected.SortType}");
                 MusicLibrary.Instance.CurrentPlaylist = selected;
-
-                CurrentPlaylistNameText.Text = selected.Name;
-                CurrentPlaylistDescriptionText.Text = selected.Description;
-                CurrentTracksCountText.Text = $"{selected.Tracks.Count} треков";
-                TimeSpan totalTime = selected.TotalDuration;
-                string timeString = totalTime.TotalHours >= 1
-                    ? totalTime.ToString(@"hh\:mm\:ss")
-                    : totalTime.ToString(@"mm\:ss");
-
-                CurrentTracksTimeText.Text = timeString;
-                CurrentTracksDateCreateText.Text = selected.CreatedDateDisplay;
-
-                if (selected.CoverImage != null && selected.CoverImage.Length > 0)
-                {
-                    CurrentPlaylistCover.Source = LoadImage(selected.CoverImage);
-                }
-                else
-                {
-                    CurrentPlaylistCover.Source = null;
-                }
-
-                // Применяем сохраненный тип сортировки к трекам
-                // ApplySortToPlaylist сама будет обновлять ItemsSource после сортировки
+                // selected.PropertyChanged += OnCurrentPlaylistPropertyChanged;
+                // UpdatePlaylistDisplay(selected);
                 ApplySortToPlaylist(selected);
 
                 // Если сортировка по дате добавления (по умолчанию), просто устанавливаем ItemsSource
@@ -265,19 +247,19 @@ namespace QAMP
             System.Diagnostics.Debug.WriteLine($"Плейлист: {playlist.Name}");
             System.Diagnostics.Debug.WriteLine($"SortType: {playlist.SortType}");
             System.Diagnostics.Debug.WriteLine($"Треков в коллекции: {playlist.Tracks.Count}");
-            
+
             if (playlist.SortType != TrackSortType.AddedDate)
             {
                 System.Diagnostics.Debug.WriteLine($"Применяю сортировку: {playlist.SortType}");
                 var sortedTracks = SortTracks(playlist.Tracks.ToList(), playlist.SortType);
-                
+
                 // Выводим первые 3 трека до и после сортировки
                 System.Diagnostics.Debug.WriteLine("После сортировки:");
                 for (int i = 0; i < Math.Min(3, sortedTracks.Count); i++)
                 {
                     System.Diagnostics.Debug.WriteLine($"  {i}: {sortedTracks[i].Name} ({sortedTracks[i].Album}) #{sortedTracks[i].TrackNumber}");
                 }
-                
+
                 playlist.Tracks.Clear();
                 foreach (var track in sortedTracks)
                 {
@@ -301,7 +283,7 @@ namespace QAMP
                 // Иконка тусклая при дефолтной сортировке
                 if (sortImage1 != null)
                 {
-                    sortImage1.Fill = (Brush)Application.Current.Resources["DisabledBrush"] ?? 
+                    sortImage1.Fill = (Brush)Application.Current.Resources["DisabledBrush"] ??
                                      (Brush)Application.Current.Resources["AccentBrush"];
                 }
             }
@@ -333,16 +315,16 @@ namespace QAMP
                 if (PlaylistsListBox.SelectedItem is Playlist currentPlaylist)
                 {
                     // Проверяем, воспроизводится ли музыка из другого плейлиста
-                    var playbackPlaylist = MusicLibrary.Instance.CurrentPlaylist;
-                    var isPlayingFromOtherPlaylist = playbackPlaylist != null && playbackPlaylist.Id != currentPlaylist.Id;
-                    
-                    if (isPlayingFromOtherPlaylist && PlayerService.Instance.IsPlaying)
-                    {
-                        // Уведомляем пользователя и не переключаемся
-                        NotificationWindow.Show($"Воспроизведение из плейлиста '{playbackPlaylist.Name}'", this);
-                        return;
-                    }
-                    
+                    var playingPlaylist = MusicLibrary.Instance.PlayingPlaylist;
+                    var isPlayingFromOtherPlaylist = playingPlaylist != null && playingPlaylist.Id != currentPlaylist.Id;
+
+                    // if (isPlayingFromOtherPlaylist && PlayerService.Instance.IsPlaying)
+                    // {
+                    //     // Уведомляем пользователя и не переключаемся
+                    //     NotificationWindow.Show($"Воспроизведение из плейлиста '{playingPlaylist.Name}'", this);
+                    //     return;
+                    // }
+
                     // Разрешаем воспроизведение если это тот же плейлист или ничего не играет
                     MusicLibrary.Instance.PlayTrackFromPlaylist(selectedTrack, currentPlaylist);
                     UpdateNextTrackUI();
@@ -362,5 +344,29 @@ namespace QAMP
             Library.CurrentTrack = track;
             _lastTrackWithCover = track;
         }
+        // private void UpdatePlaylistDisplay(Playlist playlist)
+        // {
+        //     CurrentPlaylistNameText.Text = playlist.Name;
+        //     CurrentPlaylistDescriptionText.Text = playlist.Description;
+        //     CurrentTracksCountText.Text = playlist.TrackCountDisplay;
+        //     CurrentTracksDateCreateText.Text = $"Создан: {playlist.CreatedDate:dd MMM yyyy}";
+
+        //     TimeSpan totalTime = playlist.TotalDuration;
+        //     CurrentTracksTimeText.Text = totalTime.TotalHours >= 1
+        //         ? totalTime.ToString(@"hh\:mm\:ss")
+        //         : totalTime.ToString(@"mm\:ss");
+
+        //     if (playlist.CoverImage != null && playlist.CoverImage.Length > 0)
+        //         CurrentPlaylistCover.Source = LoadImage(playlist.CoverImage);
+        //     else
+        //         CurrentPlaylistCover.Source = null;
+        // }
+        // private void OnCurrentPlaylistPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        // {
+        //     if (sender is Playlist playlist)
+        //     {
+        //         UpdatePlaylistDisplay(playlist);
+        //     }
+        // }
     }
 }

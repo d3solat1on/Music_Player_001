@@ -54,7 +54,7 @@ namespace QAMP
                         TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
                     }
 
-                    CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
+                    // CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
                     UpdateNextTrackUI();
                 }
             }
@@ -74,7 +74,7 @@ namespace QAMP
                 {
                     // КРИТИЧНО: Сохраняем какой плейлист был выбран ДО удаления
                     var previouslySelectedPlaylist = MusicLibrary.Instance.CurrentPlaylist;
-                    
+
                     DatabaseService.DeletePlaylist(selectedPlaylist.Id);
 
                     // Удаляем плейлист из коллекции
@@ -105,10 +105,10 @@ namespace QAMP
                             {
                                 // Нет других плейлистов, очищаем UI
                                 MusicLibrary.Instance.CurrentPlaylist = null;
-                                CurrentPlaylistNameText.Text = "";
-                                CurrentPlaylistDescriptionText.Text = "";
-                                CurrentPlaylistCover.Source = null;
-                                CurrentTracksCountText.Text = "0 треков";
+                                // CurrentPlaylistNameText.Text = "";
+                                // CurrentPlaylistDescriptionText.Text = "";
+                                // CurrentPlaylistCover.Source = null;
+                                // CurrentTracksCountText.Text = "0 треков";
                             }
                         }
                     }
@@ -197,7 +197,7 @@ namespace QAMP
         }
 
         private void DeletePlaylist_Click(object sender, RoutedEventArgs e) => RemovePlaylist_Click(sender, e);
-        
+
 
         private void PinPlaylist_Click(object sender, RoutedEventArgs e)
         {
@@ -206,7 +206,7 @@ namespace QAMP
                 bool newPinnedState = !selectedPlaylist.IsPinned;
                 DatabaseService.UpdatePlaylistPinnedState(selectedPlaylist.Id, newPinnedState);
                 selectedPlaylist.IsPinned = newPinnedState;
-                
+
                 // Используем RefreshSinglePlaylist для оптимизации вместо RefreshPlaylists
                 MusicLibrary.Instance.RefreshSinglePlaylist(selectedPlaylist.Id);
                 PlaylistsListBox.SelectedItem = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == selectedPlaylist.Id);
@@ -253,7 +253,7 @@ namespace QAMP
                 {
                     // Вместо RefreshPlaylists() используем RefreshSinglePlaylist для оптимизации
                     MusicLibrary.Instance.RefreshSinglePlaylist(selectedPlaylist.Id);
-                    
+
                     // Восстанавливаем выбор плейлиста в списке
                     PlaylistsListBox.SelectedItem = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == selectedPlaylist.Id);
                 }
@@ -355,7 +355,7 @@ namespace QAMP
             {
                 TracksDataGrid.ItemsSource = null;
                 TracksDataGrid.ItemsSource = favoritePlaylist.Tracks;
-                CurrentTracksCountText.Text = $"{favoritePlaylist.Tracks.Count} треков";
+                // CurrentTracksCountText.Text = $"{favoritePlaylist.Tracks.Count} треков";
             }
 
             UpdateFavoriteIcon(Player.CurrentTrack);
@@ -449,9 +449,9 @@ namespace QAMP
             if (PlaylistsListBox.SelectedItem is Playlist currentPlaylist)
             {
                 TracksDataGrid.ItemsSource = currentPlaylist.Tracks;
-                CurrentPlaylistNameText.Text = currentPlaylist.Name;
-                CurrentPlaylistDescriptionText.Text = currentPlaylist.Description;
-                CurrentTracksCountText.Text = $"{currentPlaylist.Tracks.Count} треков";
+                // CurrentPlaylistNameText.Text = currentPlaylist.Name;
+                // CurrentPlaylistDescriptionText.Text = currentPlaylist.Description;
+                // CurrentTracksCountText.Text = $"{currentPlaylist.Tracks.Count} треков";
             }
         }
 
@@ -495,12 +495,17 @@ namespace QAMP
                 return;
             }
 
-            CurrentPlaylistNameText.Text = "Результаты поиска";
-            CurrentPlaylistDescriptionText.Text = $"По запросу: \"{searchQuery}\" найдено {results.Count} треков";
-            CurrentTracksCountText.Text = $"{results.Count} треков";
-            CurrentPlaylistCover.Source = null;
+            var searchPlaylist = new Playlist
+            {
+                Name = "Результаты поиска",
+                Description = $"По запросу: \"{searchQuery}\" найдено {results.Count} треков",
+                Tracks = new ObservableCollection<Track>(results),
+                CoverImage = null 
+            };
 
-            TracksDataGrid.ItemsSource = new ObservableCollection<Track>(results);
+            MusicLibrary.Instance.CurrentPlaylist = searchPlaylist;
+
+            TracksDataGrid.ItemsSource = searchPlaylist.Tracks;
         }
 
         private void AddToPlaylistSubMenu_SubmenuOpened(object sender, RoutedEventArgs e)
