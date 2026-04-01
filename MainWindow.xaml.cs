@@ -172,7 +172,7 @@ namespace QAMP
                 CurrentTrackExecutor.Text = track.Executor;
                 CurrentTrackAlbum.Text = track.Album;
                 CurrentTrackData.Text = $"{track.Genre} | {track.Duration} | {track.SampleRate} Hz | {track.Bitrate} kbps";
-                CurrentTrackExtension.Text = track.Extension;
+                CurrentTrackExtension.Text = track.DisplayExtension;
                 CurrentTrackYear.Text = track.Year > 0 ? track.Year.ToString() : "Неизвестно";
 
                 string totalTime = Player.Duration > 0 ? FormatTime(Player.Duration) : "Загрузка...";

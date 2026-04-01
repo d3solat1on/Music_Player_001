@@ -26,7 +26,7 @@ namespace QAMP.Models
             set
             {
                 _lyrics = value;
-                OnPropertyChanged(nameof(Lyrics)); 
+                OnPropertyChanged(nameof(Lyrics));
             }
         }
         public string? Channels { get; set; }
@@ -71,6 +71,15 @@ namespace QAMP.Models
         public void UnloadCover()
         {
             _coverImage = null;
+        }
+        public string DisplayExtension
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(Extension)) return Extension.Replace(".", "").ToUpper();
+                if (!string.IsNullOrEmpty(Path)) return System.IO.Path.GetExtension(Path).Replace(".", "").ToUpper();
+                return "N/A";
+            }
         }
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged(string name) =>

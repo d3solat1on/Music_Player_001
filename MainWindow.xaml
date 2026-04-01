@@ -755,11 +755,18 @@
                                                 Background="{DynamicResource CentralPanelHeaderBackground}"
                                                 BorderBrush="{DynamicResource GridHeaderSeperatorBrush}"
                                                 BorderThickness="0,0,0,1">
-                                                <StackPanel Orientation="Horizontal">
 
-                                                        <Border Width="150"
+                                                <Grid Height="160">
+                                                        <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                        </Grid.ColumnDefinitions>
+
+                                                        <Border Grid.Column="0"
+                                                                Width="150"
                                                                 Height="150"
                                                                 CornerRadius="4"
+                                                                VerticalAlignment="Top"
                                                                 Background="{DynamicResource CentralPanelCardBackground}"
                                                                 BorderBrush="{DynamicResource CentralPanelCardBorderBrush}"
                                                                 BorderThickness="1"
@@ -768,40 +775,58 @@
                                                                        Stretch="UniformToFill"/>
                                                         </Border>
 
-                                                        <StackPanel VerticalAlignment="Bottom">
-                                                                <TextBlock Text="ПЛЕЙЛИСТ"
+                                                        <Grid Grid.Column="1">
+                                                                <Grid.RowDefinitions>
+                                                                        <RowDefinition Height="Auto"/>
+                                                                        <RowDefinition Height="Auto"/>
+                                                                        <RowDefinition Height="*"/>
+                                                                        <RowDefinition Height="Auto"/>
+                                                                </Grid.RowDefinitions>
+
+                                                                <TextBlock Grid.Row="0"
+                                                                           Text="ПЛЕЙЛИСТ"
                                                                            Foreground="{DynamicResource CentralPanelHighlightForeground}"
                                                                            FontSize="12"
                                                                            FontWeight="Bold"
-                                                                           Margin="0,0,0,5"/>
+                                                                           Margin="0,0,0,2"/>
 
-                                                                <TextBlock Text="{Binding CurrentPlaylist.Name}"
+                                                                <TextBlock Grid.Row="1"
+                                                                           Text="{Binding CurrentPlaylist.Name}"
                                                                            Foreground="{DynamicResource CentralPanelHighlightForeground}"
-                                                                           FontSize="48"
+                                                                           FontSize="44"
                                                                            FontWeight="Black"
-                                                                           Margin="0,0,0,10"/>
+                                                                           Margin="0,0,0,5"
+                                                                           TextTrimming="CharacterEllipsis"/>
 
-                                                                <TextBlock Text="{Binding CurrentPlaylist.Description}"
+                                                                <TextBlock Grid.Row="2"
+                                                                           Text="{Binding CurrentPlaylist.Description}"
                                                                            Foreground="{DynamicResource CentralPanelSecondaryForeground}"
                                                                            FontSize="14"
                                                                            TextWrapping="Wrap"
-                                                                           MaxWidth="500"/>
+                                                                           VerticalAlignment="Top"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           MaxWidth="600"
+                                                                           HorizontalAlignment="Left"/>
 
-                                                                <TextBlock Text="{Binding CurrentPlaylist.TrackCountDisplay}"
-                                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
-                                                                           FontSize="14"
-                                                                           Margin="0,10,0,0"/>
-                                                                <TextBlock Text="{Binding CurrentPlaylist.TotalDurationDisplay}"
-                                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
-                                                                           FontSize="14"
-                                                                           Margin="0,10,0,0"/>
-                                                                <TextBlock Text="{Binding CurrentPlaylist.CreatedDate, StringFormat=\{0:dd\\.MM\\.yyyy\}}"
-                                                                           Foreground="{DynamicResource CentralPanelMutedForeground}"
-                                                                           FontSize="14"
-                                                                           Margin="0,10,0,0"/>
-                                                        </StackPanel>
-
-                                                </StackPanel>
+                                                                <StackPanel Grid.Row="3"
+                                                                            Orientation="Horizontal"
+                                                                            VerticalAlignment="Bottom">
+                                                                        <TextBlock Text="{Binding CurrentPlaylist.TrackCountDisplay}"
+                                                                                   Foreground="{DynamicResource CentralPanelMutedForeground}"
+                                                                                   FontSize="13"/>
+                                                                        <TextBlock Text=" • "
+                                                                                   Foreground="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                        <TextBlock Text="{Binding CurrentPlaylist.TotalDurationDisplay}"
+                                                                                   Foreground="{DynamicResource CentralPanelMutedForeground}"
+                                                                                   FontSize="13"/>
+                                                                        <TextBlock Text=" • "
+                                                                                   Foreground="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                        <TextBlock Text="{Binding CurrentPlaylist.CreatedDate, StringFormat=\{0:dd\\.MM\\.yyyy\}}"
+                                                                                   Foreground="{DynamicResource CentralPanelMutedForeground}"
+                                                                                   FontSize="13"/>
+                                                                </StackPanel>
+                                                        </Grid>
+                                                </Grid>
                                         </Border>
                                         <Border x:Name="ControlsPanel"
                                                 Grid.Row="1"
@@ -1176,6 +1201,7 @@
 
                                 <!-- Правая колонка - NOW PLAYING -->
                                 <Border Grid.Column="2"
+                                        HorizontalAlignment="Center"
                                         Background="{DynamicResource TertiaryBackgroundBrush}"
                                         BorderThickness="1,0,0,0"
                                         BorderBrush="{DynamicResource BorderBrush}">

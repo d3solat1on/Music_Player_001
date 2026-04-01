@@ -222,13 +222,6 @@ namespace QAMP
                 // UpdatePlaylistDisplay(selected);
                 ApplySortToPlaylist(selected);
 
-                // Если сортировка по дате добавления (по умолчанию), просто устанавливаем ItemsSource
-                if (selected.SortType == TrackSortType.AddedDate)
-                {
-                    System.Diagnostics.Debug.WriteLine("Устанавливаю ItemsSource для дефолтной сортировки");
-                    TracksDataGrid.ItemsSource = selected.Tracks;
-                }
-
                 // Обновляем иконку избранного при переключении плейлиста
                 // в случае если текущий трек все еще воспроизводится
                 if (Player.CurrentTrack != null)
@@ -248,28 +241,30 @@ namespace QAMP
             System.Diagnostics.Debug.WriteLine($"SortType: {playlist.SortType}");
             System.Diagnostics.Debug.WriteLine($"Треков в коллекции: {playlist.Tracks.Count}");
 
+            // Выводим исходный порядок треков
+            System.Diagnostics.Debug.WriteLine($"ИСХОДНЫЙ ПОРЯДОК в playlist.Tracks:");
+            for (int i = 0; i < Math.Min(15, playlist.Tracks.Count); i++)
+            {
+                System.Diagnostics.Debug.WriteLine($"  {i}: {playlist.Tracks[i].Name} (Album: {playlist.Tracks[i].Album})");
+            }
+
             if (playlist.SortType != TrackSortType.AddedDate)
             {
                 System.Diagnostics.Debug.WriteLine($"Применяю сортировку: {playlist.SortType}");
                 var sortedTracks = SortTracks(playlist.Tracks.ToList(), playlist.SortType);
 
                 // Выводим первые 3 трека до и после сортировки
-                System.Diagnostics.Debug.WriteLine("После сортировки:");
-                for (int i = 0; i < Math.Min(3, sortedTracks.Count); i++)
+                System.Diagnostics.Debug.WriteLine("ОТСОРТИРОВАННЫЙ ПОРЯДОК:");
+                for (int i = 0; i < Math.Min(15, sortedTracks.Count); i++)
                 {
-                    System.Diagnostics.Debug.WriteLine($"  {i}: {sortedTracks[i].Name} ({sortedTracks[i].Album}) #{sortedTracks[i].TrackNumber}");
+                    System.Diagnostics.Debug.WriteLine($"  {i}: {sortedTracks[i].Name} (Album: {sortedTracks[i].Album})");
                 }
 
-                playlist.Tracks.Clear();
-                foreach (var track in sortedTracks)
-                {
-                    playlist.Tracks.Add(track);
-                }
-
-                // Обновляем DataGrid для отображения отсортированных треков
+                // ВАЖНО: НЕ изменяем саму коллекцию Tracks!
+                // Вместо этого отображаем отсортированные треки в DataGrid
                 System.Diagnostics.Debug.WriteLine("Переустанавливаю ItemsSource для DataGrid");
                 TracksDataGrid.ItemsSource = null;
-                TracksDataGrid.ItemsSource = playlist.Tracks;
+                TracksDataGrid.ItemsSource = new ObservableCollection<Track>(sortedTracks);
 
                 // Обновляем иконку сортировки (светит при активной сортировке)
                 if (sortImage1 != null)
@@ -286,6 +281,8 @@ namespace QAMP
                     sortImage1.Fill = (Brush)Application.Current.Resources["DisabledBrush"] ??
                                      (Brush)Application.Current.Resources["AccentBrush"];
                 }
+                // Отображаем исходный порядок треков
+                TracksDataGrid.ItemsSource = playlist.Tracks;
             }
         }
 
@@ -326,7 +323,9 @@ namespace QAMP
                     // }
 
                     // Разрешаем воспроизведение если это тот же плейлист или ничего не играет
-                    MusicLibrary.Instance.PlayTrackFromPlaylist(selectedTrack, currentPlaylist);
+                    // Получаем порядок треков как они отображаются в DataGrid (с учетом сортировки)
+                    var displayOrder = TracksDataGrid.ItemsSource as IEnumerable<Track>;
+                    MusicLibrary.Instance.PlayTrackFromPlaylist(selectedTrack, currentPlaylist, displayOrder);
                     UpdateNextTrackUI();
                 }
             }

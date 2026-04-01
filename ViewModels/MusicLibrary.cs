@@ -108,6 +108,7 @@ namespace QAMP.ViewModels
             if (track == null || playlist == null) return;
 
             System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ТРЕКА: {track.Name} из плейлиста: {playlist.Name} ===");
+            System.Diagnostics.Debug.WriteLine($"Трек для воспроизведения находится на позиции в playlist.Tracks: {playlist.Tracks.IndexOf(track)}");
 
             // Устанавливаем плейлист из которого воспроизводится музыка
             PlayingPlaylist = playlist;
@@ -118,6 +119,20 @@ namespace QAMP.ViewModels
             {
                 PlaybackQueue.Add(t);
             }
+
+            // Отладка: выводим всю очередь
+            System.Diagnostics.Debug.WriteLine($"PlaybackQueue после заполнения (всего {PlaybackQueue.Count} треков):");
+            for (int i = 0; i < Math.Min(5, PlaybackQueue.Count); i++)
+            {
+                System.Diagnostics.Debug.WriteLine($"  {i}: {PlaybackQueue[i].Name}");
+            }
+            if (PlaybackQueue.Count > 5)
+            {
+                System.Diagnostics.Debug.WriteLine($"  ... еще {PlaybackQueue.Count - 5} треков");
+            }
+            // Найдем позицию текущего трека в очереди
+            int trackIndexInQueue = PlaybackQueue.IndexOf(track);
+            System.Diagnostics.Debug.WriteLine($"Позиция трека '{track.Name}' в PlaybackQueue: {trackIndexInQueue}");
 
             // Если включен Shuffle, обновляем перемешанную очередь
             if (PlayerService.Instance.IsShuffleEnabled)
@@ -130,6 +145,59 @@ namespace QAMP.ViewModels
             // Начинаем с выбранного трека
             PlayerService.Instance.PlayTrack(track);
         }
+
+        /// <summary>
+        /// Воспроизводит трек из плейлиста с учетом отображаемого порядка (например, при сортировке)
+        /// </summary>
+        /// <param name="track">Трек для воспроизведения</param>
+        /// <param name="playlist">Плейлист, из которого воспроизводится трек</param>
+        /// <param name="displayOrder">Порядок треков для отображения в очереди (если null, использует playlist.Tracks)</param>
+        public void PlayTrackFromPlaylist(Track track, Playlist playlist, IEnumerable<Track>? displayOrder = null)
+        {
+            if (track == null || playlist == null) return;
+
+            System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ТРЕКА: {track.Name} из плейлиста: {playlist.Name} ===");
+            System.Diagnostics.Debug.WriteLine($"Использует displayOrder: {displayOrder != null}");
+
+            // Устанавливаем плейлист из которого воспроизводится музыка
+            PlayingPlaylist = playlist;
+
+            // Обновляем очередь воспроизведения: используем displayOrder если предоставлен, иначе playlist.Tracks
+            var tracksForQueue = displayOrder ?? playlist.Tracks;
+            
+            PlaybackQueue.Clear();
+            foreach (var t in tracksForQueue)
+            {
+                PlaybackQueue.Add(t);
+            }
+
+            // Отладка: выводим всю очередь
+            System.Diagnostics.Debug.WriteLine($"PlaybackQueue после заполнения (всего {PlaybackQueue.Count} треков):");
+            for (int i = 0; i < Math.Min(5, PlaybackQueue.Count); i++)
+            {
+                System.Diagnostics.Debug.WriteLine($"  {i}: {PlaybackQueue[i].Name}");
+            }
+            if (PlaybackQueue.Count > 5)
+            {
+                System.Diagnostics.Debug.WriteLine($"  ... еще {PlaybackQueue.Count - 5} треков");
+            }
+            
+            // Найдем позицию текущего трека в очереди
+            int trackIndexInQueue = PlaybackQueue.IndexOf(track);
+            System.Diagnostics.Debug.WriteLine($"Позиция трека '{track.Name}' в PlaybackQueue: {trackIndexInQueue}");
+
+            // Если включен Shuffle, обновляем перемешанную очередь
+            if (PlayerService.Instance.IsShuffleEnabled)
+            {
+                var remainingTracks = PlaybackQueue.Where(t => t != track).OrderBy(x => Guid.NewGuid()).ToList();
+                PlayerService.Instance.ShuffledQueue = [track, .. remainingTracks];
+                System.Diagnostics.Debug.WriteLine($"ShuffledQueue обновлена, Count: {PlayerService.Instance.ShuffledQueue.Count}");
+            }
+
+            // Начинаем с выбранного трека
+            PlayerService.Instance.PlayTrack(track);
+        }
+
         public void SyncShuffledQueueWithCurrentTrack()
         {
             if (!PlayerService.Instance.IsShuffleEnabled) return;

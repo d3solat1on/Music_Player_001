@@ -282,14 +282,21 @@ namespace QAMP
 
                 var currentIndex = MusicLibrary.Instance.PlaybackQueue.IndexOf(Player.CurrentTrack);
                 
+                System.Diagnostics.Debug.WriteLine($"=== NEXT BUTTON ===");
+                System.Diagnostics.Debug.WriteLine($"Текущий трек: {Player.CurrentTrack?.Name}");
+                System.Diagnostics.Debug.WriteLine($"Индекс в PlaybackQueue: {currentIndex}");
+                System.Diagnostics.Debug.WriteLine($"Всего треков в PlaybackQueue: {MusicLibrary.Instance.PlaybackQueue.Count}");
+                
                 // КРИТИЧНАЯ ПРОВЕРКА: currentIndex должен быть валидным
                 if (currentIndex != -1 && currentIndex < MusicLibrary.Instance.PlaybackQueue.Count - 1)
                 {
                     Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[currentIndex + 1]);
+                    System.Diagnostics.Debug.WriteLine($"Проигываю трек: {MusicLibrary.Instance.PlaybackQueue[currentIndex + 1].Name}");
                     UpdateNextTrackUI();
                 }
                 else if (currentIndex == MusicLibrary.Instance.PlaybackQueue.Count - 1)
                 {
+                    System.Diagnostics.Debug.WriteLine($"Это последний трек в очереди");
                     // Конец плейлиста
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
@@ -303,6 +310,7 @@ namespace QAMP
                 }
                 else
                 {
+                    System.Diagnostics.Debug.WriteLine($"Трек не найден в очереди!");
                     // currentIndex = -1 — трека нет в очереди, попытаемся проиграть первый
                     if (MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
@@ -479,15 +487,10 @@ namespace QAMP
             // Применяем сортировку к трекам
             var sortedTracks = SortTracks([.. Library.CurrentPlaylist.Tracks], sortType);
 
-            // Обновляем коллекцию (очищаем и добавляем заново)
-            Library.CurrentPlaylist.Tracks.Clear();
-            foreach (var track in sortedTracks)
-            {
-                Library.CurrentPlaylist.Tracks.Add(track);
-            }
-
+            // ВАЖНО: НЕ изменяем саму коллекцию Tracks!
+            // Вместо этого переустанавливаем ItemsSource на отсортированные треки для отображения в DataGrid
             TracksDataGrid.ItemsSource = null;
-            TracksDataGrid.ItemsSource = Library.CurrentPlaylist.Tracks;
+            TracksDataGrid.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<Track>(sortedTracks);
 
             var brushColor = sortType == TrackSortType.AddedDate
                 ? ((Brush)Application.Current.Resources["DisabledBrush"] ?? Brushes.Gray)
