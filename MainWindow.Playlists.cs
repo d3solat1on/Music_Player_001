@@ -217,6 +217,7 @@ namespace QAMP
             {
                 System.Diagnostics.Debug.WriteLine($"=== ПРОСМОТР ПЛЕЙЛИСТА: {selected.Name} ===");
                 System.Diagnostics.Debug.WriteLine($"SortType из БД: {selected.SortType}");
+                App.LogInfo($"SelectPlaylist: {selected.Name} | Tracks: {selected.Tracks.Count}");
                 MusicLibrary.Instance.CurrentPlaylist = selected;
                 // selected.PropertyChanged += OnCurrentPlaylistPropertyChanged;
                 // UpdatePlaylistDisplay(selected);
@@ -286,25 +287,6 @@ namespace QAMP
             }
         }
 
-        private static BitmapImage? LoadImage(byte[] imageData)
-        {
-            if (imageData == null || imageData.Length == 0) return null;
-
-            var image = new BitmapImage();
-            using (var mem = new MemoryStream(imageData))
-            {
-                mem.Position = 0;
-                image.BeginInit();
-                image.CreateOptions = BitmapCreateOptions.PreservePixelFormat;
-                image.CacheOption = BitmapCacheOption.OnLoad;
-                image.UriSource = null;
-                image.StreamSource = mem;
-                image.EndInit();
-            }
-            image.Freeze();
-            return image;
-        }
-
         private void TracksDataGrid_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
@@ -321,6 +303,8 @@ namespace QAMP
                     //     NotificationWindow.Show($"Воспроизведение из плейлиста '{playingPlaylist.Name}'", this);
                     //     return;
                     // }
+
+                    App.LogInfo($"TrackDoubleClick: {selectedTrack.Executor} - {selectedTrack.Name} | Playlist: {currentPlaylist.Name}");
 
                     // Разрешаем воспроизведение если это тот же плейлист или ничего не играет
                     // Получаем порядок треков как они отображаются в DataGrid (с учетом сортировки)

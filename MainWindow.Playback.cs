@@ -30,16 +30,20 @@ namespace QAMP
             {
                 if (MusicLibrary.Instance.PlaybackQueue.Count > 0)
                 {
-                    Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[0]);
+                    var track = MusicLibrary.Instance.PlaybackQueue[0];
+                    App.LogInfo($"PlayTrack (Toggle): {track.Executor} - {track.Name}");
+                    Player.PlayTrack(track);
                     UpdateNextTrackUI();
                 }
             }
             else if (Player.IsPlaying)
             {
+                App.LogInfo($"Pause: {Player.CurrentTrack?.Executor} - {Player.CurrentTrack?.Name}");
                 Player.PauseAsync();
             }
             else
             {
+                App.LogInfo($"Resume: {Player.CurrentTrack?.Executor} - {Player.CurrentTrack?.Name}");
                 Player.Resume();
             }
             UpdateOSD();
@@ -90,6 +94,7 @@ namespace QAMP
             Library.PlayingPlaylist = Library.CurrentPlaylist;
 
             var firstTrack = Library.CurrentPlaylist.Tracks[0];
+            App.LogInfo($"PlayPlaylist: {Library.CurrentPlaylist.Name} | Track: {firstTrack.Executor} - {firstTrack.Name}");
             Player.PlayTrack(firstTrack);
 
             Library.PlaybackQueue.Clear();
@@ -143,11 +148,13 @@ namespace QAMP
                 if (currentIndex > 0)
                 {
                     var prevTrack = _playService.ShuffledQueue[currentIndex - 1];
+                    App.LogInfo($"PrevTrack (Shuffle): {prevTrack.Executor} - {prevTrack.Name}");
                     Player.PlayTrack(prevTrack);
                 }
                 else if (currentIndex == 0 && _playService.RepeatMode == RepeatMode.RepeatAll)
                 {
                     var prevTrack = _playService.ShuffledQueue[_playService.ShuffledQueue.Count - 1];
+                    App.LogInfo($"PrevTrack (Shuffle, wrap): {prevTrack.Executor} - {prevTrack.Name}");
                     Player.PlayTrack(prevTrack);
                 }
                 else if (currentIndex == -1)
@@ -162,6 +169,7 @@ namespace QAMP
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && _playService.ShuffledQueue.Count > 1)
                     {
                         var prevTrack = _playService.ShuffledQueue[_playService.ShuffledQueue.Count - 1];
+                        App.LogInfo($"PrevTrack (Shuffle, not in queue): {prevTrack.Executor} - {prevTrack.Name}");
                         Player.PlayTrack(prevTrack);
                     }
                 }
@@ -182,7 +190,9 @@ namespace QAMP
                 // КРИТИЧНАЯ ПРОВЕРКА: currentIndex должен быть валидным
                 if (currentIndex > 0)
                 {
-                    Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[currentIndex - 1]);
+                    var track = MusicLibrary.Instance.PlaybackQueue[currentIndex - 1];
+                    App.LogInfo($"PrevTrack: {track.Executor} - {track.Name}");
+                    Player.PlayTrack(track);
                     UpdateNextTrackUI();
                 }
                 else if (currentIndex == -1)
@@ -190,7 +200,9 @@ namespace QAMP
                     // Трека нет в очереди
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
-                        Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[MusicLibrary.Instance.PlaybackQueue.Count - 1]);
+                        var track = MusicLibrary.Instance.PlaybackQueue[MusicLibrary.Instance.PlaybackQueue.Count - 1];
+                        App.LogInfo($"PrevTrack (wrap): {track.Executor} - {track.Name}");
+                        Player.PlayTrack(track);
                         UpdateNextTrackUI();
                     }
                     else
@@ -203,7 +215,9 @@ namespace QAMP
                     // Это первый трек
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
-                        Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[MusicLibrary.Instance.PlaybackQueue.Count - 1]);
+                        var track = MusicLibrary.Instance.PlaybackQueue[MusicLibrary.Instance.PlaybackQueue.Count - 1];
+                        App.LogInfo($"PrevTrack (wrap, at first): {track.Executor} - {track.Name}");
+                        Player.PlayTrack(track);
                         UpdateNextTrackUI();
                     }
                     else
@@ -235,6 +249,7 @@ namespace QAMP
                 if (currentIndex != -1 && currentIndex < _playService.ShuffledQueue.Count - 1)
                 {
                     var nextTrack = _playService.ShuffledQueue[currentIndex + 1];
+                    App.LogInfo($"NextTrack (Shuffle): {nextTrack.Executor} - {nextTrack.Name}");
                     Player.PlayTrack(nextTrack);
                 }
                 else if (currentIndex == _playService.ShuffledQueue.Count - 1)
@@ -242,6 +257,7 @@ namespace QAMP
                     if (_playService.RepeatMode == RepeatMode.RepeatAll)
                     {
                         var nextTrack = _playService.ShuffledQueue[0];
+                        App.LogInfo($"NextTrack (Shuffle, wrap): {nextTrack.Executor} - {nextTrack.Name}");
                         Player.PlayTrack(nextTrack);
                     }
                     else
@@ -261,6 +277,7 @@ namespace QAMP
                     if (_playService.ShuffledQueue.Count > 1)
                     {
                         var nextTrack = _playService.ShuffledQueue[1];
+                        App.LogInfo($"NextTrack (Shuffle, not in queue): {nextTrack.Executor} - {nextTrack.Name}");
                         Player.PlayTrack(nextTrack);
                     }
                     else
@@ -290,8 +307,10 @@ namespace QAMP
                 // КРИТИЧНАЯ ПРОВЕРКА: currentIndex должен быть валидным
                 if (currentIndex != -1 && currentIndex < MusicLibrary.Instance.PlaybackQueue.Count - 1)
                 {
-                    Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[currentIndex + 1]);
-                    System.Diagnostics.Debug.WriteLine($"Проигываю трек: {MusicLibrary.Instance.PlaybackQueue[currentIndex + 1].Name}");
+                    var nextTrack = MusicLibrary.Instance.PlaybackQueue[currentIndex + 1];
+                    App.LogInfo($"NextTrack: {nextTrack.Executor} - {nextTrack.Name}");
+                    Player.PlayTrack(nextTrack);
+                    System.Diagnostics.Debug.WriteLine($"Проигываю трек: {nextTrack.Name}");
                     UpdateNextTrackUI();
                 }
                 else if (currentIndex == MusicLibrary.Instance.PlaybackQueue.Count - 1)
@@ -300,7 +319,9 @@ namespace QAMP
                     // Конец плейлиста
                     if (_playService.RepeatMode == RepeatMode.RepeatAll && MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
-                        Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[0]);
+                        var track = MusicLibrary.Instance.PlaybackQueue[0];
+                        App.LogInfo($"NextTrack (wrap): {track.Executor} - {track.Name}");
+                        Player.PlayTrack(track);
                         UpdateNextTrackUI();
                     }
                     else
@@ -314,7 +335,9 @@ namespace QAMP
                     // currentIndex = -1 — трека нет в очереди, попытаемся проиграть первый
                     if (MusicLibrary.Instance.PlaybackQueue.Count > 0)
                     {
-                        Player.PlayTrack(MusicLibrary.Instance.PlaybackQueue[0]);
+                        var track = MusicLibrary.Instance.PlaybackQueue[0];
+                        App.LogInfo($"NextTrack (not in queue): {track.Executor} - {track.Name}");
+                        Player.PlayTrack(track);
                         UpdateNextTrackUI();
                     }
                     else

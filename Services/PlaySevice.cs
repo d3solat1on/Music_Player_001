@@ -27,7 +27,6 @@ namespace QAMP.Services
         private WaveOutEvent _waveOutEvent;
         private DispatcherTimer? _positionTimer;
         private FadeInOutProvider _fadeProvider;
-        private bool _fadingOut;
 
         // События
         public event Action<Track> TrackChanged;
@@ -191,6 +190,7 @@ namespace QAMP.Services
 
                 _waveOutEvent.PlaybackStopped += OnPlaybackStopped;
                 TrackChanged?.Invoke(track);
+                App.LogInfo($"Start track: {track.Name}");
             }
             catch (Exception ex)
             {

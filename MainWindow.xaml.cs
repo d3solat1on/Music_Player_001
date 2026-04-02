@@ -12,6 +12,7 @@ using QAMP.Dialogs;
 using QAMP.Models;
 using QAMP.Services;
 using QAMP.ViewModels;
+using static QAMP.Dialogs.NotificationWindow;
 
 namespace QAMP
 {
@@ -26,6 +27,7 @@ namespace QAMP
         private double _lastVolume = 0.5;
         private Track? _lastTrackWithCover;
         private bool _isLyricsMode = false;
+        private StressTester _stressTester;
 
         public MainWindow()
         {
@@ -65,21 +67,21 @@ namespace QAMP
             };
             _memoryCleanupTimer.Start();
 
-            Closed += (s, e) => OnClosing((CancelEventArgs)e);
+            Closing += (s, e) => OnClosing(e);
         }
 
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Загружаем громкость - устанавливаем в слайдер, это вызовет VolumeSlider_ValueChanged
             string savedVolume = DatabaseService.GetSetting("Volume", "0.5");
-            
+
             // ВАЖНО: парсим с InvariantCulture! В БД сохраняется с точкой (0.5), а не с запятой (0,5)
             if (double.TryParse(savedVolume, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double vol))
             {
                 // Важно: устанавливаем сначала Value слайдера
                 // Это вызовет VolumeSlider_ValueChanged, который установит Player.Volume
                 VolumeSlider.Value = vol * 100;
-                
+
                 // На случай если ValueChanged не сработал (например, если новое значение = старому)
                 // Явно установим Player.Volume
                 if (Math.Abs(Player.Volume - vol) > 0.01)
@@ -90,12 +92,12 @@ namespace QAMP
 
             // Загружаем последний выбранный плейлист
             string lastPlaylistIdStr = DatabaseService.GetSetting("LastPlaylistId", "-1");
-            
+
             int lastPlaylistId = -1;
             if (int.TryParse(lastPlaylistIdStr, out int id) && id != -1)
             {
                 var playlist = MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == id);
-                
+
                 if (playlist != null)
                 {
                     lastPlaylistId = id;
@@ -105,21 +107,21 @@ namespace QAMP
 
             // Загружаем последний трек
             string lastTrackPath = DatabaseService.GetSetting("LastTrackPath", "");
-            
+
             if (!string.IsNullOrEmpty(lastTrackPath) && lastPlaylistId != -1)
             {
-                var currentPlaylist = PlaylistsListBox.SelectedItem as Playlist 
+                var currentPlaylist = PlaylistsListBox.SelectedItem as Playlist
                     ?? MusicLibrary.Instance.Playlists.FirstOrDefault(p => p.Id == lastPlaylistId);
-                
+
                 if (currentPlaylist != null)
                 {
                     var lastTrack = currentPlaylist.Tracks.FirstOrDefault(t => t.Path == lastTrackPath);
-                    
+
                     if (lastTrack != null)
                     {
                         // Загружаем трек, но не воспроизводим его
                         _playService.LoadTrack(lastTrack);
-                        
+
                         // Восстанавливаем позицию проигрывания
                         string positionStr = DatabaseService.GetSetting("LastTrackPosition", "0");
                         // ВАЖНО: парсим с InvariantCulture! В БД сохраняется с точкой, а не с запятой
@@ -127,7 +129,7 @@ namespace QAMP
                         {
                             _playService.Seek(position);
                         }
-                        
+
                         System.Diagnostics.Debug.WriteLine($"DEBUG: Трек загружен на паузе. IsPlaying={_playService.IsPlaying}");
                     }
                 }
@@ -139,6 +141,35 @@ namespace QAMP
                 VolumePercentage.Text = $"{VolumeSlider.Value:F0}%";
                 System.Diagnostics.Debug.WriteLine($"DEBUG: VolumePercent обновлен: {VolumeSlider.Value:F0}%");
             }
+            _stressTester = new StressTester(
+                togglePlayPause: () => TogglePlayPause(),
+                setPlaylistIndex: (index) => PlaylistsListBox.SelectedIndex = index,
+                getPlaylistsCount: () => PlaylistsListBox.Items.Count,
+                getTracksCount: () => TracksDataGrid.Items.Count,
+                playTrackByIndex: (index) =>
+                {
+                    if (TracksDataGrid.Items[index] is Track track)
+                        Player.PlayTrack(track);
+                },
+                showMessage: (text) => Task.Run(() => 
+                {
+                    Application.Current.Dispatcher.Invoke(() => 
+                    {
+                        NotificationWindow.Show(text, this, NotificationMode.Info);
+                    });
+                })
+            );
+
+            KeyDown += async (s, e) =>
+            {
+                if (e.Key == Key.T && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    if (_stressTester.IsRunning)
+                        _stressTester.Stop();
+                    else
+                        await _stressTester.Run(TimeSpan.FromMinutes(5));
+                }
+            };
         }
 
         private static void LoadApplicationSettings()

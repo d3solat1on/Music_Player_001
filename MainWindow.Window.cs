@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -106,7 +107,8 @@ namespace QAMP
 
                 if (tracksToDelete.Count == 0) return;
                 var result = NotificationWindow.Show("Вы уверены, что хотите удалить выбранные треки?", this, NotificationMode.Confirm);
-                if (result == true)                {
+                if (result == true)
+                {
                     foreach (var track in tracksToDelete)
                     {
                         DatabaseService.RemoveTrackFromPlaylist(currentPlaylist.Id, track.Id);
@@ -128,60 +130,67 @@ namespace QAMP
             }
         }
 
+        private bool _isClosing = false;
+
         protected override void OnClosing(CancelEventArgs e)
         {
-#pragma warning disable CA1416
+            // 1. Если мы УЖЕ в процессе полного закрытия (вызванного из меню "Выход"), 
+            // не мешаем процессу.
+            if (_isClosing) return;
+
             try
             {
-                // СНАЧАЛА - сохраняем ВСЕ данные ДО ВСЕГО
-                try
+                var config = SettingsManager.Instance.Config;
+
+                // 2. ПРОВЕРКА ТРЕЯ: Если настройка включена — отменяем закрытие окна
+                if (config != null && config.CloseToTray)
                 {
-                    var config = SettingsManager.Instance.Config;
-                    
-                    // Сохраняем громкость
-                    string volumeStr = _playService.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                    DatabaseService.SaveSetting("Volume", volumeStr);
-                    System.Diagnostics.Debug.WriteLine($"=== OnClosing: Сохранена громкость: Player.Volume={_playService.Volume} -> БД='{volumeStr}'");
-                    
-                    // Сохраняем текущий трек и позицию воспроизведения
-                    if (_playService.CurrentTrack != null)
-                    {
-                        DatabaseService.SaveSetting("LastTrackPath", _playService.CurrentTrack.Path ?? "");
-                        string positionStr = _playService.Position.ToString(System.Globalization.CultureInfo.InvariantCulture);
-                        DatabaseService.SaveSetting("LastTrackPosition", positionStr);
-                    }
-                    
-                    SettingsManager.Instance.Save();
+                    e.Cancel = true; // ГОВОРИМ WINDOWS: НЕ ЗАКРЫВАЙ ОКНО
+                    this.Hide();     // Просто скрываем его с глаз
+                    App.LogInfo("OnClosing: App hidden to tray instead of closing.");
+                    return;          // ВАЖНО: выходим из метода здесь
                 }
-                catch (Exception ex)
+
+                // --- ДАЛЕЕ ЛОГИКА ПОЛНОГО ВЫХОДА (если CloseToTray = false) ---
+                _isClosing = true;
+                App.LogInfo("=== OnClosing FULL EXIT START ===");
+
+                _playService.Stop();
+
+                // Сохранение данных
+                var volumeStr = _playService.Volume.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                DatabaseService.SaveSettingSync("Volume", volumeStr);
+
+                if (_playService.CurrentTrack != null)
                 {
-                    System.Diagnostics.Debug.WriteLine($"ERROR: Ошибка при сохранении данных: {ex.Message}");
+                    DatabaseService.SaveSettingSync("LastTrackPath", _playService.CurrentTrack.Path ?? "");
+                    DatabaseService.SaveSettingSync("LastTrackPosition", _playService.Position.ToString(System.Globalization.CultureInfo.InvariantCulture));
                 }
-                
-                // ПОТОМ - убираем иконку и закрываемся
-                try
+                SettingsManager.Instance.Save();
+
+                // Чистим иконку, раз уж выходим совсем
+                if (_notifyIcon != null)
                 {
-                    var config = SettingsManager.Instance.Config;
-                    
-                    if (!config.CloseToTray)
-                    {
-                        if (_notifyIcon != null)
-                        {
-                            _notifyIcon.Visible = false;
-                            _notifyIcon.Dispose();
-                        }
-                    }
+                    _notifyIcon.Visible = false;
+                    _notifyIcon.Dispose();
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"WARNING: Ошибка при очистке иконки: {ex.Message}");
-                }
+
+                App.LogInfo("=== OnClosing FULL EXIT END ===");
+            }
+            catch (Exception ex)
+            {
+                App.LogException(ex, "OnClosing Error");
             }
             finally
             {
-                base.OnClosing(e);
+                // Если мы не отменили закрытие (CloseToTray был false), 
+                // завершаем процесс полностью.
+                if (!e.Cancel)
+                {
+                    base.OnClosing(e);
+                    Environment.Exit(0);
+                }
             }
-#pragma warning restore CA1416
         }
 
         private void SetupTrayIcon()
@@ -191,7 +200,7 @@ namespace QAMP
             _notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 Icon = new System.Drawing.Icon(iconStream),
-                Visible = false,
+                Visible = true,
                 Text = "QAMP Player"
             };
 
@@ -213,8 +222,8 @@ namespace QAMP
             _notifyIcon.ContextMenuStrip.Items.Add("-");
             _notifyIcon.ContextMenuStrip.Items.Add("Выход", null, (s, e) =>
             {
-                SettingsManager.Instance.Save();
-                Application.Current.Shutdown();
+                _isClosing = true;
+                this.Close();
             });
 #pragma warning restore CA1416
         }

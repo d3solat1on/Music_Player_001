@@ -280,6 +280,7 @@ namespace QAMP
         {
             if (TracksDataGrid.SelectedItem is Track selectedTrack)
             {
+                App.LogInfo($"PlayTrack (ContextMenu): {selectedTrack.Executor} - {selectedTrack.Name}");
                 Player.PlayTrack(selectedTrack);
                 UpdateNextTrackUI();
             }

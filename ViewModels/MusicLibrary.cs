@@ -109,6 +109,7 @@ namespace QAMP.ViewModels
 
             System.Diagnostics.Debug.WriteLine($"=== ВОСПРОИЗВЕДЕНИЕ ТРЕКА: {track.Name} из плейлиста: {playlist.Name} ===");
             System.Diagnostics.Debug.WriteLine($"Трек для воспроизведения находится на позиции в playlist.Tracks: {playlist.Tracks.IndexOf(track)}");
+            
 
             // Устанавливаем плейлист из которого воспроизводится музыка
             PlayingPlaylist = playlist;

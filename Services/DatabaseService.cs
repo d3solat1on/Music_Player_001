@@ -465,7 +465,7 @@ public class DatabaseService
             {
                 command.CommandText = "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType FROM Playlists WHERE Id = $id";
                 command.Parameters.AddWithValue("$id", playlistId);
-                
+
                 using var reader = command.ExecuteReader();
                 if (reader.Read())
                 {
@@ -518,7 +518,7 @@ public class DatabaseService
                     // Загружаем треки для этого плейлиста
                     var tracks = GetTracksForPlaylist(playlist.Id);
                     System.Diagnostics.Debug.WriteLine($"Загружен плейлист '{playlist.Name}' (ID={playlist.Id}): {tracks.Count} треков");
-                    
+
                     foreach (var track in tracks)
                     {
                         playlist.Tracks.Add(track);
@@ -526,7 +526,7 @@ public class DatabaseService
 
                     return playlist;
                 }
-                
+
                 System.Diagnostics.Debug.WriteLine($"Плейлист с ID={playlistId} не найден в БД");
                 return null;
             }
@@ -829,15 +829,62 @@ public class DatabaseService
         transaction.Commit();
     }
 
-    public static void SaveSetting(string key, string value)
+    public static void SaveSettingSync(string key, string value)
     {
-        using var connection = new SqliteConnection(_connectionString);
-        connection.Open();
-        var cmd = connection.CreateCommand();
-        cmd.CommandText = "INSERT OR REPLACE INTO Settings (Key, Value) VALUES ($key, $val)";
-        cmd.Parameters.AddWithValue("$key", key);
-        cmd.Parameters.AddWithValue("$val", value);
-        cmd.ExecuteNonQuery();
+        try
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            using var cmd = connection.CreateCommand();
+            cmd.CommandText = "INSERT OR REPLACE INTO Settings (Key, Value) VALUES ($key, $val)";
+            cmd.Parameters.AddWithValue("$key", key);
+            cmd.Parameters.AddWithValue("$val", value);
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            // Логируем в файл без MessageBox при закрытии приложения (чтобы избежать StackOverflow)
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string message = $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] [SaveSettingSync]\n{ex}\n";
+            message += "----------------------------------------------------------------\n";
+            try
+            {
+                File.AppendAllText(logPath, message);
+            }
+            catch
+            {
+                // Игнорируем ошибку логирования
+            }
+        }
+    }
+
+    public static async Task SaveSetting(string key, string value)
+    {
+        try
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            await connection.OpenAsync();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "INSERT OR REPLACE INTO Settings (Key, Value) VALUES ($key, $val)";
+            cmd.Parameters.AddWithValue("$key", key);
+            cmd.Parameters.AddWithValue("$val", value);
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            // Логируем в файл без MessageBox при закрытии приложения (чтобы избежать StackOverflow)
+            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string message = $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] [SaveSetting]\n{ex}\n";
+            message += "----------------------------------------------------------------\n";
+            try
+            {
+                System.IO.File.AppendAllText(logPath, message);
+            }
+            catch
+            {
+                // Игнорируем ошибку логирования
+            }
+        }
     }
 
     public static string GetSetting(string key, string defaultValue = "")
