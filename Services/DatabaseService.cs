@@ -299,9 +299,10 @@ public class DatabaseService
         long trackId = (long)getIdCommand.ExecuteScalar();
 
         var linkCommand = connection.CreateCommand();
-        linkCommand.CommandText = "INSERT INTO PlaylistTracks (PlaylistId, TrackId) VALUES ($pId, $tId)";
+        linkCommand.CommandText = "INSERT INTO PlaylistTracks (PlaylistId, TrackId, AddedDate) VALUES ($pId, $tId, $date)";
         linkCommand.Parameters.AddWithValue("$pId", playlistId);
         linkCommand.Parameters.AddWithValue("$tId", trackId);
+        linkCommand.Parameters.AddWithValue("$date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
         linkCommand.ExecuteNonQuery();
     }
 

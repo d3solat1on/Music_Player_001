@@ -750,7 +750,8 @@
                                                 <RowDefinition Height="*"/>
                                         </Grid.RowDefinitions>
 
-                                        <Border Grid.Row="0"
+                                        <Border x:Name="UpperPanel"
+                                                Grid.Row="0"
                                                 Padding="20"
                                                 Background="{DynamicResource CentralPanelHeaderBackground}"
                                                 BorderBrush="{DynamicResource GridHeaderSeperatorBrush}"

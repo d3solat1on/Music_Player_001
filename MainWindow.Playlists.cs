@@ -7,7 +7,9 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using ColorThiefDotNet;
 using Microsoft.Win32;
+using QAMP.Converters;
 using QAMP.Dialogs;
 using QAMP.Models;
 using QAMP.Services;
@@ -18,6 +20,9 @@ namespace QAMP
 {
     public partial class MainWindow
     {
+        private readonly SettingsManager _settingsManager = SettingsManager.Instance;
+        private AppSettings AppSettings => _settingsManager.Config;
+        private readonly LargeTrackImageConverter _imageConverter = new();
         private void AddMusicButton_Click(object sender, RoutedEventArgs e)
         {
             if (PlaylistsListBox.SelectedItem is Playlist selectedPlaylist)
@@ -209,22 +214,15 @@ namespace QAMP
 
         private void PlaylistsListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            // if (e.RemovedItems.Count > 0 && e.RemovedItems[0] is Playlist oldPlaylist)
-            // {
-            //     oldPlaylist.PropertyChanged -= OnCurrentPlaylistPropertyChanged;
-            // }
             if (PlaylistsListBox.SelectedItem is Playlist selected)
             {
                 System.Diagnostics.Debug.WriteLine($"=== ПРОСМОТР ПЛЕЙЛИСТА: {selected.Name} ===");
                 System.Diagnostics.Debug.WriteLine($"SortType из БД: {selected.SortType}");
                 App.LogInfo($"SelectPlaylist: {selected.Name} | Tracks: {selected.Tracks.Count}");
                 MusicLibrary.Instance.CurrentPlaylist = selected;
-                // selected.PropertyChanged += OnCurrentPlaylistPropertyChanged;
-                // UpdatePlaylistDisplay(selected);
                 ApplySortToPlaylist(selected);
-
-                // Обновляем иконку избранного при переключении плейлиста
-                // в случае если текущий трек все еще воспроизводится
+                var bitmap = _imageConverter.Convert(selected.CoverImage, typeof(BitmapSource), null, System.Globalization.CultureInfo.InvariantCulture) as BitmapSource;
+                UpdateUpperPanelGradient(bitmap);
                 if (Player.CurrentTrack != null)
                 {
                     UpdateFavoriteIcon(Player.CurrentTrack);
@@ -351,5 +349,47 @@ namespace QAMP
         //         UpdatePlaylistDisplay(playlist);
         //     }
         // }
+        private void UpdateUpperPanelGradient(BitmapSource cover)
+        {
+            if (cover == null || !AppSettings.UseAdaptiveGradients)
+            {
+                UpperPanel.Background = (Brush)Application.Current.Resources["BackgroundBrush"];
+                return;
+            }
+            try
+            {
+                System.Windows.Media.Color dominant = ThemeHelper.GetDominantColor(cover);
+
+                // Создаем градиент
+                var brush = new LinearGradientBrush
+                {
+                    StartPoint = new Point(0, 0),
+                    EndPoint = new Point(0, 1)
+                };
+
+                brush.GradientStops.Add(new GradientStop(dominant, 0));
+
+                brush.GradientStops.Add(new GradientStop(System.Windows.Media.Color.FromRgb(25, 25, 25), 1));
+
+                UpperPanel.Background = brush;
+            }
+            catch (Exception ex)
+            {
+                App.LogException(ex, "GradientUpdate");
+            }
+        }
+
+        /// <summary>
+        /// Обновляет градиент верхней панели при изменении настроек адаптивных градиентов
+        /// </summary>
+        public void RefreshAdaptiveGradients()
+        {
+            var currentPlaylist = MusicLibrary.Instance.CurrentPlaylist;
+            if (currentPlaylist == null)
+                return;
+
+            var bitmap = _imageConverter.Convert(currentPlaylist.CoverImage, typeof(BitmapSource), null, System.Globalization.CultureInfo.InvariantCulture) as BitmapSource;
+            UpdateUpperPanelGradient(bitmap!);
+        }
     }
 }

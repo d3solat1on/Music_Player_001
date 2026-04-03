@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="BunLabs.NAudio.Flac" Version="2.0.1" />
     <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="ksemenenko.ColorThief" Version="1.1.1.4" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.5" />
     <PackageReference Include="NAudio" Version="2.3.0" />
     <PackageReference Include="NAudio.Flac" Version="1.0.5702.29018" />

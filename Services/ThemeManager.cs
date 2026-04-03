@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using QAMP.Models;
 
 namespace QAMP.Services
@@ -62,6 +64,21 @@ namespace QAMP.Services
             catch
             {
             }
+        }
+    }
+    public class ThemeHelper
+    {
+        public static Color GetDominantColor(BitmapSource bitmapSource)
+        {
+            var colorThief = new ColorThiefDotNet.ColorThief();
+            // ColorThief работает с Bitmap, поэтому конвертируем
+            using var memoryStream = new System.IO.MemoryStream();
+            var encoder = new BmpBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmapSource));
+            encoder.Save(memoryStream);
+            using var bitmap = new System.Drawing.Bitmap(memoryStream);
+            var quantizeColor = colorThief.GetColor(bitmap);
+            return Color.FromRgb(quantizeColor.Color.R, quantizeColor.Color.G, quantizeColor.Color.B);
         }
     }
 }

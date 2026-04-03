@@ -18,6 +18,7 @@ namespace QAMP.Windows
         private bool originalVisualizerEnabled;
         private int originalBarCount;
         private bool originalCloseToTray;
+        private bool originalUseAdaptiveGradients;
         private readonly PlayerService _player;
 
         public Settings(PlayerService player)
@@ -198,6 +199,7 @@ namespace QAMP.Windows
             originalVisualizerEnabled = config.IsVisualizerEnabled;
             originalBarCount = config.VisualizerBarCount;
             originalCloseToTray = config.CloseToTray;
+            originalUseAdaptiveGradients = config.UseAdaptiveGradients;
 
             // Установить параметры спектрограммы
             VisualizerEnabled.IsChecked = config.IsVisualizerEnabled;
@@ -226,6 +228,10 @@ namespace QAMP.Windows
             CloseToTrayRadio.IsChecked = config.CloseToTray;
             CloseAppRadio.IsChecked = !config.CloseToTray;
 
+            // Загружаем состояние адаптивных градиентов
+            AdaptiveGradientsRadio.IsChecked = config.UseAdaptiveGradients;
+            StaticGradientsRadio.IsChecked = !config.UseAdaptiveGradients;
+
             isInitializing = false;
 
             // Синхронизируем эквалайзер с плеером
@@ -246,6 +252,15 @@ namespace QAMP.Windows
                 DefaultModeRadio.IsChecked = true;
         }
 
+        private void AdaptiveGradients_Checked(object sender, RoutedEventArgs e)
+        {
+            if (isInitializing) return;
+
+            var config = SettingsManager.Instance.Config;
+            config.UseAdaptiveGradients = AdaptiveGradientsRadio.IsChecked ?? false;
+            SettingsManager.Instance.Save();
+        }
+        
         private void ThemeRadio_Checked(object sender, RoutedEventArgs e)
         {
             if (isInitializing) return;
@@ -321,6 +336,13 @@ namespace QAMP.Windows
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsManager.Instance.Save();
+            
+            // Обновляем интерфейс, если опция адаптивных градиентов изменилась
+            if (Application.Current.MainWindow is MainWindow mainWindow)
+            {
+                mainWindow.RefreshAdaptiveGradients();
+            }
+            
             DialogResult = true;
             Close();
         }
@@ -353,6 +375,9 @@ namespace QAMP.Windows
             // Восстановить оригинальное значение "Сворачивать в трей"
             config.CloseToTray = originalCloseToTray;
 
+            // Восстановить оригинальное значение адаптивных градиентов
+            config.UseAdaptiveGradients = originalUseAdaptiveGradients;
+
             // Обновляем RadioButton при восстановлении
             if (originalCloseToTray)
             {
@@ -361,6 +386,16 @@ namespace QAMP.Windows
             else
             {
                 CloseAppRadio.IsChecked = true;
+            }
+
+            // Обновляем RadioButton адаптивных градиентов при восстановлении
+            if (originalUseAdaptiveGradients)
+            {
+                AdaptiveGradientsRadio.IsChecked = true;
+            }
+            else
+            {
+                StaticGradientsRadio.IsChecked = true;
             }
 
             if (_player?.SpectrumViewModel != null)
