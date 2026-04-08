@@ -370,13 +370,13 @@
                                                                  MaxHeight="100"/>
                                                 </Border>
 
-                                                <Button Content="Найти текст (Genius)"
+                                                <Button Content="Найти текст песни"
                                                         Click="SearchLyrics_Click"
                                                         Visibility="{Binding ElementName=EditModeButton, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}"
                                                         Width="150"
                                                         Height="25"
                                                         Background="{DynamicResource AccentBrush}"
-                                                        ToolTip="Функция поиска текста использует открытые API (Genius) исключительно для ознакомительных целей и личного использования"
+                                                        ToolTip="Функция поиска текста использует открытые API исключительно для ознакомительных целей и личного использования"
                                                         Margin="5"/>
                                                 <TextBlock Text="Текст песни"
                                                            FontWeight="Bold"

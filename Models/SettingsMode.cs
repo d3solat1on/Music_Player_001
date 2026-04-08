@@ -15,16 +15,22 @@ public class AppSettings : INotifyPropertyChanged
     public string EqualizerPreset { get; set; } = "Пользовательский"; // Текущий выбранный режим
     private bool _isCompactMode = true;
     public bool UseAdaptiveGradients { get; set; } = true;
-    public bool IsCompactMode 
-    { 
+    public bool IsCompactMode
+    {
         get => _isCompactMode;
-        set { 
-            _isCompactMode = value; 
-            OnPropertyChanged(nameof(IsCompactMode)); 
-        } 
+        set
+        {
+            _isCompactMode = value;
+            OnPropertyChanged(nameof(IsCompactMode));
+        }
     }
+    public double SpectrumFreqPower { get; set; } = 1.5;
+    public double SpectrumAmplitudeGain { get; set; } = 6.0;
+    public double SpectrumAmplitudePower { get; set; } = 0.7;
+    public double SpectrumAttackSpeed { get; set; } = 0.5;
+    public double SpectrumReleaseSpeed { get; set; } = 0.9;
     public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged(string name) => 
+    protected void OnPropertyChanged(string name) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
 }
 public class SettingsManager

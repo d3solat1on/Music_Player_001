@@ -251,15 +251,30 @@ namespace QAMP
                         catch { }
                     }
 
-                    BigLyricsText.Text = string.IsNullOrEmpty(track.Lyrics)
+                    string lyricsToDisplay = string.IsNullOrEmpty(track.Lyrics)
                         ? "Текст для этого трека отсутствует или не загружен."
                         : track.Lyrics;
+
+                    _parsedLyrics = ParseLrc(lyricsToDisplay);
+
+                    if (_parsedLyrics.Count > 0)
+                    {
+                        LyricsListBox.ItemsSource = _parsedLyrics;
+                    }
+                    else
+                    {
+                        LyricsListBox.ItemsSource = new List<LrcLine>
+                {
+                    new() { Text = lyricsToDisplay, IsActive = true }
+                };
+                    }
                 }
 
                 TracksDataGrid.Visibility = Visibility.Collapsed;
                 PlaylistsListBox.Visibility = Visibility.Collapsed;
                 LeftZona.Visibility = Visibility.Collapsed;
                 ControlsPanel.Visibility = Visibility.Collapsed;
+                UpperPanel.Visibility = Visibility.Collapsed;
                 LyricsOverlay.Visibility = Visibility.Visible;
             }
             else
@@ -268,10 +283,31 @@ namespace QAMP
                 PlaylistsListBox.Visibility = Visibility.Visible;
                 LeftZona.Visibility = Visibility.Visible;
                 ControlsPanel.Visibility = Visibility.Visible;
+                UpperPanel.Visibility = Visibility.Visible;
                 LyricsOverlay.Visibility = Visibility.Collapsed;
             }
         }
+        private List<LrcLine> _parsedLyrics = [];
+        private static List<LrcLine> ParseLrc(string lrcText)
+        {
+            var lines = new List<LrcLine>();
+            if (string.IsNullOrEmpty(lrcText)) return lines;
 
+            var regex = MyRegex();
+
+            foreach (var line in lrcText.Split('\n'))
+            {
+                var match = regex.Match(line);
+                if (match.Success)
+                {
+                    if (TimeSpan.TryParse("00:" + match.Groups["time"].Value.Replace(".", ","), out TimeSpan time))
+                    {
+                        lines.Add(new LrcLine { Time = time, Text = match.Groups["text"].Value.Trim() });
+                    }
+                }
+            }
+            return [.. lines.OrderBy(l => l.Time)];
+        }
         public void UpdateLyricsView()
         {
             var track = Player.CurrentTrack;
@@ -292,16 +328,50 @@ namespace QAMP
 
             string finalLyrics = !string.IsNullOrEmpty(lyricsFromFile) ? lyricsFromFile : track.Lyrics;
 
-            BigLyricsText.Text = string.IsNullOrEmpty(finalLyrics)
-                ? "Текст не найден в тегах файла."
-                : finalLyrics;
+            _parsedLyrics = ParseLrc(finalLyrics);
+
+            if (_parsedLyrics.Count > 0)
+            {
+                LyricsListBox.ItemsSource = _parsedLyrics;
+            }
+            else
+            {
+                var fallbackLine = new LrcLine
+                {
+                    Text = string.IsNullOrEmpty(finalLyrics) ? "Текст не найден." : finalLyrics,
+                    IsActive = true
+                };
+                LyricsListBox.ItemsSource = new List<LrcLine> { fallbackLine };
+            }
 
             track.Lyrics = finalLyrics;
-
-            LyricsScrollViewer?.ScrollToHome();
-            UpdateNextTrackUI();
+            if (LyricsListBox.Items.Count > 0)
+                LyricsListBox.ScrollIntoView(LyricsListBox.Items[0]);
         }
+        private void UpdateLyricsHighlight(TimeSpan currentTime)
+        {
+            if (_parsedLyrics == null || _parsedLyrics.Count == 0) return;
 
+            LrcLine? currentLine = null;
+            foreach (var line in _parsedLyrics)
+            {
+                if (line.Time <= currentTime)
+                    currentLine = line;
+                else
+                    break;
+            }
+
+            if (currentLine != null && !currentLine.IsActive)
+            {
+                foreach (var l in _parsedLyrics) l.IsActive = false;
+                currentLine.IsActive = true;
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    LyricsListBox.ScrollIntoView(currentLine);
+                    LyricsListBox.UpdateLayout();
+                }), System.Windows.Threading.DispatcherPriority.Background);
+            }
+        }
         private void MainGrid_DragOver(object sender, DragEventArgs e)
         {
             e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
@@ -315,5 +385,8 @@ namespace QAMP
         {
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
+
+        [System.Text.RegularExpressions.GeneratedRegex(@"\[(?<time>\d{2}:\d{2}\.\d{2,3})\](?<text>.*)")]
+        private static partial System.Text.RegularExpressions.Regex MyRegex();
     }
 }

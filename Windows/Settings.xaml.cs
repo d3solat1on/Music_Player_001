@@ -398,10 +398,10 @@ namespace QAMP.Windows
                 StaticGradientsRadio.IsChecked = true;
             }
 
-            if (_player?.SpectrumViewModel != null)
-            {
-                _player.SpectrumViewModel.BarCount = originalBarCount;
-            }
+            // if (_player?.SpectrumViewModel != null)
+            // {
+            //     _player.SpectrumViewModel.BarCount = originalBarCount;
+            // }
 
             if (originalColorScheme != null)
                 ThemeManager.ApplyTheme(originalColorScheme);
@@ -576,16 +576,16 @@ namespace QAMP.Windows
             config.IsVisualizerEnabled = VisualizerEnabled.IsChecked ?? false;
 
             // Очищаем спектрограмму при отключении
-            if (_player?.SpectrumViewModel?.Bars != null)
-            {
-                _player.SpectrumViewModel.Bars.Clear();
-            }
+            // if (_player?.SpectrumViewModel?.Bars != null)
+            // {
+            //     _player.SpectrumViewModel.Bars.Clear();
+            // }
         }
 
         private void BarCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (isInitializing || BarCountCombo.SelectedItem == null) return;
-            if (_player?.SpectrumViewModel == null) return;
+            // if (_player?.SpectrumViewModel == null) return;
 
             if (BarCountCombo.SelectedItem is ComboBoxItem item &&
                 item.Content != null &&
@@ -593,7 +593,7 @@ namespace QAMP.Windows
             {
                 var config = SettingsManager.Instance.Config;
                 config.VisualizerBarCount = barCount;
-                _player.SpectrumViewModel.BarCount = barCount;
+                // _player.SpectrumViewModel.BarCount = barCount;
             }
         }
     }

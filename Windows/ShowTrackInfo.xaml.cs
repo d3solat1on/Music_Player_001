@@ -6,12 +6,7 @@ using TagLib;
 using QAMP.Dialogs;
 using QAMP.Models;
 using Microsoft.Win32;
-using Newtonsoft.Json.Linq;
 using System.Net.Http;
-using HtmlAgilityPack;
-using System.Net;
-using System.Windows.Data;
-using System.ComponentModel;
 
 
 namespace QAMP.Windows
@@ -32,16 +27,16 @@ namespace QAMP.Windows
             {
                 pathTextBlock.MouseLeftButtonDown += PathTextBlock_MouseLeftButtonDown;
             }
-            
+
             var player = Services.PlayerService.Instance;
             if (player != null)
             {
                 player.PlayCountUpdated += Player_PlayCountUpdated;
-                
+
                 Closed += (s, e) => player.PlayCountUpdated -= Player_PlayCountUpdated;
             }
         }
-        
+
         private void Player_PlayCountUpdated(int trackId)
         {
             if (_track != null && _track.Id == trackId)
@@ -156,87 +151,69 @@ namespace QAMP.Windows
             }
         }
 
-
         private async void SearchLyrics_Click(object sender, RoutedEventArgs e)
         {
-            NotificationWindow.Show("Ищем текст на Genius...", this);
+            NotificationWindow.Show("Searching in LRCLIB...", this);
 
-            // Передаем текущие данные из полей (вдруг ты их уже подправил)
-            string foundLyrics = await FetchLyricsFromGenius(_track.Executor, _track.Name);
+            string lyrics = await FetchLrcFromLrcLib(_track.Executor, _track.Name);
 
-            if (!string.IsNullOrEmpty(foundLyrics) && !foundLyrics.StartsWith("Ошибка"))
+            if (!string.IsNullOrEmpty(lyrics))
             {
-                _track.Lyrics = foundLyrics;
-
-                // ПРИНУДИТЕЛЬНОЕ ОБНОВЛЕНИЕ (на случай, если Binding молчит)
-                // Находим твой TextBox для лирики по имени (например, LyricsTextBox)
+                _track.Lyrics = lyrics;
                 if (FindName("LyricsTextBox") is System.Windows.Controls.TextBox tb)
                 {
-                    tb.Text = foundLyrics;
+                    tb.Text = lyrics;
                 }
-
-                NotificationWindow.Show("Текст успешно загружен!", this);
+                try
+                {
+                    using (var file = TagLib.File.Create(_track.Path))
+                    {
+                        file.Tag.Lyrics = lyrics;
+                        file.Save();
+                    }
+                    NotificationWindow.Show("Lyrics loaded and SAVED to file!", this);
+                }
+                catch (Exception ex)
+                {
+                    NotificationWindow.Show($"Loaded, but save failed: {ex.Message}", this);
+                }
             }
             else
             {
-                NotificationWindow.Show(foundLyrics, this); // Покажет причину ошибки
+                NotificationWindow.Show("Lyrics not found in LRCLIB database.", this);
             }
         }
-
-        public static async Task<string> FetchLyricsFromGenius(string artist, string title)
+        private static async Task<string?> FetchLrcFromLrcLib(string artist, string title)
         {
-            string accessToken = "5Vqtv4BG4gXkIO9wQlrZbDpkRg_lt8PHs88WsvxIfgg5tJH5SZPpdDnSEH83powx";
             using HttpClient client = new();
             try
             {
-                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                string url = $"https://lrclib.net/api/get?artist_name={Uri.EscapeDataString(artist)}&track_name={Uri.EscapeDataString(title)}";
 
-                // 1. Поиск ID песни
-                string query = Uri.EscapeDataString($"{artist} {title}");
-                string searchUrl = $"https://api.genius.com/search?q={query}";
-                var response = await client.GetStringAsync(searchUrl);
-                var json = JObject.Parse(response);
+                client.DefaultRequestHeaders.Add("User-Agent", "QAMP-MusicPlayer (https://github.com/d3solat1on/QAMP)");
 
-                var sUrl = json["response"]["hits"]?.FirstOrDefault()?["result"]?["url"]?.ToString();
-                if (string.IsNullOrEmpty(sUrl)) return "Ошибка: API Genius не нашло такую песню.";
+                var response = await client.GetAsync(url);
+                if (!response.IsSuccessStatusCode) return null;
 
-                // Выведи ссылку в консоль отладки (Output в Visual Studio)
-                Debug.WriteLine($"Найдена ссылка: {sUrl}");
+                string json = await response.Content.ReadAsStringAsync();
+                using System.Text.Json.JsonDocument doc = System.Text.Json.JsonDocument.Parse(json);
+                var root = doc.RootElement;
 
-                // 2. Загрузка страницы и парсинг текста
-                var web = new HtmlWeb();
-                var doc = await web.LoadFromWebAsync(sUrl);
-
-                // Genius часто меняет структуру, но обычно текст лежит в контейнерах с атрибутом 'data-lyrics-container'
-                var nodes = doc.DocumentNode.SelectNodes("//div[@data-lyrics-container='true']")
-            ?? doc.DocumentNode.SelectNodes("//div[contains(@class, 'Lyrics__Container')]")
-            ?? doc.DocumentNode.SelectNodes("//div[@id='lyrics-root']");
-
-                if (nodes == null)
+                if (root.TryGetProperty("syncedLyrics", out var synced) && !string.IsNullOrEmpty(synced.GetString()))
                 {
-                    // Если ничего не нашли, давай проверим, не попали ли мы на капчу или пустую страницу
-                    return "Ошибка: Не удалось найти блок с текстом на странице.";
+                    return synced.GetString();
                 }
 
-                if (nodes == null) return "Не удалось извлечь текст (возможно, дизайн сайта изменился).";
-
-                // Собираем текст, заменяя <br> на переносы строк
-                string lyrics = "";
-                foreach (var node in nodes)
+                if (root.TryGetProperty("plainLyrics", out var plain))
                 {
-                    // Заменяем <br> на новую строку перед получением текста
-                    var html = node.InnerHtml.Replace("<br>", "\n");
-                    var tempDoc = new HtmlDocument();
-                    tempDoc.LoadHtml(html);
-                    lyrics += tempDoc.DocumentNode.InnerText + "\n";
+                    return plain.GetString();
                 }
-
-                return WebUtility.HtmlDecode(lyrics).Trim();
             }
             catch (Exception ex)
             {
-                return $"Ошибка при поиске: {ex.Message}";
+                System.Diagnostics.Debug.WriteLine($"LRCLIB Error: {ex.Message}");
             }
+            return null;
         }
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {

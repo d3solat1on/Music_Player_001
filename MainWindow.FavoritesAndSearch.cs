@@ -312,16 +312,15 @@ namespace QAMP
                 byte[]? favCover = null;
                 try
                 {
-                    var uri = new Uri("pack://application:,,,/Resources/favorite_cover.png");
-                    var resourceStream = Application.GetResourceStream(uri);
-                    if (resourceStream != null)
-                    {
-                        using var ms = new MemoryStream();
-                        resourceStream.Stream.CopyTo(ms);
-                        favCover = ms.ToArray();
-                    }
+                    var geometry = (Geometry)Application.Current.Resources["favoriteGeometry"];
+                    var accentBrush = (Brush)Application.Current.Resources["AccentBrush"];
+                    var drawing = new GeometryDrawing(accentBrush, null, geometry);
+                    favCover = RenderGeometryToPngConverter.RenderGeometryToPng(geometry, accentBrush);
                 }
-                catch { }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Ошибка создания обложки для избранного: {ex.Message}");
+                }
 
                 long newId = DatabaseService.CreatePlaylist(MusicLibrary.FavoritesName, "Ваши любимые треки", favCover);
                 var newPlaylist = new Playlist

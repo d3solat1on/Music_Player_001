@@ -39,13 +39,17 @@ namespace QAMP.Audio
             // Читаем данные из источника (AudioFileReader)
             int samplesRead = _sourceProvider.Read(buffer, offset, count);
 
-            // Прогоняем каждый считанный сэмпл через все 10 фильтров
+            // ОПТИМИЗАЦИЯ: применяем фильтры для каждого сэмпла
+            // Это более эффективно, чем проходить все сэмплы для каждого фильтра
             for (int n = 0; n < samplesRead; n++)
             {
+                float sample = buffer[offset + n];
+                // Применяем все фильтры к одному сэмплу последовательно
                 for (int i = 0; i < _filters.Length; i++)
                 {
-                    buffer[offset + n] = _filters[i].Transform(buffer[offset + n]);
+                    sample = _filters[i].Transform(sample);
                 }
+                buffer[offset + n] = sample;
             }
 
             return samplesRead;

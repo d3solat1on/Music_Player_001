@@ -54,7 +54,7 @@ namespace QAMP
             PlaylistsListBox.MouseDoubleClick += PlaylistsListBox_MouseDoubleClick;
             PreviewKeyDown += Window_KeyDown;
             PreviewKeyDown += TracksDataGrid_PreviewKeyDown;
-
+            PlayerService.Instance.SpectrumControl = SpectrumViewer;
             _memoryCleanupTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMinutes(5)
@@ -69,7 +69,7 @@ namespace QAMP
 
             Closing += (s, e) => OnClosing(e);
         }
-
+        
         private void MainWindow_Loaded(object sender, RoutedEventArgs e)
         {
             // Загружаем громкость - устанавливаем в слайдер, это вызовет VolumeSlider_ValueChanged
@@ -142,7 +142,7 @@ namespace QAMP
                 System.Diagnostics.Debug.WriteLine($"DEBUG: VolumePercent обновлен: {VolumeSlider.Value:F0}%");
             }
             _stressTester = new StressTester(
-                togglePlayPause: () => TogglePlayPause(),
+                togglePlayPause: TogglePlayPause,
                 setPlaylistIndex: (index) => PlaylistsListBox.SelectedIndex = index,
                 getPlaylistsCount: () => PlaylistsListBox.Items.Count,
                 getTracksCount: () => TracksDataGrid.Items.Count,
@@ -151,9 +151,9 @@ namespace QAMP
                     if (TracksDataGrid.Items[index] is Track track)
                         Player.PlayTrack(track);
                 },
-                showMessage: (text) => Task.Run(() => 
+                showMessage: (text) => Task.Run(() =>
                 {
-                    Application.Current.Dispatcher.Invoke(() => 
+                    Application.Current.Dispatcher.Invoke(() =>
                     {
                         NotificationWindow.Show(text, this, NotificationMode.Info);
                     });
@@ -246,6 +246,10 @@ namespace QAMP
                     }
                 }
                 CurrentTimeText.Text = FormatTime(position);
+            }
+            if (_isLyricsMode)
+            {
+                UpdateLyricsHighlight(TimeSpan.FromSeconds(position));
             }
         }
 

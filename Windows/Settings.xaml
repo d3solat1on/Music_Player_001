@@ -209,6 +209,7 @@
                                       Width="100"
                                       SelectionChanged="BarCountCombo_SelectionChanged">
                                 <ComboBoxItem Content="32"/>
+                                <ComboBoxItem Content="48"/>
                                 <ComboBoxItem Content="64"/>
                                 <!-- IsSelected="True"/> -->
                                 <ComboBoxItem Content="128"/>

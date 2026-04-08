@@ -1,4 +1,5 @@
 using System;
+using System.Windows;
 using NAudio.Dsp;
 using NAudio.Wave;
 using QAMP.Models;
@@ -8,36 +9,30 @@ namespace QAMP.Visualization
     public class SampleAggregator : ISampleProvider
     {
         private readonly ISampleProvider source;
-        private readonly int fftSize;
+        private readonly int fftSize = 512;
         private readonly Complex[] fftBuffer;
         private readonly float[] lastFftResults;
-        private readonly float[] windowBuffer; // Предсчитанное окно
+        private readonly float[] windowBuffer;
         private int fftPos;
+        private readonly Lock _lockObject = new();
 
-        // Событие, которое будет передавать рассчитанные данные в UI
         public event EventHandler<float[]> FftCalculated;
 
         public WaveFormat WaveFormat => source.WaveFormat;
 
-        public SampleAggregator(ISampleProvider source, int fftSize = 4096)
+        public SampleAggregator(ISampleProvider source, int unused = 4096)
         {
-            if (!IsPowerOfTwo(fftSize)) throw new ArgumentException("FFT size must be a power of two");
             this.source = source;
-            this.fftSize = fftSize;
             fftBuffer = new Complex[fftSize];
             lastFftResults = new float[fftSize / 2];
             windowBuffer = new float[fftSize];
 
-            // Предсчитываем окно Хеннинга один раз
             for (int i = 0; i < fftSize; i++)
                 windowBuffer[i] = (float)(0.5 * (1.0 - Math.Cos(2 * Math.PI * i / fftSize)));
         }
 
-        private static bool IsPowerOfTwo(int n) => n > 0 && (n & (n - 1)) == 0;
-
         public int Read(float[] buffer, int offset, int count)
         {
-            // Читаем данные из основного источника (файла)
             int samplesRead = source.Read(buffer, offset, count);
 
             for (int n = 0; n < samplesRead; n++)
@@ -52,29 +47,48 @@ namespace QAMP.Visualization
         {
             if (!SettingsManager.Instance.Config.IsVisualizerEnabled)
             {
-                // Если выключено — просто не считаем FFT, экономя ресурсы
                 return;
             }
-            // Используем предсчитанное окно для ускорения
-            fftBuffer[fftPos].X = value * windowBuffer[fftPos];
-            fftBuffer[fftPos].Y = 0;
-            fftPos++;
 
-            if (fftPos >= fftSize)
+            lock (_lockObject)
             {
-                fftPos = 0;
-                FastFourierTransform.FFT(true, (int)Math.Log(fftSize, 2), fftBuffer);
+                fftBuffer[fftPos].X = value * windowBuffer[fftPos];
+                fftBuffer[fftPos].Y = 0;
+                fftPos++;
 
-                // Заполняем результат (только половина спектра полезна)
+                if (fftPos >= fftSize)
+                {
+                    fftPos = 0;
+                    ProcessFFT(fftBuffer);
+                }
+            }
+        }
+
+        private void ProcessFFT(Complex[] fftData)
+        {
+            try
+            {
+                FastFourierTransform.FFT(true, (int)Math.Log(fftSize, 2), fftData);
+
                 for (int i = 0; i < fftSize / 2; i++)
                 {
-                    float magnitude = (float)Math.Sqrt(fftBuffer[i].X * fftBuffer[i].X + fftBuffer[i].Y * fftBuffer[i].Y);
+                    float magnitude = (float)Math.Sqrt(fftData[i].X * fftData[i].X + fftData[i].Y * fftData[i].Y);
+                    magnitude *= 225f;
                     lastFftResults[i] = magnitude;
                 }
 
-                // Вызываем событие для отрисовки
-                FftCalculated?.Invoke(this, lastFftResults);
+                float[] result = new float[fftSize / 2];
+                Array.Copy(lastFftResults, result, fftSize / 2);
+
+                // Используем Background вместо Dispatcher для улучшения производительности
+                Task.Run(() =>
+                {
+                    Application.Current?.Dispatcher.BeginInvoke(
+                        new Action(() => { FftCalculated?.Invoke(this, result); }),
+                        System.Windows.Threading.DispatcherPriority.Render); 
+                });
             }
+            catch { /* ignore */ }
         }
     }
 }

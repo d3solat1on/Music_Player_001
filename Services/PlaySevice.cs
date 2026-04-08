@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Threading;
 using System.Linq;
+using System.Timers;
 using NAudio.Wave;
 using NAudio.Flac;
 using QAMP.Models;
@@ -18,15 +19,16 @@ namespace QAMP.Services
     {
         private static PlayerService? _instance;
         public static PlayerService Instance => _instance ??= new PlayerService();
+        DateTime _nextTime = DateTime.MinValue;
         public float[] EqGains { get; set; } = new float[10];
         public EqualizerFilter CurrentEqualizer { get; private set; }
-        private readonly SpectrumViewModel _spectrumViewModel;
-        public SpectrumViewModel SpectrumViewModel => _spectrumViewModel;
         private bool _disposed = false;
-        private bool _isTrackEnding = false;
-        private double _trackDuration;
-        private DispatcherTimer _endCheckTimer;
         private bool _playCountIncremented = false;
+        private SpectrumAnalyzer _spectrumAnalyzer;
+        public SpectrumControl SpectrumControl { get; set; }
+
+        // НОВОЕ: Настройки спектра
+        private SpectrumSettings _spectrumSettings;
 
         // NAudio компоненты
         private WaveStream _audioFileReader;
@@ -40,12 +42,11 @@ namespace QAMP.Services
         public event Action<bool> PlaybackPaused;
         public event Action<double> VolumeChanged;
         public event Action DurationChanged;
-        public event Action<int> PlayCountUpdated;  // ✅ Новое событие: (trackId)
+        public event Action<int> PlayCountUpdated;
 
         // Свойства
         public Track CurrentTrack { get; set; }
         public bool IsPlaying { get; private set; }
-
         public bool IsShuffleEnabled { get; set; } = false;
         public List<Track> ShuffledQueue { get; set; } = [];
         private double _position;
@@ -88,7 +89,6 @@ namespace QAMP.Services
             }
         }
 
-        // Режимы воспроизведения
         private RepeatMode _repeatMode = RepeatMode.NoRepeat;
         public RepeatMode RepeatMode
         {
@@ -113,14 +113,10 @@ namespace QAMP.Services
         }
         public event Action<bool> ShuffleChanged;
 
-        private readonly Random _random = new();
-
         private string? _tempFilePath;
-        private double _lastGoodPosition;
-        private int _stuckCounter;
+
         private PlayerService()
         {
-            _spectrumViewModel = new SpectrumViewModel();
             _positionTimer = new DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(100)
@@ -139,9 +135,48 @@ namespace QAMP.Services
                     EqGains[i] = (float)config.EqualizerGains[i];
                 }
             }
+
+            InitializeSpectrumSettings();
         }
 
-        public void PlayTrack(Track track)
+        private void InitializeSpectrumSettings()
+        {
+            _spectrumSettings = new SpectrumSettings
+            {
+                FreqPower = 1.2,      // частота
+                AmplitudeGain = 25.0, // Усиление 
+                AmplitudePower = 0.7, //  сжатие
+                AutoNormalize = false, //  автонормализация
+                MinBarValue = 0.00,
+                MaxBarValue = 0.95
+            };
+        }
+        public void SetSpectrumPreset(string presetName)
+        {
+            _spectrumSettings.ApplyPreset(presetName);
+            _spectrumAnalyzer?.SetPreset(presetName);
+            SpectrumControl?.SetSpectrumPreset(presetName);
+            App.LogInfo($"Spectrum preset changed to: {presetName}");
+        }
+        public void UpdateSpectrumSettings(double freqPower, double amplitudeGain, double amplitudePower,
+                                           double attackSpeed, double releaseSpeed)
+        {
+            _spectrumSettings.FreqPower = freqPower;
+            _spectrumSettings.AmplitudeGain = amplitudeGain;
+            _spectrumSettings.AmplitudePower = amplitudePower;
+            _spectrumSettings.AttackSpeed = attackSpeed;
+            _spectrumSettings.ReleaseSpeed = releaseSpeed;
+
+            var config = SettingsManager.Instance.Config;
+            config.SpectrumFreqPower = freqPower;
+            config.SpectrumAmplitudeGain = amplitudeGain;
+            config.SpectrumAmplitudePower = amplitudePower;
+            config.SpectrumAttackSpeed = attackSpeed;
+            config.SpectrumReleaseSpeed = releaseSpeed;
+            SettingsManager.Instance.Save();
+        }
+
+        public async Task PlayTrack(Track track)
         {
             MusicLibrary.Instance.PlaybackQueue = new ObservableCollection<Track>(MusicLibrary.Instance.PlaybackQueue);
             try
@@ -152,40 +187,59 @@ namespace QAMP.Services
                 string extension = Path.GetExtension(track.Path).ToLowerInvariant();
                 ISampleProvider sampleProvider;
 
-                if (extension == ".flac")
+                await Task.Run(() =>
                 {
-                    var flacReader = new FlacReader(track.Path);
-                    _audioFileReader = flacReader;
-                    sampleProvider = flacReader.ToSampleProvider();
-                }
-                else
-                {
-                    var reader = new AudioFileReader(track.Path);
-                    _audioFileReader = reader;
-                    sampleProvider = reader;
-                }
+                    if (extension == ".flac")
+                    {
+                        var flacReader = new FlacReader(track.Path);
+                        _audioFileReader = flacReader;
+                        sampleProvider = flacReader.ToSampleProvider();
+                    }
+                    else
+                    {
+                        var reader = new AudioFileReader(track.Path);
+                        _audioFileReader = reader;
+                        sampleProvider = reader;
+                    }
 
-                float[] frequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
+                    float[] frequencies = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000];
 
-                // Создаем новый эквалайзер
-                CurrentEqualizer = new EqualizerFilter(sampleProvider, frequencies);
+                    CurrentEqualizer = new EqualizerFilter(sampleProvider, frequencies);
+                    ApplySavedEqualizerSettings();
 
-                // ВАЖНО: Применяем сохраненные настройки к новому эквалайзеру
-                ApplySavedEqualizerSettings();
+                    var aggregator = new SampleAggregator(CurrentEqualizer, 256);
 
-                var aggregator = new SampleAggregator(CurrentEqualizer, 256);
+                    _spectrumAnalyzer = new SpectrumAnalyzer(_spectrumSettings);
+                    _spectrumAnalyzer.SpectrumUpdated += (s, result) =>
+                    {
 
-                aggregator.FftCalculated += (s, fftData) =>
-                {
-                    Application.Current.Dispatcher.BeginInvoke(
-                        new Action(() =>
+                        SpectrumControl?.UpdateSpectrum(result.Data);
+                    };
+
+                    aggregator.FftCalculated += (s, fftData) =>
+                    {
+                        if (fftData != null && fftData.Length > 0)
                         {
-                            SpectrumViewModel?.Update(fftData);
-                        }),
-                        DispatcherPriority.Background);
-                };
-                _fadeProvider = new FadeInOutProvider(aggregator);
-                _waveOutEvent = new WaveOutEvent();
+                            float maxVal = 0;
+                            for (int i = 0; i < fftData.Length; i++)
+                            {
+                                if (fftData[i] > maxVal) maxVal = fftData[i];
+                            }
+
+                            if (DateTime.Now >= _nextTime)
+                            {
+                                System.Diagnostics.Debug.WriteLine($"FFT Max Value: {maxVal:F6}");
+                                _nextTime = DateTime.Now.AddSeconds(2);
+                            }
+
+                            _spectrumAnalyzer?.ProcessSamples(fftData, fftData.Length);
+                        }
+                    };
+
+                    _fadeProvider = new FadeInOutProvider(aggregator);
+                });
+
+                _waveOutEvent = new WaveOutEvent { DesiredLatency = 500 };
                 _waveOutEvent.Init(_fadeProvider);
                 _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
@@ -194,7 +248,7 @@ namespace QAMP.Services
                 Duration = _audioFileReader.TotalTime.TotalSeconds;
                 IsPlaying = true;
                 _positionTimer.Start();
-                // ИСПРАВЛЕНИЕ: отписываемся перед подпиской, чтобы избежать дублирования обработчиков
+
                 _waveOutEvent.PlaybackStopped -= OnPlaybackStopped;
                 _waveOutEvent.PlaybackStopped += OnPlaybackStopped;
                 TrackChanged?.Invoke(track);
@@ -242,19 +296,17 @@ namespace QAMP.Services
                 // ВАЖНО: Применяем сохраненные настройки к новому эквалайзеру
                 ApplySavedEqualizerSettings();
 
-                var aggregator = new SampleAggregator(CurrentEqualizer, 256);
+                var aggregator = new SampleAggregator(CurrentEqualizer, 4096);
 
                 aggregator.FftCalculated += (s, fftData) =>
-                {
-                    Application.Current.Dispatcher.BeginInvoke(
-                        new Action(() =>
+                    {
+                        if (fftData != null && fftData.Length > 0)
                         {
-                            SpectrumViewModel?.Update(fftData);
-                        }),
-                        DispatcherPriority.Background);
-                };
+                            _spectrumAnalyzer?.ProcessSamples(fftData, fftData.Length);
+                        }
+                    };
 
-                _waveOutEvent = new WaveOutEvent();
+                _waveOutEvent = new WaveOutEvent { DesiredLatency = 500 };  // ОПТИМИЗАЦИЯ: увеличено с 250 мс
                 _waveOutEvent.Init(aggregator);
                 _waveOutEvent.Volume = (float)Volume;
                 // НЕ вызываем Play() - трек будет загружен, но на паузе
@@ -359,7 +411,7 @@ namespace QAMP.Services
                                     {
                                         CurrentTrack.PlayCount++;
                                         System.Diagnostics.Debug.WriteLine($"[PlayCount] PlayCount now: {CurrentTrack.PlayCount}");
-                                        
+
                                         // ✅ Уведомляем об обновлении PlayCount (например, для ShowTrackInfo)
                                         PlayCountUpdated?.Invoke(trackId);
                                     });

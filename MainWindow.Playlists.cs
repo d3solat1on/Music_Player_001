@@ -325,30 +325,6 @@ namespace QAMP
             Library.CurrentTrack = track;
             _lastTrackWithCover = track;
         }
-        // private void UpdatePlaylistDisplay(Playlist playlist)
-        // {
-        //     CurrentPlaylistNameText.Text = playlist.Name;
-        //     CurrentPlaylistDescriptionText.Text = playlist.Description;
-        //     CurrentTracksCountText.Text = playlist.TrackCountDisplay;
-        //     CurrentTracksDateCreateText.Text = $"Создан: {playlist.CreatedDate:dd MMM yyyy}";
-
-        //     TimeSpan totalTime = playlist.TotalDuration;
-        //     CurrentTracksTimeText.Text = totalTime.TotalHours >= 1
-        //         ? totalTime.ToString(@"hh\:mm\:ss")
-        //         : totalTime.ToString(@"mm\:ss");
-
-        //     if (playlist.CoverImage != null && playlist.CoverImage.Length > 0)
-        //         CurrentPlaylistCover.Source = LoadImage(playlist.CoverImage);
-        //     else
-        //         CurrentPlaylistCover.Source = null;
-        // }
-        // private void OnCurrentPlaylistPropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
-        // {
-        //     if (sender is Playlist playlist)
-        //     {
-        //         UpdatePlaylistDisplay(playlist);
-        //     }
-        // }
         private void UpdateUpperPanelGradient(BitmapSource cover)
         {
             if (cover == null || !AppSettings.UseAdaptiveGradients)

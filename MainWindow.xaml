@@ -9,6 +9,7 @@
         xmlns:viewModels="clr-namespace:QAMP.ViewModels"
         xmlns:services="clr-namespace:QAMP.Services"
         xmlns:models="clr-namespace:QAMP.Models"
+        xmlns:vis="clr-namespace:QAMP.Visualization"
         xmlns:system="clr-namespace:System;assembly=mscorlib"
         mc:Ignorable="d"
         Title="QAMP"
@@ -891,312 +892,344 @@
                                                 </StackPanel>
                                         </Border>
 
-                                        <DataGrid x:Name="TracksDataGrid"
-                                                  Visibility="Visible"
-                                                  VirtualizingStackPanel.IsVirtualizing="True"
-                                                  VirtualizingStackPanel.VirtualizationMode="Recycling"
-                                                  ScrollViewer.IsDeferredScrollingEnabled="False"
-                                                  VirtualizingStackPanel.ScrollUnit="Pixel"
-                                                  VirtualizingStackPanel.CacheLength="2,3"
-                                                  VirtualizingStackPanel.CacheLengthUnit="Page"
-                                                  Grid.Row="2"
-                                                  Background="Transparent"
-                                                  RowBackground="{DynamicResource DataGridRowBackground}"
-                                                  AlternatingRowBackground="{DynamicResource DataGridRowAltBackground}"
-                                                  Foreground="{DynamicResource DataGridCellForeground}"
-                                                  BorderBrush="{DynamicResource DataGridBorderBrush}"
-                                                  BorderThickness="0"
-                                                  AutoGenerateColumns="False"
-                                                  CanUserResizeRows="False"
-                                                  CanUserAddRows="False"
-                                                  CanUserReorderColumns="False"
-                                                  CanUserResizeColumns="False"
-                                                  IsReadOnly="True"
-                                                  MouseDoubleClick="TracksDataGrid_MouseDoubleClick"
-                                                  GridLinesVisibility="None"
-                                                  AllowDrop="True"
-                                                  SelectionMode="Extended"
-                                                  SelectionUnit="FullRow"
-                                                  DragOver="MainGrid_DragOver">
-                                                <!-- Drop="MainGrid_Drop"> -->
-                                                <DataGrid.ContextMenu>
-                                                        <ContextMenu Background="{DynamicResource ContextMenuBackground}"
-                                                                     BorderBrush="{DynamicResource ContextMenuBorderBrush}"
-                                                                     Opened="ContextMenu_Opened">
+                                        <Grid Grid.Row="2">
+                                                <DataGrid x:Name="TracksDataGrid"
+                                                          Visibility="Visible"
+                                                          VirtualizingStackPanel.IsVirtualizing="True"
+                                                          VirtualizingStackPanel.VirtualizationMode="Recycling"
+                                                          ScrollViewer.IsDeferredScrollingEnabled="False"
+                                                          VirtualizingStackPanel.ScrollUnit="Pixel"
+                                                          VirtualizingStackPanel.CacheLength="2,3"
+                                                          VirtualizingStackPanel.CacheLengthUnit="Page"
+                                                          Background="Transparent"
+                                                          RowBackground="{DynamicResource DataGridRowBackground}"
+                                                          AlternatingRowBackground="{DynamicResource DataGridRowAltBackground}"
+                                                          Foreground="{DynamicResource DataGridCellForeground}"
+                                                          BorderBrush="{DynamicResource DataGridBorderBrush}"
+                                                          BorderThickness="0"
+                                                          AutoGenerateColumns="False"
+                                                          CanUserResizeRows="False"
+                                                          CanUserAddRows="False"
+                                                          CanUserReorderColumns="False"
+                                                          CanUserResizeColumns="False"
+                                                          IsReadOnly="True"
+                                                          MouseDoubleClick="TracksDataGrid_MouseDoubleClick"
+                                                          GridLinesVisibility="None"
+                                                          AllowDrop="True"
+                                                          SelectionMode="Extended"
+                                                          SelectionUnit="FullRow"
+                                                          DragOver="MainGrid_DragOver">
+                                                        <!-- Drop="MainGrid_Drop"> -->
+                                                        <DataGrid.ContextMenu>
+                                                                <ContextMenu Background="{DynamicResource ContextMenuBackground}"
+                                                                             BorderBrush="{DynamicResource ContextMenuBorderBrush}"
+                                                                             Opened="ContextMenu_Opened">
 
-                                                                <MenuItem Header="Воспроизвести"
-                                                                          Click="PlayTrackMenuItem_Click"/>
-                                                                <MenuItem Header="Информация"
-                                                                          Click="ShowTrackInfo_Click"/>
+                                                                        <MenuItem Header="Воспроизвести"
+                                                                                  Click="PlayTrackMenuItem_Click"/>
+                                                                        <MenuItem Header="Информация"
+                                                                                  Click="ShowTrackInfo_Click"/>
 
-                                                                <MenuItem Header="Добавить в плейлист"/>
+                                                                        <MenuItem Header="Добавить в плейлист"/>
 
-                                                                <MenuItem Header="Удалить из плейлиста"
-                                                                          Click="RemoveFromPlaylist_Click"/>
-                                                        </ContextMenu>
-                                                </DataGrid.ContextMenu>
-                                                <DataGrid.Resources>
-                                                        <Style TargetType="{x:Type DataGridRowHeader}">
-                                                                <Setter Property="Background"
-                                                                        Value="Transparent"/>
-                                                                <Setter Property="BorderThickness"
-                                                                        Value="0"/>
-                                                                <Setter Property="Width"
-                                                                        Value="0"/>
-                                                        </Style>
-                                                        <!-- Стиль для заголовков колонок -->
-                                                        <Style TargetType="DataGridColumnHeader">
-                                                                <Setter Property="Background"
-                                                                        Value="{DynamicResource DataGridHeaderBackground}"/>
-                                                                <Setter Property="Foreground"
-                                                                        Value="{DynamicResource DataGridHeaderForeground}"/>
-                                                                <Setter Property="FontWeight"
-                                                                        Value="Bold"/>
-                                                                <Setter Property="FontSize"
-                                                                        Value="18"/>
-                                                                <Setter Property="Height"
-                                                                        Value="40"/>
-                                                                <Setter Property="BorderBrush"
-                                                                        Value="{DynamicResource GridHeaderSeperatorBrush}"/>
-                                                                <Setter Property="BorderThickness"
-                                                                        Value="0,0,1,1"/>
-                                                                <Setter Property="HorizontalContentAlignment"
-                                                                        Value="Left"/>
-                                                                <Setter Property="Padding"
-                                                                        Value="10,0,0,0"/>
-                                                        </Style>
+                                                                        <MenuItem Header="Удалить из плейлиста"
+                                                                                  Click="RemoveFromPlaylist_Click"/>
+                                                                </ContextMenu>
+                                                        </DataGrid.ContextMenu>
+                                                        <DataGrid.Resources>
+                                                                <Style TargetType="{x:Type DataGridRowHeader}">
+                                                                        <Setter Property="Background"
+                                                                                Value="Transparent"/>
+                                                                        <Setter Property="BorderThickness"
+                                                                                Value="0"/>
+                                                                        <Setter Property="Width"
+                                                                                Value="0"/>
+                                                                </Style>
+                                                                <!-- Стиль для заголовков колонок -->
+                                                                <Style TargetType="DataGridColumnHeader">
+                                                                        <Setter Property="Background"
+                                                                                Value="{DynamicResource DataGridHeaderBackground}"/>
+                                                                        <Setter Property="Foreground"
+                                                                                Value="{DynamicResource DataGridHeaderForeground}"/>
+                                                                        <Setter Property="FontWeight"
+                                                                                Value="Bold"/>
+                                                                        <Setter Property="FontSize"
+                                                                                Value="18"/>
+                                                                        <Setter Property="Height"
+                                                                                Value="40"/>
+                                                                        <Setter Property="BorderBrush"
+                                                                                Value="{DynamicResource GridHeaderSeperatorBrush}"/>
+                                                                        <Setter Property="BorderThickness"
+                                                                                Value="0,0,1,1"/>
+                                                                        <Setter Property="HorizontalContentAlignment"
+                                                                                Value="Left"/>
+                                                                        <Setter Property="Padding"
+                                                                                Value="10,0,0,0"/>
+                                                                </Style>
 
-                                                        <!-- Стиль для ячеек -->
-                                                        <Style TargetType="DataGridCell">
-                                                                <Setter Property="Background"
-                                                                        Value="{DynamicResource DataGridCellBackground}"/>
-                                                                <Setter Property="Foreground"
-                                                                        Value="{DynamicResource DataGridCellForeground}"/>
-                                                                <Setter Property="BorderBrush"
-                                                                        Value="Transparent"/>
-                                                                <Setter Property="VerticalAlignment"
-                                                                        Value="Center"/>
-                                                                <Setter Property="Padding"
-                                                                        Value="10,5,0,5"/>
-                                                                <Setter Property="FontSize"
-                                                                        Value="18"/>
-                                                                <Style.Triggers>
-                                                                        <Trigger Property="IsSelected"
-                                                                                 Value="True">
-                                                                                <Setter Property="Background"
-                                                                                        Value="{DynamicResource DataGridRowSelectedBackground}"/>
-                                                                                <Setter Property="Foreground"
-                                                                                        Value="{DynamicResource DataGridCellSelectedForeground}"/>
-                                                                                <Setter Property="BorderBrush"
-                                                                                        Value="{DynamicResource DataGridSelectionBorderBrush}"/>
-                                                                        </Trigger>
-                                                                </Style.Triggers>
-                                                        </Style>
+                                                                <!-- Стиль для ячеек -->
+                                                                <Style TargetType="DataGridCell">
+                                                                        <Setter Property="Background"
+                                                                                Value="{DynamicResource DataGridCellBackground}"/>
+                                                                        <Setter Property="Foreground"
+                                                                                Value="{DynamicResource DataGridCellForeground}"/>
+                                                                        <Setter Property="BorderBrush"
+                                                                                Value="Transparent"/>
+                                                                        <Setter Property="VerticalAlignment"
+                                                                                Value="Center"/>
+                                                                        <Setter Property="Padding"
+                                                                                Value="10,5,0,5"/>
+                                                                        <Setter Property="FontSize"
+                                                                                Value="18"/>
+                                                                        <Style.Triggers>
+                                                                                <Trigger Property="IsSelected"
+                                                                                         Value="True">
+                                                                                        <Setter Property="Background"
+                                                                                                Value="{DynamicResource DataGridRowSelectedBackground}"/>
+                                                                                        <Setter Property="Foreground"
+                                                                                                Value="{DynamicResource DataGridCellSelectedForeground}"/>
+                                                                                        <Setter Property="BorderBrush"
+                                                                                                Value="{DynamicResource DataGridSelectionBorderBrush}"/>
+                                                                                </Trigger>
+                                                                        </Style.Triggers>
+                                                                </Style>
 
-                                                        <!-- Стиль для строк -->
-                                                        <Style TargetType="DataGridRow">
-                                                                <Setter Property="Background"
-                                                                        Value="{DynamicResource DataGridRowBackground}"/>
-                                                                <Setter Property="MinHeight"
-                                                                        Value="35"/>
-                                                                <Style.Triggers>
-                                                                        <Trigger Property="AlternationIndex"
-                                                                                 Value="1">
-                                                                                <Setter Property="Background"
-                                                                                        Value="{DynamicResource DataGridRowAltBackground}"/>
-                                                                        </Trigger>
-                                                                        <Trigger Property="IsSelected"
-                                                                                 Value="True">
-                                                                                <Setter Property="Background"
-                                                                                        Value="{DynamicResource DataGridRowSelectedBackground}"/>
-                                                                        </Trigger>
-                                                                </Style.Triggers>
-                                                        </Style>
-                                                </DataGrid.Resources>
-                                                <DataGrid.Columns>
+                                                                <!-- Стиль для строк -->
+                                                                <Style TargetType="DataGridRow">
+                                                                        <Setter Property="Background"
+                                                                                Value="{DynamicResource DataGridRowBackground}"/>
+                                                                        <Setter Property="MinHeight"
+                                                                                Value="35"/>
+                                                                        <Style.Triggers>
+                                                                                <Trigger Property="AlternationIndex"
+                                                                                         Value="1">
+                                                                                        <Setter Property="Background"
+                                                                                                Value="{DynamicResource DataGridRowAltBackground}"/>
+                                                                                </Trigger>
+                                                                                <Trigger Property="IsSelected"
+                                                                                         Value="True">
+                                                                                        <Setter Property="Background"
+                                                                                                Value="{DynamicResource DataGridRowSelectedBackground}"/>
+                                                                                </Trigger>
+                                                                        </Style.Triggers>
+                                                                </Style>
+                                                        </DataGrid.Resources>
+                                                        <DataGrid.Columns>
 
-                                                        <!-- В DataGrid.Columns, перед колонкой NAME -->
-                                                        <DataGridTemplateColumn Header=""
-                                                                                Visibility="{Binding Data.IsCompactMode, 
+                                                                <!-- В DataGrid.Columns, перед колонкой NAME -->
+                                                                <DataGridTemplateColumn Header=""
+                                                                                        Visibility="{Binding Data.IsCompactMode, 
                  Source={StaticResource Proxy}, 
                  Converter={StaticResource InverseBoolToVisConverter}}"
-                                                                                Width="75">
-                                                                <DataGridTemplateColumn.CellTemplate>
+                                                                                        Width="75">
+                                                                        <DataGridTemplateColumn.CellTemplate>
+                                                                                <DataTemplate>
+                                                                                        <Border Width="75"
+                                                                                                Height="75"
+                                                                                                CornerRadius="4"
+                                                                                                BorderThickness="1"
+                                                                                                BorderBrush="{DynamicResource BorderBrush}"
+                                                                                                Background="{DynamicResource CentralPanelCardBackground}">
+                                                                                                <Grid>
+                                                                                                        <Path Data="{DynamicResource default_coverGeometry}"
+                                                                                                              Fill="{DynamicResource AccentBrush}"
+                                                                                                              Stretch="Uniform"
+                                                                                                              Margin="15"
+                                                                                                              HorizontalAlignment="Center"
+                                                                                                              VerticalAlignment="Center"/>
+                                                                                                        <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
+                                                                                                               Stretch="UniformToFill"
+                                                                                                               HorizontalAlignment="Center"
+                                                                                                               VerticalAlignment="Center">
+                                                                                                                <Image.Style>
+                                                                                                                        <Style TargetType="Image">
+                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                        Value="Visible"/>
+                                                                                                                                <Style.Triggers>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                                                                     Value="{x:Null}">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Collapsed"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                        <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                                                                     Value="0">
+                                                                                                                                                <Setter Property="Visibility"
+                                                                                                                                                        Value="Collapsed"/>
+                                                                                                                                        </DataTrigger>
+                                                                                                                                </Style.Triggers>
+                                                                                                                        </Style>
+                                                                                                                </Image.Style>
+                                                                                                        </Image>
+                                                                                                </Grid>
+                                                                                        </Border>
+                                                                                </DataTemplate>
+                                                                        </DataGridTemplateColumn.CellTemplate>
+
+                                                                </DataGridTemplateColumn>
+                                                                <DataGridTextColumn Header="NAME"
+                                                                                    Binding="{Binding Name}"
+                                                                                    Width="3*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource DataGridCellForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                                Value="Center"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+
+                                                                <DataGridTextColumn Header="EXECUTOR"
+                                                                                    Binding="{Binding Executor}"
+                                                                                    Width="2*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelSecondaryForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                                Value="Center"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+
+                                                                <DataGridTextColumn Header="ALBUM"
+                                                                                    Binding="{Binding Album}"
+                                                                                    Width="2*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelSecondaryForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                                Value="Center"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+
+                                                                <DataGridTextColumn Header="DURATION"
+                                                                                    Binding="{Binding Duration}"
+                                                                                    Width="1*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                                Value="Center"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+
+                                                                <DataGridTextColumn Header="BITRATE"
+                                                                                    Binding="{Binding Bitrate}"
+                                                                                    Visibility="{Binding Data.IsCompactMode, 
+                 Source={StaticResource Proxy}, 
+                 Converter={StaticResource InverseBoolToVisConverter}}"
+                                                                                    Width="1*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                        <Setter Property="TextBlock.VerticalAlignment"
+                                                                                                Value="Center"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+                                                                <DataGridTextColumn Header="GENRE"
+                                                                                    Binding="{Binding Genre}"
+                                                                                    Visibility="{Binding Data.IsCompactMode, 
+                 Source={StaticResource Proxy}, 
+                 Converter={StaticResource InverseBoolToVisConverter}}"
+                                                                                    Width="1*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+                                                                <DataGridTextColumn Header="DATE ADDED"
+                                                                                    Binding="{Binding AddedDate, StringFormat=\{0:dd.MM.yyyy HH:mm\}}"
+                                                                                    Visibility="{Binding Data.IsCompactMode, Source={StaticResource Proxy}, Converter={StaticResource InverseBoolToVisConverter}}"
+                                                                                    Width="1*">
+                                                                        <DataGridTextColumn.ElementStyle>
+                                                                                <Style TargetType="TextBlock">
+                                                                                        <Setter Property="TextBlock.Foreground"
+                                                                                                Value="{DynamicResource CentralPanelMutedForeground}"/>
+                                                                                        <Setter Property="TextBlock.Margin"
+                                                                                                Value="10,0,0,0"/>
+                                                                                </Style>
+                                                                        </DataGridTextColumn.ElementStyle>
+                                                                </DataGridTextColumn>
+                                                        </DataGrid.Columns>
+                                                </DataGrid>
+                                                <Grid x:Name="LyricsOverlay"
+                                                      Visibility="Collapsed"
+                                                      Background="{DynamicResource TertiaryBackgroundBrush}">
+
+                                                        <ListBox x:Name="LyricsListBox"
+                                                                 Margin="50,20"
+                                                                 Background="Transparent"
+                                                                 BorderThickness="0"
+                                                                 VerticalAlignment="Stretch"
+                                                                 HorizontalContentAlignment="Center"
+                                                                 ScrollViewer.VerticalScrollBarVisibility="Hidden"
+                                                                 VirtualizingStackPanel.IsVirtualizing="False">
+
+                                                                <ListBox.ItemContainerStyle>
+                                                                        <Style TargetType="ListBoxItem">
+                                                                                <Setter Property="Template">
+                                                                                        <Setter.Value>
+                                                                                                <ControlTemplate TargetType="ListBoxItem">
+                                                                                                        <ContentPresenter/>
+                                                                                                </ControlTemplate>
+                                                                                        </Setter.Value>
+                                                                                </Setter>
+                                                                        </Style>
+                                                                </ListBox.ItemContainerStyle>
+
+                                                                <ListBox.ItemTemplate>
                                                                         <DataTemplate>
-                                                                                <Border Width="75"
-                                                                                        Height="75"
-                                                                                        CornerRadius="4"
-                                                                                        BorderThickness="1"
-                                                                                        BorderBrush="{DynamicResource BorderBrush}"
-                                                                                        Background="{DynamicResource CentralPanelCardBackground}">
-                                                                                        <Grid>
-                                                                                                <Path Data="{DynamicResource default_coverGeometry}"
-                                                                                                      Fill="{DynamicResource AccentBrush}"
-                                                                                                      Stretch="Uniform"
-                                                                                                      Margin="15"
-                                                                                                      HorizontalAlignment="Center"
-                                                                                                      VerticalAlignment="Center"/>
-                                                                                                <Image Source="{Binding CoverImage, Converter={StaticResource ByteArrayToImageConverter}}"
-                                                                                                       Stretch="UniformToFill"
-                                                                                                       HorizontalAlignment="Center"
-                                                                                                       VerticalAlignment="Center">
-                                                                                                        <Image.Style>
-                                                                                                                <Style TargetType="Image">
-                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                Value="Visible"/>
-                                                                                                                        <Style.Triggers>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage}"
-                                                                                                                                             Value="{x:Null}">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Collapsed"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
-                                                                                                                                             Value="0">
-                                                                                                                                        <Setter Property="Visibility"
-                                                                                                                                                Value="Collapsed"/>
-                                                                                                                                </DataTrigger>
-                                                                                                                        </Style.Triggers>
-                                                                                                                </Style>
-                                                                                                        </Image.Style>
-                                                                                                </Image>
-                                                                                        </Grid>
-                                                                                </Border>
+                                                                                <TextBlock Text="{Binding Text}"
+                                                                                           FontSize="32"
+                                                                                           TextAlignment="Center"
+                                                                                           Margin="0,15"
+                                                                                           TextWrapping="Wrap">
+                                                                                        <TextBlock.Style>
+                                                                                                <Style TargetType="TextBlock">
+                                                                                                        <Setter Property="Foreground"
+                                                                                                                Value="Gray"/>
+                                                                                                        <Setter Property="Opacity"
+                                                                                                                Value="0.6"/>
+                                                                                                        <Style.Triggers>
+                                                                                                                <DataTrigger Binding="{Binding IsActive}"
+                                                                                                                             Value="True">
+                                                                                                                        <Setter Property="Foreground"
+                                                                                                                                Value="White"/>
+                                                                                                                        <Setter Property="Opacity"
+                                                                                                                                Value="1.0"/>
+                                                                                                                        <Setter Property="FontWeight"
+                                                                                                                                Value="Bold"/>
+                                                                                                                </DataTrigger>
+                                                                                                        </Style.Triggers>
+                                                                                                </Style>
+                                                                                        </TextBlock.Style>
+                                                                                </TextBlock>
                                                                         </DataTemplate>
-                                                                </DataGridTemplateColumn.CellTemplate>
-
-                                                        </DataGridTemplateColumn>
-                                                        <DataGridTextColumn Header="NAME"
-                                                                            Binding="{Binding Name}"
-                                                                            Width="3*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource DataGridCellForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                                <Setter Property="TextBlock.VerticalAlignment"
-                                                                                        Value="Center"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-
-                                                        <DataGridTextColumn Header="EXECUTOR"
-                                                                            Binding="{Binding Executor}"
-                                                                            Width="2*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelSecondaryForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                                <Setter Property="TextBlock.VerticalAlignment"
-                                                                                        Value="Center"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-
-                                                        <DataGridTextColumn Header="ALBUM"
-                                                                            Binding="{Binding Album}"
-                                                                            Width="2*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelSecondaryForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                                <Setter Property="TextBlock.VerticalAlignment"
-                                                                                        Value="Center"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-
-                                                        <DataGridTextColumn Header="DURATION"
-                                                                            Binding="{Binding Duration}"
-                                                                            Width="1*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                                <Setter Property="TextBlock.VerticalAlignment"
-                                                                                        Value="Center"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-
-                                                        <DataGridTextColumn Header="BITRATE"
-                                                                            Binding="{Binding Bitrate}"
-                                                                            Visibility="{Binding Data.IsCompactMode, 
-                 Source={StaticResource Proxy}, 
-                 Converter={StaticResource InverseBoolToVisConverter}}"
-                                                                            Width="1*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                                <Setter Property="TextBlock.VerticalAlignment"
-                                                                                        Value="Center"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-                                                        <DataGridTextColumn Header="GENRE"
-                                                                            Binding="{Binding Genre}"
-                                                                            Visibility="{Binding Data.IsCompactMode, 
-                 Source={StaticResource Proxy}, 
-                 Converter={StaticResource InverseBoolToVisConverter}}"
-                                                                            Width="1*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-                                                        <DataGridTextColumn Header="DATE ADDED"
-                                                                            Binding="{Binding AddedDate, StringFormat=\{0:dd.MM.yyyy HH:mm\}}"
-                                                                            Visibility="{Binding Data.IsCompactMode, Source={StaticResource Proxy}, Converter={StaticResource InverseBoolToVisConverter}}"
-                                                                            Width="1*">
-                                                                <DataGridTextColumn.ElementStyle>
-                                                                        <Style TargetType="TextBlock">
-                                                                                <Setter Property="TextBlock.Foreground"
-                                                                                        Value="{DynamicResource CentralPanelMutedForeground}"/>
-                                                                                <Setter Property="TextBlock.Margin"
-                                                                                        Value="10,0,0,0"/>
-                                                                        </Style>
-                                                                </DataGridTextColumn.ElementStyle>
-                                                        </DataGridTextColumn>
-                                                </DataGrid.Columns>
-                                        </DataGrid>
-                                        <Grid x:Name="LyricsOverlay"
-                                              Visibility="Collapsed"
-                                              Background="{DynamicResource TertiaryBackgroundBrush}">
-                                                <Grid.RowDefinitions>
-                                                        <RowDefinition Height="*"/>
-                                                </Grid.RowDefinitions>
-                                                <ScrollViewer x:Name="LyricsScrollViewer"
-                                                              Grid.Row="0"
-                                                              Margin="50,20"
-                                                              Background="Transparent"
-                                                              VerticalScrollBarVisibility="Auto"
-                                                              CanContentScroll="False"
-                                                              MaxHeight="{Binding ActualHeight, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                              Panel.ZIndex="1000">
-                                                        <TextBlock x:Name="BigLyricsText"
-                                                                   TextWrapping="Wrap"
-                                                                   TextAlignment="Center"
-                                                                   VerticalAlignment="Top"
-                                                                   FontSize="32"
-                                                                   Foreground="White"
-                                                                   Padding="0,100,0,100"
-                                                                   LineHeight="45"/>
-                                                </ScrollViewer>
+                                                                </ListBox.ItemTemplate>
+                                                        </ListBox>
+                                                </Grid>
                                         </Grid>
-
                                 </Grid>
 
                                 <!-- Правая колонка - NOW PLAYING -->
@@ -1268,40 +1301,13 @@
                                                                    Foreground="{DynamicResource ForegroundBrush}"
                                                                    TextWrapping="Wrap"/>
                                                 </StackPanel>
-                                                <!-- <Canvas x:Name="SpectrumCanvas"
-                                                        Height="100"
-                                                        VerticalAlignment="Bottom"
-                                                        Margin="10"
-                                                        Background="Transparent">
-                                                        <Polyline x:Name="SpectrumLine"
-                                                                  Stroke="#1DB954"
-                                                                  StrokeThickness="2"
-                                                                  Points="0,100 400,100"/>
-                                                </Canvas> -->
-                                                <ItemsControl ItemsSource="{Binding PlayService.SpectrumViewModel.Bars}"
-                                                              VerticalAlignment="Bottom"
-                                                              HorizontalAlignment="Stretch"
-                                                              Height="120"
-                                                              Margin="10,0">
-                                                        <ItemsControl.ItemsPanel>
-                                                                <ItemsPanelTemplate>
-                                                                        <UniformGrid Columns="{Binding SpectrumViewModel.Bars.Count, 
-                     Source={x:Static services:PlayerService.Instance}}"
-                                                                                     Rows="1"/>
-                                                                </ItemsPanelTemplate>
-                                                        </ItemsControl.ItemsPanel>
-                                                        <ItemsControl.ItemTemplate>
-                                                                <DataTemplate>
-                                                                        <Border Width="Auto"
-                                                                                Margin="1,0"
-                                                                                Background="{DynamicResource AccentBrush}"
-                                                                                VerticalAlignment="Bottom"
-                                                                                CornerRadius="0"
-                                                                                Height="{Binding Value}">
-                                                                        </Border>
-                                                                </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                </ItemsControl>
+                                                <Grid>
+                                                        <vis:SpectrumControl x:Name="SpectrumViewer"
+                                                                             Height="150"
+                                                                             VerticalAlignment="Bottom"
+                                                                             HorizontalAlignment="Stretch"
+                                                                             BorderThickness="2"/>
+                                                </Grid>
                                         </StackPanel>
                                 </Border>
                         </Grid>
