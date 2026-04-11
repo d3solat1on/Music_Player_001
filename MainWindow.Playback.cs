@@ -384,29 +384,22 @@ namespace QAMP
         {
             if (Library.CurrentPlaylist == null) return;
 
-            // Сохраняем тип сортировки в плейлисте
             Library.CurrentPlaylist.SortType = sortType;
 
-            // Сохраняем в БД
             DatabaseService.UpdatePlaylistSortType(Library.CurrentPlaylist.Id, sortType);
 
-            // Применяем сортировку к трекам
             var sortedTracks = SortTracks([.. Library.CurrentPlaylist.Tracks], sortType);
 
-            // ВАЖНО: НЕ изменяем саму коллекцию Tracks!
-            // Вместо этого переустанавливаем ItemsSource на отсортированные треки для отображения в DataGrid
+            Library.CurrentPlaylist.Tracks.Clear();
+            foreach (var track in sortedTracks)
+            {
+                Library.CurrentPlaylist.Tracks.Add(track);
+            }
+
             TracksDataGrid.ItemsSource = null;
             TracksDataGrid.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<Track>(sortedTracks);
 
-            var brushColor = sortType == TrackSortType.AddedDate
-                ? ((Brush)Application.Current.Resources["DisabledBrush"] ?? Brushes.Gray)
-                : (Brush)Application.Current.Resources["AccentBrush"];
-
-            // if (sortImage != null)
-            //     sortImage.Fill = brushColor;
-            // if (sortImage1 != null)
-            //     sortImage1.Fill = brushColor;
-
+            Player.UpdateQueueOrder(sortedTracks);
             string sortName = sortType switch
             {
                 TrackSortType.AddedDate => "по дате добавления",

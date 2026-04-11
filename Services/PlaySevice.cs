@@ -267,6 +267,23 @@ namespace QAMP.Services
             }
 
         }
+        public void UpdateQueueOrder(List<Track> newOrder)
+        {
+            _actualPlayingQueue = newOrder;
+
+            if (IsShuffleEnabled)
+            {
+                ShuffledQueue = [.. _actualPlayingQueue];
+                var rnd = new Random();
+                for (int i = ShuffledQueue.Count - 1; i > 0; i--)
+                {
+                    int j = rnd.Next(i + 1);
+                    (ShuffledQueue[j], ShuffledQueue[i]) = (ShuffledQueue[i], ShuffledQueue[j]);
+                }
+            }
+
+            System.Diagnostics.Debug.WriteLine($"[QUEUE] Очередь обновлена: {_actualPlayingQueue.Count} треков");
+        }
         /// <summary>
         /// Загружает трек без воспроизведения (для восстановления состояния при запуске)
         /// </summary>
@@ -617,6 +634,10 @@ namespace QAMP.Services
         }
         public void PlayNextTrack()
         {
+            if (MusicLibrary.Instance.CurrentPlaylist != null && _actualPlayingQueue.Contains(CurrentTrack))
+            {
+                _actualPlayingQueue = [.. MusicLibrary.Instance.CurrentPlaylist.Tracks];
+            }
             if (CurrentTrack == null)
             {
                 System.Diagnostics.Debug.WriteLine("PlayNextTrack: CurrentTrack == null");
