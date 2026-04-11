@@ -459,6 +459,7 @@
                                                         <StackPanel Orientation="Horizontal"
                                                                     DockPanel.Dock="Right">
                                                                 <Button x:Name="CreatePlaylistButton"
+                                                                        Style="{StaticResource IconButton}"
                                                                         Background="Transparent"
                                                                         BorderBrush="Transparent"
                                                                         Width="40"
@@ -473,6 +474,7 @@
                                                                                 VerticalAlignment="Center"/>
                                                                 </Button>
                                                                 <Button x:Name="RemovePlaylistButton"
+                                                                        Style="{StaticResource IconButton}"
                                                                         Background="Transparent"
                                                                         BorderBrush="Transparent"
                                                                         Width="40"
@@ -488,6 +490,7 @@
                                                                                 VerticalAlignment="Center"/>
                                                                 </Button>
                                                                 <Button
+                                                                        Style="{StaticResource IconButton}"
                                                                         Background="Transparent"
                                                                         BorderBrush="Transparent"
                                                                         Width="40"

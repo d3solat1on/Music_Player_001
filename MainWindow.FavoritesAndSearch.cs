@@ -50,7 +50,6 @@ namespace QAMP
                         TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
                     }
 
-                    // CurrentTracksCountText.Text = $"{selectedPlaylist.Tracks.Count} треков";
                     UpdateNextTrackUI();
                 }
             }
@@ -101,10 +100,6 @@ namespace QAMP
                             {
                                 // Нет других плейлистов, очищаем UI
                                 MusicLibrary.Instance.CurrentPlaylist = null;
-                                // CurrentPlaylistNameText.Text = "";
-                                // CurrentPlaylistDescriptionText.Text = "";
-                                // CurrentPlaylistCover.Source = null;
-                                // CurrentTracksCountText.Text = "0 треков";
                             }
                         }
                     }
@@ -277,7 +272,7 @@ namespace QAMP
                 {
                     fullInfo.PlayCount = selectedTrack.PlayCount;
                     var infoWindow = new ShowTrackInfo(fullInfo) { Owner = this };
-                    infoWindow.ShowDialog();
+                    infoWindow.Show();
                 }
             }
             else
@@ -365,7 +360,6 @@ namespace QAMP
             {
                 TracksDataGrid.ItemsSource = null;
                 TracksDataGrid.ItemsSource = favoritePlaylist.Tracks;
-                // CurrentTracksCountText.Text = $"{favoritePlaylist.Tracks.Count} треков";
             }
 
             UpdateFavoriteIcon(Player.CurrentTrack);
@@ -427,9 +421,6 @@ namespace QAMP
             if (PlaylistsListBox.SelectedItem is Playlist currentPlaylist)
             {
                 TracksDataGrid.ItemsSource = currentPlaylist.Tracks;
-                // CurrentPlaylistNameText.Text = currentPlaylist.Name;
-                // CurrentPlaylistDescriptionText.Text = currentPlaylist.Description;
-                // CurrentTracksCountText.Text = $"{currentPlaylist.Tracks.Count} треков";
             }
         }
 

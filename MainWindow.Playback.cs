@@ -354,22 +354,22 @@ namespace QAMP
 
             // По дате добавления
             var menuItemDate = new MenuItem { Header = "По дате добавления" };
-            menuItemDate.Click += (s, args) => ApplySort(TrackSortType.AddedDate);
+            menuItemDate.Click += (s, args) => ApplySort(TrackSortType.AddedDate, true);
             _ = contextMenu.Items.Add(menuItemDate);
 
             // По альбому 
             var menuItemAlbum = new MenuItem { Header = "По альбому (A-Z)" };
-            menuItemAlbum.Click += (s, args) => ApplySort(TrackSortType.AlbumAZ);
+            menuItemAlbum.Click += (s, args) => ApplySort(TrackSortType.AlbumAZ, true);
             _ = contextMenu.Items.Add(menuItemAlbum);
 
             // По исполнителю 
             var menuItemExecutor = new MenuItem { Header = "По исполнителю (A-Z)" };
-            menuItemExecutor.Click += (s, args) => ApplySort(TrackSortType.ExecutorAZ);
+            menuItemExecutor.Click += (s, args) => ApplySort(TrackSortType.ExecutorAZ, true);
             _ = contextMenu.Items.Add(menuItemExecutor);
 
             //По названию 
             var menuItemName = new MenuItem { Header = "По названию (A-Z)" };
-            menuItemName.Click += (s, args) => ApplySort(TrackSortType.NameAZ);
+            menuItemName.Click += (s, args) => ApplySort(TrackSortType.NameAZ, true);
             _ = contextMenu.Items.Add(menuItemName);
 
             if (sender is Button button)
@@ -380,7 +380,7 @@ namespace QAMP
             }
         }
 
-        private void ApplySort(TrackSortType sortType)
+        private void ApplySort(TrackSortType sortType, bool showNotification = false)
         {
             if (Library.CurrentPlaylist == null) return;
 
@@ -400,15 +400,18 @@ namespace QAMP
             TracksDataGrid.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<Track>(sortedTracks);
 
             Player.UpdateQueueOrder(sortedTracks);
-            string sortName = sortType switch
+            if (showNotification)
             {
-                TrackSortType.AddedDate => "по дате добавления",
-                TrackSortType.AlbumAZ => "по альбому (A-Z)",
-                TrackSortType.ExecutorAZ => "по исполнителю (A-Z)",
-                TrackSortType.NameAZ => "по названию (A-Z)",
-                _ => "неизвестно"
-            };
-            _ = NotificationWindow.Show($"Плейлист отсортирован {sortName}", this);
+                string sortName = sortType switch
+                {
+                    TrackSortType.AddedDate => "по дате добавления",
+                    TrackSortType.AlbumAZ => "по альбому (A-Z)",
+                    TrackSortType.ExecutorAZ => "по исполнителю (A-Z)",
+                    TrackSortType.NameAZ => "по названию (A-Z)",
+                    _ => "неизвестно"
+                };
+                _ = NotificationWindow.Show($"Плейлист отсортирован {sortName}", this);
+            }
         }
 
         /// <summary>

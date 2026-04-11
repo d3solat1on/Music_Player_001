@@ -176,7 +176,7 @@ namespace QAMP.Services
             {
                 if (MusicLibrary.Instance.CurrentPlaylist != null)
                 {
-                    _actualPlayingQueue = [.. MusicLibrary.Instance.CurrentPlaylist.Tracks];
+                    _actualPlayingQueue = [.. MusicLibrary.Instance.PlaybackQueue];
                     System.Diagnostics.Debug.WriteLine($"[QUEUE] Очередь инициализирована: {_actualPlayingQueue.Count} треков");
                 }
             }
