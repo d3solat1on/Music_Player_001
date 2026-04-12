@@ -270,18 +270,18 @@ namespace QAMP
 
             if (_playService.IsShuffleEnabled)
             {
-                var shuffledList = MusicLibrary.Instance.PlaybackQueue.ToList();
+                var sourceQueue = _playService._actualPlayingQueue.ToList(); // Создаем копию, чтобы не изменять оригинальную очередь напрямую
+
+                if (sourceQueue.Count == 0) return;
 
                 Track? currentTrack = Player.CurrentTrack;
-                if (currentTrack != null && shuffledList.Contains(currentTrack))
-                {
-                    _ = shuffledList.Remove(currentTrack);
-                }
 
-                shuffledList = [.. shuffledList.OrderBy(x => Guid.NewGuid())];
+                var shuffledList = sourceQueue.OrderBy(x => Guid.NewGuid()).ToList();
 
                 if (currentTrack != null)
                 {
+                    var existing = shuffledList.FirstOrDefault(t => t.Path == currentTrack.Path);
+                    if (existing != null) shuffledList.Remove(existing);
                     shuffledList.Insert(0, currentTrack);
                 }
 

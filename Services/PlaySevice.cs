@@ -111,7 +111,7 @@ namespace QAMP.Services
         public event Action<bool>? ShuffleChanged;
 
         private string? _tempFilePath;
-        private List<Track> _actualPlayingQueue = [];
+        public List<Track> _actualPlayingQueue = [];
         private PlayerService()
         {
             _positionTimer.Interval = TimeSpan.FromMilliseconds(100);
