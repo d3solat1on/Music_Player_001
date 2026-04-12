@@ -564,40 +564,20 @@ namespace QAMP.Services
 
         public Track? GetNextTrack()
         {
-            System.Diagnostics.Debug.WriteLine($"[DEBUG] GetNextTrack called. Queue count: {MusicLibrary.Instance.PlaybackQueue.Count}");
-            // Если включен Shuffle
-            if (IsShuffleEnabled)
-            {
-                if (ShuffledQueue.Count > 0)
-                {
-                    int currentIndex = ShuffledQueue.IndexOf(CurrentTrack);
-                    System.Diagnostics.Debug.WriteLine($"GetNextTrack (Shuffle): currentIndex = {currentIndex}, Count = {ShuffledQueue.Count}");
+            var queue = IsShuffleEnabled ? ShuffledQueue : _actualPlayingQueue;
 
-                    if (currentIndex != -1 && currentIndex < ShuffledQueue.Count - 1)
-                    {
-                        return ShuffledQueue[currentIndex + 1];
-                    }
-                    else if (currentIndex == ShuffledQueue.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
-                    {
-                        return ShuffledQueue[0];
-                    }
-                }
-                return null;
+            if (queue == null || CurrentTrack == null) return null;
+
+            int currentIndex = queue.FindIndex(t => t.Path == CurrentTrack.Path);
+
+            if (currentIndex != -1 && currentIndex < queue.Count - 1)
+            {
+                return queue[currentIndex + 1];
             }
 
-            // Обычный режим
-            var activeList = MusicLibrary.Instance.PlaybackQueue.ToList();
-            if (activeList.Count == 0) return null;
-
-            int index = activeList.IndexOf(CurrentTrack);
-
-            if (index != -1 && index < activeList.Count - 1)
+            if (RepeatMode == RepeatMode.RepeatAll && queue.Count > 0)
             {
-                return activeList[index + 1];
-            }
-            else if (index == activeList.Count - 1 && RepeatMode == RepeatMode.RepeatAll)
-            {
-                return activeList[0];
+                return queue[0];
             }
 
             return null;
@@ -605,8 +585,7 @@ namespace QAMP.Services
 
         public void PlayPreviousTrack()
         {
-            var queue = MusicLibrary.Instance.PlaybackQueue.ToList();
-
+            var queue = IsShuffleEnabled ? ShuffledQueue : _actualPlayingQueue;
             if (queue == null || queue.Count == 0) return;
 
             int currentIndex = queue.IndexOf(CurrentTrack);
@@ -634,18 +613,15 @@ namespace QAMP.Services
         }
         public void PlayNextTrack()
         {
-            if (MusicLibrary.Instance.CurrentPlaylist != null && _actualPlayingQueue.Contains(CurrentTrack))
-            {
-                _actualPlayingQueue = [.. MusicLibrary.Instance.CurrentPlaylist.Tracks];
-            }
             if (CurrentTrack == null)
             {
                 System.Diagnostics.Debug.WriteLine("PlayNextTrack: CurrentTrack == null");
                 return;
             }
 
-            // РАБОТАЕМ ТОЛЬКО С ЭТОЙ ОЧЕРЕДЬЮ
-            var queue = _actualPlayingQueue;
+            // Используем ту очередь, которая была установлена при старте воспроизведения
+            var queue = IsShuffleEnabled ? ShuffledQueue : _actualPlayingQueue;
+
             if (queue == null || queue.Count == 0)
             {
                 System.Diagnostics.Debug.WriteLine("PlayNextTrack: Queue is empty");

@@ -339,8 +339,19 @@ namespace QAMP
             bool isAlreadyFavorite = favoritePlaylist.Tracks.Any(t => t.Path == Player.CurrentTrack.Path);
             if (!isAlreadyFavorite)
             {
-                DatabaseService.SaveTrackToPlaylist(favoritePlaylist.Id, Player.CurrentTrack);
-                favoritePlaylist.Tracks.Add(Player.CurrentTrack);
+                var trackCopy = new Track
+                {
+                    Id = Player.CurrentTrack.Id, // ID тот же, чтобы база понимала, что за файл
+                    Path = Player.CurrentTrack.Path,
+                    Name = Player.CurrentTrack.Name,
+                    Executor = Player.CurrentTrack.Executor,
+                    Duration = Player.CurrentTrack.Duration,
+                    AddedDate = DateTime.Now
+                };
+
+                DatabaseService.SaveTrackToPlaylist(favoritePlaylist.Id, trackCopy);
+                favoritePlaylist.Tracks.Add(trackCopy);
+
                 UpdateFavoriteIcon(Player.CurrentTrack, true);
                 NotificationWindow.Show("Добавлено в Избранное", this);
             }

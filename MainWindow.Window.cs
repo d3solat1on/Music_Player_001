@@ -78,12 +78,12 @@ namespace QAMP
                         e.Handled = true;
                         break;
                     case Key.N:
-                            _playService.PlayNextTrack();
-                            e.Handled = true;
+                        _playService.PlayNextTrack();
+                        e.Handled = true;
                         break;
                     case Key.B:
-                            _playService.PlayPreviousTrack();
-                            e.Handled = true;
+                        _playService.PlayPreviousTrack();
+                        e.Handled = true;
                         break;
                     case Key.L:
                         ViewLyricsButton_Click(null, null);
@@ -238,12 +238,37 @@ namespace QAMP
 
         private void SetupTrayIcon()
         {
+            var menu = new System.Windows.Forms.ContextMenuStrip
+            {
+                RenderMode = System.Windows.Forms.ToolStripRenderMode.System,
+                Renderer = new DarkContextMenuRenderer(),
+                ShowImageMargin = false,
+                ShowCheckMargin = false,
+                BackColor = System.Drawing.Color.FromArgb(30, 30, 30),
+                ForeColor = System.Drawing.Color.White,
+            };
+
+            menu.Items.Add("Развернуть", null, (s, e) =>
+            {
+                Show();
+                WindowState = WindowState.Normal;
+                Activate();
+            });
+            menu.Items.Add("Играть/Пауза", null, (s, e) => TogglePlayPause());
+            menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
+            menu.Items.Add("Выход", null, (s, e) =>
+            {
+                _isClosing = true;
+                Close();
+            });
+
             var iconStream = Application.GetResourceStream(new Uri("pack://application:,,,/icon/QAMP_icon.ico")).Stream;
             _notifyIcon = new System.Windows.Forms.NotifyIcon
             {
                 Icon = new System.Drawing.Icon(iconStream),
                 Visible = true,
-                Text = "QAMP Player"
+                Text = "QAMP Player",
+                ContextMenuStrip = menu
             };
 
             _notifyIcon.DoubleClick += (s, e) =>
@@ -252,21 +277,6 @@ namespace QAMP
                 WindowState = WindowState.Normal;
                 Activate();
             };
-
-            _notifyIcon.ContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
-            _notifyIcon.ContextMenuStrip.Items.Add("Развернуть", null, (s, e) =>
-            {
-                Show();
-                WindowState = WindowState.Maximized;
-                Activate();
-            });
-            _notifyIcon.ContextMenuStrip.Items.Add("Играть/Пауза", null, (s, e) => TogglePlayPause());
-            _notifyIcon.ContextMenuStrip.Items.Add("-");
-            _notifyIcon.ContextMenuStrip.Items.Add("Выход", null, (s, e) =>
-            {
-                _isClosing = true;
-                this.Close();
-            });
         }
 
         private void ViewLyricsButton_Click(object? sender, RoutedEventArgs? e)

@@ -15,3 +15,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>", Scope = "member", Target = "~M:QAMP.Visualization.SpectrumControl.SetupPlot")]
 [assembly: SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>", Scope = "member", Target = "~M:QAMP.Visualization.SpectrumControl.UpdateSpectrum(System.Double[])")]
 [assembly: SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>", Scope = "member", Target = "~M:QAMP.Services.PlayerService.PlayTrack(QAMP.Models.Track,System.Boolean)~System.Threading.Tasks.Task")]
+[assembly: SuppressMessage("Interoperability", "CA1416:Проверка совместимости платформы", Justification = "<Ожидание>", Scope = "type", Target = "~T:QAMP.Services.DarkContextMenuRenderer")]

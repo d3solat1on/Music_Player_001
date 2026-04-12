@@ -399,7 +399,7 @@ namespace QAMP
             TracksDataGrid.ItemsSource = null;
             TracksDataGrid.ItemsSource = new System.Collections.ObjectModel.ObservableCollection<Track>(sortedTracks);
 
-            Player.UpdateQueueOrder(sortedTracks);
+            // Player.UpdateQueueOrder(sortedTracks);
             if (showNotification)
             {
                 string sortName = sortType switch

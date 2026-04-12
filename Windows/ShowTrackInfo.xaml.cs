@@ -20,6 +20,13 @@ namespace QAMP.Windows
             _track = track;
             DataContext = track;
             Loaded += ShowTrackInfo_Loaded;
+            this.KeyDown += (s, e) =>
+            {
+                if (e.Key == Key.I || e.Key == Key.Escape && Keyboard.Modifiers == ModifierKeys.Control)
+                {
+                    this.Close();
+                }
+            };
         }
         private void ShowTrackInfo_Loaded(object sender, RoutedEventArgs e)
         {

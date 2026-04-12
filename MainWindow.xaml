@@ -76,6 +76,7 @@
                                          Text=""
                                          KeyDown="SearchBox_KeyDown"/>
                                 <Button x:Name="SearchButton"
+                                        Style="{StaticResource IconButton}"
                                         Width="30"
                                         Height="24"
                                         Margin="5,0,0,0"
@@ -93,6 +94,7 @@
                                               VerticalAlignment="Center"/>
                                 </Button>
                                 <Button x:Name="ClearSearchButton"
+                                        Style="{StaticResource IconButton}"
                                         Width="30"
                                         Height="24"
                                         Margin="5,0,0,0"

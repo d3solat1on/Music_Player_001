@@ -263,7 +263,7 @@
                                     Padding="10,5"
                                     Click="ResetEq_Click"
                                     Background="{DynamicResource TertiaryBackgroundBrush}"
-                                    Foreground="{DynamicResource ForegroundBrush}"
+                                    Foreground="{DynamicResource AccentBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"/>
                         </StackPanel>
 
@@ -381,7 +381,9 @@
                         Height="30"
                         Click="HelpWindowButton_Click"
                         Background="{DynamicResource TertiaryBackgroundBrush}"
-                        Foreground="{DynamicResource ForegroundBrush}">
+                        Foreground="{DynamicResource AccentBrush}">
+                    <!-- Style="{StaticResource IconButton}" -->
+
                     <Button.Resources>
                         <Style TargetType="{x:Type Border}">
                             <Setter Property="CornerRadius"
@@ -395,7 +397,8 @@
                         Height="30"
                         Click="CancelButton_Click"
                         Background="{DynamicResource TertiaryBackgroundBrush}"
-                        Foreground="{DynamicResource ForegroundBrush}">
+                        Foreground="{DynamicResource AccentBrush}">
+                    <!-- Style="{StaticResource IconButton}" -->
                     <Button.Resources>
                         <Style TargetType="{x:Type Border}">
                             <Setter Property="CornerRadius"
@@ -410,7 +413,8 @@
                         Margin="0,0,10,0"
                         Click="SaveButton_Click"
                         Background="{DynamicResource TertiaryBackgroundBrush}"
-                        Foreground="{DynamicResource ForegroundBrush}">
+                        Foreground="{DynamicResource AccentBrush}">
+                    <!-- Style="{StaticResource IconButton}" -->
                     <Button.Resources>
                         <Style TargetType="{x:Type Border}">
                             <Setter Property="CornerRadius"
