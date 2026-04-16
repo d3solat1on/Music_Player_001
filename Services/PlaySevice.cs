@@ -78,10 +78,7 @@ namespace QAMP.Services
             set
             {
                 _volume = Math.Max(0, Math.Min(1, value));
-                if (_waveOutEvent != null)
-                {
-                    _waveOutEvent.Volume = (float)_volume;
-                }
+                _waveOutEvent?.Volume = (float)_volume;
                 VolumeChanged?.Invoke(_volume);
             }
         }
@@ -190,18 +187,19 @@ namespace QAMP.Services
 
                 await Task.Run(() =>
                 {
-                    byte[] fileData = File.ReadAllBytes(track.Path);
-                    var memStream = new MemoryStream(fileData);
+                    var fileStream = new FileStream(track.Path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, true);
+                    // byte[] fileData = File.ReadAllBytes(track.Path);
+                    // var memStream = new MemoryStream(fileData);
 
                     if (extension == ".flac")
                     {
-                        var flacReader = new FlacReader(memStream);
+                        var flacReader = new FlacReader(fileStream);
                         _audioFileReader = flacReader;
                         sampleProvider = flacReader.ToSampleProvider();
                     }
                     else
                     {
-                        var reader = new StreamMediaFoundationReader(memStream);
+                        var reader = new StreamMediaFoundationReader(fileStream);
                         _audioFileReader = reader;
                         sampleProvider = reader.ToSampleProvider();
                     }
@@ -243,7 +241,7 @@ namespace QAMP.Services
                     _fadeProvider = new FadeInOutProvider(aggregator);
                 });
 
-                _waveOutEvent = new WaveOutEvent { DesiredLatency = 500 };
+                _waveOutEvent = new WaveOutEvent { DesiredLatency = 250 };
                 _waveOutEvent.Init(_fadeProvider);
                 _waveOutEvent.Volume = (float)Volume;
                 _waveOutEvent.Play();
@@ -328,7 +326,7 @@ namespace QAMP.Services
                         }
                     };
 
-                _waveOutEvent = new WaveOutEvent { DesiredLatency = 500 };  // ОПТИМИЗАЦИЯ: увеличено с 250 мс
+                _waveOutEvent = new WaveOutEvent { DesiredLatency = 250 };  // ОПТИМИЗАЦИЯ: увеличено с 250 мс
                 _waveOutEvent.Init(aggregator);
                 _waveOutEvent.Volume = (float)Volume;
                 // НЕ вызываем Play() - трек будет загружен, но на паузе

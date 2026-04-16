@@ -449,8 +449,13 @@
                                         BorderThickness="0,0,1,0"
                                         Margin="0,0,0,0"
                                         Background="{DynamicResource TertiaryBackgroundBrush}">
-                                        <StackPanel Margin="10">
-                                                <DockPanel Margin="0,0,0,10">
+                                        <Grid Margin="10">
+                                                <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto"/>
+                                                         <RowDefinition Height="*"/>
+                                                         </Grid.RowDefinitions>
+                                                <DockPanel Grid.Row="0"
+                                                        Margin="0,0,0,10">
                                                         <TextBlock Text="ПЛЕЙЛИСТЫ"
                                                                    FontSize="24"
                                                                    FontWeight="Bold"
@@ -542,7 +547,8 @@
                                                         </StackPanel>
                                                 </DockPanel>
 
-                                                <ListBox x:Name="PlaylistsListBox"
+                                                <ListBox Grid.Row="1" 
+                                                        x:Name="PlaylistsListBox"
                                                          Background="Transparent"
                                                          BorderThickness="0"
                                                          Foreground="White"
@@ -744,7 +750,7 @@
                                                                 </DataTemplate>
                                                         </ListBox.ItemTemplate>
                                                 </ListBox>
-                                        </StackPanel>
+                                        </Grid>
                                 </Border>
 
 
