@@ -127,24 +127,36 @@
                                                         Background="#2D2D2D"
                                                         Cursor="Hand"
                                                         MouseLeftButtonDown="ChangeCover_Click">
-                                                        <Image Source="{Binding CoverImage, Converter={StaticResource LargeTrackImageConverter}}"
-                                                               Stretch="Uniform"
-                                                               HorizontalAlignment="Center"
-                                                               VerticalAlignment="Center">
-                                                                <Image.Style>
-                                                                        <Style TargetType="Image">
-                                                                                <Setter Property="Source"
-                                                                                        Value="/Resources/default_cover.png"/>
-                                                                                <Style.Triggers>
-                                                                                        <DataTrigger Binding="{Binding CoverImage}"
-                                                                                                     Value="{x:Null}">
-                                                                                                <Setter Property="Source"
-                                                                                                        Value="/Resources/default_cover.png"/>
-                                                                                        </DataTrigger>
-                                                                                </Style.Triggers>
-                                                                        </Style>
-                                                                </Image.Style>
-                                                        </Image>
+                                                        <Grid>
+                                                                <Path Data="{DynamicResource default_coverGeometry}"
+                                                                      Fill="{DynamicResource AccentBrush}"
+                                                                      Stretch="Uniform"
+                                                                      HorizontalAlignment="Center"
+                                                                      VerticalAlignment="Center"/>
+                                                                <Image Source="{Binding CoverImage, Converter={StaticResource LargeTrackImageConverter}}"
+                                                                       Stretch="UniformToFill"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center">
+                                                                        <Image.Style>
+                                                                                <Style TargetType="Image">
+                                                                                        <Setter Property="Visibility"
+                                                                                                Value="Visible"/>
+                                                                                        <Style.Triggers>
+                                                                                                <DataTrigger Binding="{Binding CoverImage}"
+                                                                                                             Value="{x:Null}">
+                                                                                                        <Setter Property="Visibility"
+                                                                                                                Value="Collapsed"/>
+                                                                                                </DataTrigger>
+                                                                                                <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                                                                             Value="0">
+                                                                                                        <Setter Property="Visibility"
+                                                                                                                Value="Collapsed"/>
+                                                                                                </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                </Style>
+                                                                        </Image.Style>
+                                                                </Image>
+                                                        </Grid>
                                                 </Border>
 
                                                 <TextBlock Text="{Binding Duration}"
@@ -158,7 +170,7 @@
                                                         HorizontalAlignment="Center"
                                                         Margin="0,10,0,0"
                                                         Background="{DynamicResource AccentBrush}"/>
-                                                        <!-- Visibility="{Binding HasEmbeddedCover, Converter={StaticResource BooleanToVisibilityConverter}}"/>            -->
+                                                <!-- Visibility="{Binding HasEmbeddedCover, Converter={StaticResource BooleanToVisibilityConverter}}"/>            -->
                                         </StackPanel>
 
                                         <StackPanel Grid.Column="1"
@@ -408,6 +420,48 @@
                                                         </ScrollViewer>
                                                 </Border>
 
+                                                <TextBlock Text="Количество воспроизведений"
+                                                           FontWeight="Bold"
+                                                           Foreground="Gray"
+                                                           Margin="0,10,0,5"/>
+                                                <Border Background="#2D2D2D"
+                                                        CornerRadius="5"
+                                                        Padding="10">
+                                                        <TextBlock x:Name="PlayCountTextBlock"
+                                                                   Text="{Binding PlayCount}"
+                                                                   Foreground="White"
+                                                                   TextWrapping="Wrap"
+                                                                   FontSize="10"
+                                                                   FontFamily="Consolas"/>
+                                                </Border>
+                                                <TextBlock Text="Размер файла"
+                                                           FontWeight="Bold"
+                                                           Foreground="Gray"
+                                                           Margin="0,10,0,5"/>
+                                                <Border Background="#2D2D2D"
+                                                        CornerRadius="5"
+                                                        Padding="10">
+                                                        <TextBlock Text="{Binding Size, StringFormat='{}{0:F3} MB'}"
+                                                                   Foreground="White"
+                                                                   TextWrapping="Wrap"
+                                                                   FontSize="10"
+                                                                   FontFamily="Consolas"/>
+                                                </Border>
+
+                                                <TextBlock Text="Формат файла"
+                                                           FontWeight="Bold"
+                                                           Foreground="Gray"
+                                                           Margin="0,10,0,5"/>
+                                                <Border Background="#2D2D2D"
+                                                        CornerRadius="5"
+                                                        Padding="10">
+                                                        <TextBlock x:Name="ExstensionFile"
+                                                                   Text="{Binding DisplayExtension}"
+                                                                   Foreground="White"
+                                                                   TextWrapping="Wrap"
+                                                                   FontSize="10"
+                                                                   FontFamily="Consolas"/>
+                                                </Border>
                                                 <TextBlock Text="Путь к файлу"
                                                            FontWeight="Bold"
                                                            Foreground="Gray"
@@ -438,23 +492,6 @@
                                                                         </Style>
                                                                 </TextBlock.Style>
                                                         </TextBlock>
-                                                </Border>
-                                                <TextBlock Text="Количество воспроизведений"
-                                                           FontWeight="Bold"
-                                                           Foreground="Gray"
-                                                           Margin="0,10,0,5"/>
-                                                <Border Background="#2D2D2D"
-                                                        CornerRadius="5"
-                                                        Padding="10">
-                                                        <!-- Cursor="Hand"> -->
-                                                        <TextBlock x:Name="PlayCountTextBlock"
-                                                                   Text="{Binding PlayCount}"
-                                                                   Foreground="#00CCFF"
-                                                                   Background="Transparent"
-                                                                   TextWrapping="Wrap"
-                                                                   FontSize="10"
-                                                                   FontFamily="Consolas"
-                                                                   TextDecorations="Underline"/>
                                                 </Border>
                                         </StackPanel>
                                 </Grid>

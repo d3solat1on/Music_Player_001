@@ -44,11 +44,12 @@ namespace QAMP
                         selectedPlaylist.Tracks.Remove(track);
                     }
 
-                    if (selectedPlaylist.Tracks is not System.Collections.Specialized.INotifyCollectionChanged)
-                    {
+                    // if (selectedPlaylist.Tracks is not System.Collections.Specialized.INotifyCollectionChanged)
+                    // {
                         TracksDataGrid.ItemsSource = null;
                         TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
-                    }
+                        
+                    // }
 
                     UpdateNextTrackUI();
                 }

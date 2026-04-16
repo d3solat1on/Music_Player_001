@@ -187,14 +187,6 @@ namespace QAMP
 
                     TracksDataGrid.ItemsSource = newPlaylist.Tracks;
 
-                    if (newPlaylist.CoverImage != null && newPlaylist.CoverImage.Length > 0)
-                    {
-                        // CurrentPlaylistCover.Source = LoadImage(newPlaylist.CoverImage);
-                    }
-                    else
-                    {
-                        // CurrentPlaylistCover.Source = null;
-                    }
 
                     NotificationWindow.Show($"Плейлист \"{dialog.PlaylistName}\" создан", this);
                 }

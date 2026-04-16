@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.IO;
 using Newtonsoft.Json;
 using TagLib; // для INotifyPropertyChanged
 
@@ -18,6 +19,27 @@ namespace QAMP.Models
         public int Bitrate { get; set; }
         public int SampleRate { get; set; }
         public int Year { get; set; }
+        public double Size
+        {
+            get
+            {
+                try
+                {
+                    FileInfo fi = new(Path);
+                    if (fi.Exists)
+                    {
+                        return fi.Length / (1024.0 * 1024.0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Ошибка: {ex.Message}");
+                }
+                return 0;
+            }
+        }
+
+
         private int _playCount;
         public int PlayCount
         {
@@ -69,7 +91,7 @@ namespace QAMP.Models
         {
             try
             {
-                using var file = File.Create(Path);
+                using var file = TagLib.File.Create(Path);
                 if (file.Tag.Pictures != null && file.Tag.Pictures.Length > 0)
                 {
                     return file.Tag.Pictures[0].Data.Data;
@@ -97,7 +119,7 @@ namespace QAMP.Models
         public event PropertyChangedEventHandler? PropertyChanged;
         protected void OnPropertyChanged(string name) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
-        
+
         // ✅ Публичный метод для уведомления об изменении свойства (используется из других классов)
         public void NotifyPropertyChanged(string name) => OnPropertyChanged(name);
     }
