@@ -2,17 +2,62 @@
 using System.Windows;
 using QAMP.Models;
 using QAMP.Services;
+using System.Runtime.InteropServices;
 
 namespace QAMP
 {
     public partial class App : Application
     {
+        private static Mutex? _mutex = null;
+
+        [LibraryImport("user32.dll", StringMarshalling = StringMarshalling.Utf16)]
+        private static partial IntPtr FindWindow(string? lpClassName, string lpWindowName);
+
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        [LibraryImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static partial bool SetForegroundWindow(IntPtr hWnd);
+
+        private const int SW_RESTORE = 9;
         protected override void OnStartup(StartupEventArgs e)
         {
-            base.OnStartup(e);
-            // DatabaseService.EnsureDatabaseCreated();
+            const string appName = "QAMP_MusicPlayer_Unique_Mutex";
+            _mutex = new Mutex(true, appName, out bool createdNew);
 
-            // Применить тему при запуске
+            if (!createdNew)
+            {
+                var currentProcess = System.Diagnostics.Process.GetCurrentProcess();
+                var runningProcess = System.Diagnostics.Process.GetProcessesByName(currentProcess.ProcessName)
+                    .FirstOrDefault(p => p.Id != currentProcess.Id);
+
+                if (runningProcess != null)
+                {
+                    IntPtr hWnd = runningProcess.MainWindowHandle;
+
+                    if (hWnd != IntPtr.Zero)
+                    {
+                        ShowWindow(hWnd, SW_RESTORE);
+                        SetForegroundWindow(hWnd);
+                    }
+                    else
+                    {
+                        hWnd = FindWindow(null, "QAMP");
+                        if (hWnd != IntPtr.Zero)
+                        {
+                            ShowWindow(hWnd, SW_RESTORE);
+                            SetForegroundWindow(hWnd);
+                        }
+                    }
+                }
+                Current.Shutdown();
+                return;
+            }
+
+            base.OnStartup(e);
+
             ThemeManager.ApplyTheme(SettingsManager.Instance.Config.ColorScheme);
 
             DispatcherUnhandledException += (s, ex) => LogException(ex.Exception, "UI Dispatcher");
@@ -35,12 +80,7 @@ namespace QAMP
             }
             catch
             {
-                // Игнорируем ошибку логирования - не можем ничего сделать
             }
-            
-            // НЕ показываем MessageBox в обработчике исключений!
-            // Это может вызвать новое исключение и привести к StackOverflow
-            // Приложение будет корректно завершено, лог сохранен в файл
         }
         public static void LogInfo(string message)
         {

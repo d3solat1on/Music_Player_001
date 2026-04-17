@@ -12,7 +12,7 @@
         Title="Настройки QAMP"
         SizeToContent="Manual"
         ResizeMode="CanMinimize"
-        Height="900" 
+        Height="900"
         Width="1100"
         Background="{DynamicResource BackgroundBrush}"
         Foreground="{DynamicResource ForegroundBrush}"
@@ -114,11 +114,8 @@
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled">
             <Grid Margin="20">
-                <!-- Grid.Row="1" -->
-
-
-
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -380,13 +377,51 @@
 
                     </StackPanel>
                 </GroupBox>
+                <GroupBox Grid.Row="8"
+                          Header="Система"
+                          Margin="0,0,0,20"
+                          Foreground="{DynamicResource ForegroundBrush}">
+                    <StackPanel Margin="10"
+                                Orientation="Horizontal"
+                                HorizontalAlignment="Left">
+                        <Button x:Name="DatabaseLocation"
+                                Margin="5"
+                                Content="Открыть папку с базой данных"
+                                Background="{DynamicResource TertiaryBackgroundBrush}"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Click="OpenDatabaseLocation_Click">
+                        </Button>
+                        <Button x:Name="AppLocation"
+                                Margin="5"
+                                Content="Открыть папку с приложением"
+                                Background="{DynamicResource TertiaryBackgroundBrush}"
+                                Foreground="{DynamicResource AccentBrush}"
+                                Click="OpenAppLocation_Click">
+                        </Button>
+
+                    </StackPanel>
+                </GroupBox>
             </Grid>
         </ScrollViewer>
         <Grid Grid.Row="2"
-            Background="{DynamicResource SecondaryBackgroundBrush}">
+              Background="{DynamicResource SecondaryBackgroundBrush}">
             <StackPanel
                 Orientation="Horizontal"
                 HorizontalAlignment="Right">
+                <Button x:Name="Statistics"
+                        Content="Статистика"
+                        Width="100"
+                        Height="30"
+                        Click="StatisticsButton_Click"
+                        Background="{DynamicResource TertiaryBackgroundBrush}"
+                        Foreground="{DynamicResource AccentBrush}">
+                    <Button.Resources>
+                        <Style TargetType="{x:Type Border}">
+                            <Setter Property="CornerRadius"
+                                    Value="17"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
                 <Button x:Name="HelpWindowButton"
                         Content="Справка"
                         Width="100"

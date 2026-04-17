@@ -1063,4 +1063,193 @@ public class DatabaseService
             System.Diagnostics.Debug.WriteLine($"Ошибка при обновлении типа сортировки: {ex.Message}");
         }
     }
+    public static string GetMostListenedTracks()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Name, Executor, PlayCount 
+            FROM Tracks 
+            WHERE PlayCount IS NOT NULL AND PlayCount > 0
+            ORDER BY PlayCount DESC 
+            LIMIT 10";
+        using var reader = cmd.ExecuteReader();
+
+        string result = "Топ 10 самых прослушиваемых треков:\n";
+        int rank = 1;
+        while (reader.Read())
+        {
+            string name = reader.IsDBNull(0) ? "Без названия" : reader.GetString(0);
+            string executor = reader.IsDBNull(1) ? "Неизвестен" : reader.GetString(1);
+            int playCount = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
+            result += $"{rank}. {name} by {executor} - Прослушиваний: {playCount}\n";
+            rank++;
+        }
+        return result;
+    }
+    public static string GetHiResKing()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Name, Executor, Bitrate 
+            FROM Tracks 
+            WHERE Bitrate IS NOT NULL AND Bitrate > 0
+            ORDER BY Bitrate DESC 
+            LIMIT 1";
+        using var reader = cmd.ExecuteReader();
+
+        if (reader.Read())
+        {
+            string name = reader.IsDBNull(0) ? "Без названия" : reader.GetString(0);
+            string executor = reader.IsDBNull(1) ? "Неизвестен" : reader.GetString(1);
+            int bitrate = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
+            return $" {name} by {executor} - Битрейт: {bitrate} kbps";
+        }
+        else
+        {
+            return "Нет данных о треках с битрейтом.";
+        }
+    }
+    public static string GetLongestTrack()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Name, Executor, Duration 
+            FROM Tracks 
+            WHERE Duration IS NOT NULL AND Duration != '00:00'
+            ORDER BY 
+                (CAST(SUBSTR(Duration, 1, INSTR(Duration, ':') - 1) AS INTEGER) * 60 + 
+                 CAST(SUBSTR(Duration, INSTR(Duration, ':') + 1) AS INTEGER)) DESC 
+            LIMIT 1";
+        using var reader = cmd.ExecuteReader();
+
+        if (reader.Read())
+        {
+            string name = reader.IsDBNull(0) ? "Без названия" : reader.GetString(0);
+            string executor = reader.IsDBNull(1) ? "Неизвестен" : reader.GetString(1);
+            string duration = reader.IsDBNull(2) ? "00:00" : reader.GetString(2);
+            return $"{name} by {executor} - Длительность: {duration}";
+        }
+        else
+        {
+            return "Нет данных о длительности треков.";
+        }
+    }
+    public static string GetTotalLibrarySize()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT SUM(CAST(SUBSTR(Duration, 1, INSTR(Duration, ':') - 1) AS INTEGER) * 60 + 
+                       CAST(SUBSTR(Duration, INSTR(Duration, ':') + 1) AS INTEGER)) 
+            FROM Tracks 
+            WHERE Duration IS NOT NULL AND Duration != '00:00'";
+        var result = cmd.ExecuteScalar();
+        if (result != DBNull.Value && result != null)
+        {
+            long totalSeconds = (long)result;
+            TimeSpan totalTime = TimeSpan.FromSeconds(totalSeconds);
+            return $"{totalTime:hh\\:mm\\:ss}";
+        }
+        else
+        {
+            return "Нет данных о длительности треков.";
+        }
+    }
+    public static string GetShortestTrack()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+            SELECT Name, Executor, Duration 
+            FROM Tracks 
+            WHERE Duration IS NOT NULL AND Duration != '00:00'
+            ORDER BY 
+                (CAST(SUBSTR(Duration, 1, INSTR(Duration, ':') - 1) AS INTEGER) * 60 + 
+                 CAST(SUBSTR(Duration, INSTR(Duration, ':') + 1) AS INTEGER)) ASC 
+            LIMIT 1";
+        using var reader = cmd.ExecuteReader();
+
+        if (reader.Read())
+        {
+            string name = reader.IsDBNull(0) ? "Без названия" : reader.GetString(0);
+            string executor = reader.IsDBNull(1) ? "Неизвестен" : reader.GetString(1);
+            string duration = reader.IsDBNull(2) ? "00:00" : reader.GetString(2);
+            return $"{name} by {executor} - Длительность: {duration}";
+        }
+        else
+        {
+            return "Нет данных о длительности треков.";
+        }
+    }
+    public static string GetTotalLibraryWeight()
+    {
+        try
+        {
+            using var connection = new SqliteConnection(_connectionString);
+            connection.Open();
+            var cmd = connection.CreateCommand();
+            cmd.CommandText = "SELECT Path FROM Tracks WHERE Path IS NOT NULL";
+            using var reader = cmd.ExecuteReader();
+
+            double totalSizeInMB = 0;
+            while (reader.Read())
+            {
+                string path = reader.GetString(0);
+                try
+                {
+                    FileInfo fi = new(path);
+                    if (fi.Exists)
+                    {
+                        totalSizeInMB += fi.Length / (1024.0 * 1024.0);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Ошибка при получении размера файла {path}: {ex.Message}");
+                }
+            }
+
+            if (totalSizeInMB > 1024)
+            {
+                double totalSizeInGB = totalSizeInMB / 1024.0;
+                return $"{totalSizeInGB:F2} ГБ";
+            }
+            else
+            {
+                return $"{totalSizeInMB:F2} МБ";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Ошибка при расчете веса библиотеки: {ex.Message}");
+            return "Ошибка при расчете размера библиотеки.";
+        }
+    }
+    public static int GetPlaylistCount()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM Playlists";
+        long? count = (long?)cmd.ExecuteScalar();
+        return (int)(count ?? 0);
+    }
+    public static int GetTrackCount()
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM Tracks";
+        long? count = (long?)cmd.ExecuteScalar();
+        return (int)(count ?? 0);
+    }
+    
 }

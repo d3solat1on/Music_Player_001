@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -260,7 +261,7 @@ namespace QAMP.Windows
             config.UseAdaptiveGradients = AdaptiveGradientsRadio.IsChecked ?? false;
             SettingsManager.Instance.Save();
         }
-        
+
         private void ThemeRadio_Checked(object sender, RoutedEventArgs e)
         {
             if (isInitializing) return;
@@ -336,13 +337,13 @@ namespace QAMP.Windows
         private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
             SettingsManager.Instance.Save();
-            
+
             // Обновляем интерфейс, если опция адаптивных градиентов изменилась
             if (Application.Current.MainWindow is MainWindow mainWindow)
             {
                 mainWindow.RefreshAdaptiveGradients();
             }
-            
+
             DialogResult = true;
             Close();
         }
@@ -587,9 +588,28 @@ namespace QAMP.Windows
             {
                 Owner = this
             };
-            
+
             helpWindow.ShowHelpWindow();
         }
+        private void StatisticsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var statisticsWindow = new Statistics()
+            {
+                Owner = this
+            };
+            statisticsWindow.Show();
+        }
+        private void OpenDatabaseLocation_Click(object sender, RoutedEventArgs e)
+        {
+            string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"QAMP");
+            Process.Start("explorer.exe", path);
+        }
+        private void OpenAppLocation_Click(object sender, RoutedEventArgs e)
+        {
+            string path = AppDomain.CurrentDomain.BaseDirectory;
+            Process.Start("explorer.exe", path);
+        }
+
         // private void BarCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
         // {
         //     if (isInitializing || BarCountCombo.SelectedItem == null) return;
