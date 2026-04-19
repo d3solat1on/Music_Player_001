@@ -3,6 +3,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using System.Windows.Threading;
 using QAMP.Models;
 using QAMP.Services;
 using QAMP.ViewModels;
@@ -21,12 +22,13 @@ namespace QAMP.Windows
         private bool originalCloseToTray;
         private bool originalUseAdaptiveGradients;
         private readonly PlayerService _player;
-
+        private DispatcherTimer? _memoryTimer;
         public Settings(PlayerService player)
         {
             InitializeComponent();
             _player = player;
             LoadEqualizerData();
+            StartMemoryTicking();
         }
 
         private void LoadEqualizerData()
@@ -412,10 +414,9 @@ namespace QAMP.Windows
             ApplySavedGains();
 
             DialogResult = false;
+            _memoryTimer?.Stop();
             Close();
         }
-
-
 
         private void DrawEqGraph()
         {
@@ -601,28 +602,27 @@ namespace QAMP.Windows
         }
         private void OpenDatabaseLocation_Click(object sender, RoutedEventArgs e)
         {
-            string path = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"QAMP");
+            string path = AppDataManager.AppDataPath;
             Process.Start("explorer.exe", path);
         }
         private void OpenAppLocation_Click(object sender, RoutedEventArgs e)
         {
-            string path = AppDomain.CurrentDomain.BaseDirectory;
+            string path = AppContext.BaseDirectory;
             Process.Start("explorer.exe", path);
         }
-
-        // private void BarCountCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        // {
-        //     if (isInitializing || BarCountCombo.SelectedItem == null) return;
-        //     // if (_player?.SpectrumViewModel == null) return;
-
-        //     if (BarCountCombo.SelectedItem is ComboBoxItem item &&
-        //         item.Content != null &&
-        //         int.TryParse(item.Content.ToString(), out int barCount))
-        //     {
-        //         var config = SettingsManager.Instance.Config;
-        //         config.VisualizerBarCount = barCount;
-        //         // _player.SpectrumViewModel.BarCount = barCount;
-        //     }
-        // }
+        private void StartMemoryTicking()
+        {
+            _memoryTimer = new DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(1)
+            };
+            _memoryTimer.Tick += (s, e) => UsingRam();
+            _memoryTimer.Start();
+        }
+        private void UsingRam()
+        {
+            var memoryUsage = Process.GetCurrentProcess().WorkingSet64;
+            usingRAM.Text = $"Используемая память: {memoryUsage / (1024 * 1024):F2} MB";
+        }
     }
 }

@@ -43,7 +43,7 @@ namespace QAMP
         private void AddFilesToPlaylist_Click(object sender, RoutedEventArgs e) => AddFilesToCurrentPlaylist();
         private void AddFolderToPlaylist_Click(object sender, RoutedEventArgs e) => AddFolderToCurrentPlaylist();
 
-        private void AddFolderToCurrentPlaylist()
+        private void AddFolderToCurrentPlaylist() //Вроде норм
         {
             if (PlaylistsListBox.SelectedItem is not Playlist selectedPlaylist) return;
 
@@ -61,43 +61,53 @@ namespace QAMP
 
             if (folderDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
-                var files = Directory.GetFiles(folderDialog.SelectedPath, "*.*", SearchOption.AllDirectories)
+                Cursor = Cursors.Wait;
+                try
+                {
+                    var files = Directory.GetFiles(folderDialog.SelectedPath, "*.*", SearchOption.AllDirectories)
                     .Where(f => f.EndsWith(".mp3") || f.EndsWith(".wav") || f.EndsWith(".flac"))
                     .ToArray();
 
-                var tracks = TagReader.ReadTracksFromFiles(files);
-                int addedCount = 0;
+                    var tracks = TagReader.ReadTracksFromFiles(files);
+                    int addedCount = 0;
 
-                foreach (var track in tracks)
-                {
-                    if (track != null)
+                    foreach (var track in tracks)
                     {
-                        if (!MusicLibrary.Instance.CurrentPlaylist.Tracks.Any(t => t.Path == track.Path))
+                        if (track != null)
                         {
-                            DatabaseService.SaveTrackToPlaylist(MusicLibrary.Instance.CurrentPlaylist.Id, track);
-                            MusicLibrary.Instance.CurrentPlaylist.Tracks.Add(track);
-                            addedCount++;
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                if (!MusicLibrary.Instance.CurrentPlaylist.Tracks.Any(t => t.Path == track.Path))
+                                {
+                                    DatabaseService.SaveTrackToPlaylist(MusicLibrary.Instance.CurrentPlaylist.Id, track);
+                                    MusicLibrary.Instance.CurrentPlaylist.Tracks.Add(track);
+                                    addedCount++;
+                                }
+                            });
                         }
                     }
+                    if (MusicLibrary.Instance.PlayingPlaylist?.Id == selectedPlaylist.Id)
+                    {
+                        Player.UpdateQueueOrder([.. selectedPlaylist.Tracks]);
+                    }
+                    if (selectedPlaylist.SortType != TrackSortType.AddedDate)
+                    {
+                        ApplySort(selectedPlaylist.SortType);
+                    }
+                    else
+                    {
+                        TracksDataGrid.ItemsSource = null;
+                        TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
+                    }
+                    UpdateNextTrackUI();
+                    NotificationWindow.Show($"Добавлено {addedCount} треков", this);
                 }
-                if (MusicLibrary.Instance.PlayingPlaylist?.Id == selectedPlaylist.Id)
+                finally
                 {
-                    Player.UpdateQueueOrder([.. selectedPlaylist.Tracks]);
+                    Cursor = Cursors.Arrow;
                 }
-                if (selectedPlaylist.SortType != TrackSortType.AddedDate)
-                {
-                    ApplySort(selectedPlaylist.SortType);
-                }
-                else
-                {
-                    TracksDataGrid.ItemsSource = null;
-                    TracksDataGrid.ItemsSource = selectedPlaylist.Tracks;
-                }
-                UpdateNextTrackUI();
-                NotificationWindow.Show($"Добавлено {addedCount} треков", this);
             }
         }
-
         private void AddFilesToCurrentPlaylist()
         {
             if (PlaylistsListBox.SelectedItem is not Playlist selectedPlaylist) return;

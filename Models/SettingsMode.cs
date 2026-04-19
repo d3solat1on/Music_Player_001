@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.IO;
 using System.Text.Json;
+using QAMP.Services;
+
 namespace QAMP.Models;
 
 public class AppSettings : INotifyPropertyChanged
@@ -38,11 +40,14 @@ public class SettingsManager
     private static SettingsManager? _instance;
     public static SettingsManager Instance => _instance ??= new SettingsManager();
 
-    private readonly string _path = "settings.json";
+    private readonly string _path = AppDataManager.SettingsPath;
     public AppSettings Config { get; set; } = new AppSettings();
 
     public SettingsManager()
     {
+        // Гарантируем существование папки AppData
+        AppDataManager.EnsureAppDataFolderExists();
+
         if (File.Exists(_path))
         {
             string json = File.ReadAllText(_path);

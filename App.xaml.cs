@@ -70,7 +70,7 @@ namespace QAMP
         {
             if (ex == null) return;
 
-            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string logPath = AppDataManager.CrashLogPath;
             string message = $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] [{source}]\n{ex}\n";
             message += "----------------------------------------------------------------\n";
 
@@ -84,7 +84,7 @@ namespace QAMP
         }
         public static void LogInfo(string message)
         {
-            string logPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "app_info.log");
+            string logPath = AppDataManager.AppInfoLogPath;
             File.AppendAllText(logPath, $"[{DateTime.Now:HH:mm:ss}] {message}\n");
         }
     }

@@ -27,7 +27,7 @@ public partial class Statistics : Window
         var mostListenedArtistText = await Task.Run(() => DatabaseService.GetMostListenedArtist());
         var tracksWithoutListening = await Task.Run(() => DatabaseService.GetTracksWithoutListnenig());
         TracksWithoutListening.Text = $"Треки без прослушивания \n{tracksWithoutListening}";
-        MostListenedArtistText.Text = $"Самый прослушиваемый исполнитель:{mostListenedArtistText}";
+        MostListenedArtistText.Text = $"Самый прослушиваемый исполнитель: {mostListenedArtistText}";
         PlaylistCountText.Text = playlistCount;
         TrackCountText.Text = trackCount;
         MostListenedTrackText.Text = mostListened;

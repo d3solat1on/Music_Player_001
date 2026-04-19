@@ -7,34 +7,25 @@ namespace QAMP.Services;
 
 public class DatabaseService
 {
-    // Используем AppData для надежности
-    private static readonly string _appDataPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "QAMP");
+    // Используем AppDataManager для управления путями
+    private static readonly string _connectionString = $"Data Source={AppDataManager.DatabasePath}";
 
-    private static readonly string _dbPath = Path.Combine(_appDataPath, "library.db");
-    private static readonly string _connectionString = $"Data Source={_dbPath}";
-
-    // Добавляем публичное свойство для доступа к пути (для отладки)
-    public static string DatabasePath => _dbPath;
+    // Публичное свойство для доступа к пути (для отладки)
+    public static string DatabasePath => AppDataManager.DatabasePath;
 
     public static void EnsureDatabaseCreated()
     {
         // Создаем папку, если её нет
-        if (!Directory.Exists(_appDataPath))
-        {
-            Directory.CreateDirectory(_appDataPath);
-            System.Diagnostics.Debug.WriteLine($"Создана папка: {_appDataPath}");
-        }
+        AppDataManager.EnsureAppDataFolderExists();
 
-        if (!File.Exists(_dbPath))
+        if (!File.Exists(AppDataManager.DatabasePath))
         {
-            System.Diagnostics.Debug.WriteLine($"База данных не найдена, создаем новую: {_dbPath}");
+            System.Diagnostics.Debug.WriteLine($"База данных не найдена, создаем новую: {AppDataManager.DatabasePath}");
             InitializeDatabase();
         }
         else
         {
-            System.Diagnostics.Debug.WriteLine($"База данных существует: {_dbPath}");
+            System.Diagnostics.Debug.WriteLine($"База данных существует: {AppDataManager.DatabasePath}");
             // Проверяем и добавляем недостающие колонки
             MigrateDatabase();
         }
@@ -240,7 +231,7 @@ public class DatabaseService
         );";
         cmd.ExecuteNonQuery();
 
-        System.Diagnostics.Debug.WriteLine($"База данных инициализирована: {_dbPath}");
+        System.Diagnostics.Debug.WriteLine($"База данных инициализирована: {AppDataManager.DatabasePath}");
     }
 
     public static void AddPlaylist(string name, string description, byte[]? cover)
@@ -906,7 +897,7 @@ public class DatabaseService
         catch (Exception ex)
         {
             // Логируем в файл без MessageBox при закрытии приложения (чтобы избежать StackOverflow)
-            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string logPath = AppDataManager.CrashLogPath;
             string message = $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] [SaveSettingSync]\n{ex}\n";
             message += "----------------------------------------------------------------\n";
             try
@@ -935,7 +926,7 @@ public class DatabaseService
         catch (Exception ex)
         {
             // Логируем в файл без MessageBox при закрытии приложения (чтобы избежать StackOverflow)
-            string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
+            string logPath = AppDataManager.CrashLogPath;
             string message = $"[{DateTime.Now:dd.MM.yyyy HH:mm:ss}] [SaveSetting]\n{ex}\n";
             message += "----------------------------------------------------------------\n";
             try

@@ -1197,7 +1197,9 @@
                                                                  VerticalAlignment="Stretch"
                                                                  HorizontalContentAlignment="Center"
                                                                  ScrollViewer.VerticalScrollBarVisibility="Hidden"
-                                                                 VirtualizingStackPanel.IsVirtualizing="False">
+                                                                 VirtualizingStackPanel.IsVirtualizing="False"
+                                                                 PreviewKeyDown="LyricsListBox_PreviewKeyDown"
+                                                                 MouseWheel="LyricsListBox_MouseWheel">
 
                                                                 <ListBox.ItemContainerStyle>
                                                                         <Style TargetType="ListBoxItem">

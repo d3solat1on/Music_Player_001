@@ -408,6 +408,13 @@
             <StackPanel
                 Orientation="Horizontal"
                 HorizontalAlignment="Right">
+                <TextBlock x:Name="usingRAM"
+                           Text=""
+                           Width="250"
+                           Margin="0,0,10,0"
+                           VerticalAlignment="Center"
+                           Background="Transparent"
+                           Foreground="{DynamicResource ForegroundBrush}"/>
                 <Button x:Name="Statistics"
                         Content="Статистика"
                         Width="100"

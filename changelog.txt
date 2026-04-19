@@ -1,1 +1,7 @@
-(18.04.2026)V: 1.6.0 - The "Statistics" window has been improved. It now displays the most-listened-to artist and the top 10 unlistened tracks.
+(19.04.2026)V: 1.6.1
+    - The logic for adding a folder to a playlist has been fixed (probably, maybe not). 
+    - Added information about memory consumption to the Settings window.
+    - Now settings.json, app_info.log, and crash_log.txt are stored in the same folder as library.db. This is done for portability, as well as to solve the issue of write blocking when installing the player in system folders (e.g., Program Files) and ensures stable operation of settings autosaving without administrator rights.
+    - Fixed Lyrics Mode and added hot keys (Home, End, PageUp, PageDown)
+(18.04.2026)V: 1.6.0  
+    - The "Statistics" window has been improved. It now displays the most-listened-to artist and the top 10 unlistened tracks.

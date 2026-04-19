@@ -319,14 +319,14 @@ namespace QAMP
 
                     if (_parsedLyrics.Count > 0)
                     {
+                        // Текст с таймкодами (LRC формат)
                         LyricsListBox.ItemsSource = _parsedLyrics;
                     }
                     else
                     {
-                        LyricsListBox.ItemsSource = new List<LrcLine>
-                {
-                    new() { Text = lyricsToDisplay, IsActive = true }
-                };
+                        // Текст без таймкодов - разбиваем на отдельные строки для навигации
+                        _parsedLyrics = CreatePlainTextLines(lyricsToDisplay);
+                        LyricsListBox.ItemsSource = _parsedLyrics;
                     }
                 }
 
@@ -336,6 +336,11 @@ namespace QAMP
                 ControlsPanel.Visibility = Visibility.Collapsed;
                 UpperPanel.Visibility = Visibility.Collapsed;
                 LyricsOverlay.Visibility = Visibility.Visible;
+
+                // Установляем фокус на ListBox и выбираем первый элемент для навигации
+                LyricsListBox.SelectedIndex = 0;
+                LyricsListBox.Focus();
+                LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
             }
             else
             {
@@ -367,6 +372,31 @@ namespace QAMP
             }
             return [.. lines.OrderBy(l => l.Time)];
         }
+
+        /// <summary>
+        /// Создает список LrcLine для текста без таймкодов, разбивая по строкам
+        /// </summary>
+        private static List<LrcLine> CreatePlainTextLines(string text)
+        {
+            var lines = new List<LrcLine>();
+            if (string.IsNullOrEmpty(text)) return lines;
+
+            foreach (var line in text.Split('\n'))
+            {
+                var trimmedLine = line.Trim();
+                if (!string.IsNullOrEmpty(trimmedLine))
+                {
+                    lines.Add(new LrcLine { Text = trimmedLine, IsActive = false });
+                }
+            }
+
+            // Помечаем первую строку как активную
+            if (lines.Count > 0)
+                lines[0].IsActive = true;
+
+            return lines;
+        }
+
         public void UpdateLyricsView()
         {
             var track = Player.CurrentTrack;
@@ -391,16 +421,15 @@ namespace QAMP
 
             if (_parsedLyrics.Count > 0)
             {
+                // Текст с таймкодами (LRC формат)
                 LyricsListBox.ItemsSource = _parsedLyrics;
             }
             else
             {
-                var fallbackLine = new LrcLine
-                {
-                    Text = string.IsNullOrEmpty(finalLyrics) ? "Текст не найден." : finalLyrics,
-                    IsActive = true
-                };
-                LyricsListBox.ItemsSource = new List<LrcLine> { fallbackLine };
+                // Текст без таймкодов - разбиваем на отдельные строки для навигации
+                string textToDisplay = string.IsNullOrEmpty(finalLyrics) ? "Текст не найден." : finalLyrics;
+                _parsedLyrics = CreatePlainTextLines(textToDisplay);
+                LyricsListBox.ItemsSource = _parsedLyrics;
             }
 
             track.Lyrics = finalLyrics;
@@ -409,7 +438,16 @@ namespace QAMP
         }
         private void UpdateLyricsHighlight(TimeSpan currentTime)
         {
-            if (_parsedLyrics == null || _parsedLyrics.Count == 0) return;
+            // Проверяем как _parsedLyrics, так и LyricsListBox.Items для поддержки обоих режимов
+            if ((LyricsListBox.Items.Count == 0) || (_parsedLyrics == null || _parsedLyrics.Count == 0))
+                return;
+
+            // Проверяем, есть ли таймкоды (если все строки имеют Time == 0, это обычный текст без таймкодов)
+            bool hasTimeCodes = _parsedLyrics.Any(l => l.Time > TimeSpan.Zero);
+
+            // Если текст без таймкодов, не обновляем IsActive - пользователь сам навигирует по клавиатуре
+            if (!hasTimeCodes)
+                return;
 
             LrcLine? currentLine = null;
             foreach (var line in _parsedLyrics)
@@ -431,6 +469,100 @@ namespace QAMP
                 }), System.Windows.Threading.DispatcherPriority.Background);
             }
         }
+
+        private void LyricsListBox_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            // Обработка скролла по клавиатуре в режиме LyricsOverlay
+            if (LyricsOverlay.Visibility != Visibility.Visible)
+                return;
+
+            int currentIndex = LyricsListBox.SelectedIndex;
+            int itemCount = LyricsListBox.Items.Count;
+
+            switch (e.Key)
+            {
+                case Key.Up:
+                    if (currentIndex > 0)
+                    {
+                        LyricsListBox.SelectedIndex = currentIndex - 1;
+                        LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    }
+                    e.Handled = true;
+                    break;
+
+                case Key.Down:
+                    if (currentIndex < itemCount - 1)
+                    {
+                        LyricsListBox.SelectedIndex = currentIndex + 1;
+                        LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    }
+                    e.Handled = true;
+                    break;
+
+                case Key.PageUp:
+                    // Скролл на 5 строк вверх
+                    int newIndexUp = Math.Max(0, currentIndex - 5);
+                    LyricsListBox.SelectedIndex = newIndexUp;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    e.Handled = true;
+                    break;
+
+                case Key.PageDown:
+                    // Скролл на 5 строк вниз
+                    int newIndexDown = Math.Min(itemCount - 1, currentIndex + 5);
+                    LyricsListBox.SelectedIndex = newIndexDown;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    e.Handled = true;
+                    break;
+
+                case Key.Home:
+                    // В начало текста
+                    LyricsListBox.SelectedIndex = 0;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    e.Handled = true;
+                    break;
+
+                case Key.End:
+                    // В конец текста
+                    LyricsListBox.SelectedIndex = itemCount - 1;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                    e.Handled = true;
+                    break;
+            }
+        }
+
+        private void LyricsListBox_MouseWheel(object sender, MouseWheelEventArgs e)
+        {
+            // Обработка скролла колесом мыши в режиме LyricsOverlay
+            if (LyricsOverlay.Visibility != Visibility.Visible)
+                return;
+
+            int currentIndex = LyricsListBox.SelectedIndex;
+            int itemCount = LyricsListBox.Items.Count;
+
+            // Колесо вверх = отрицательное значение Delta
+            if (e.Delta > 0)
+            {
+                // Скролл вверх
+                if (currentIndex > 0)
+                {
+                    LyricsListBox.SelectedIndex = currentIndex - 1;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                }
+            }
+            else
+            {
+                // Скролл вниз
+                if (currentIndex < itemCount - 1)
+                {
+                    LyricsListBox.SelectedIndex = currentIndex + 1;
+                    LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                }
+            }
+
+            e.Handled = true;
+        }
+
         private void MainGrid_DragOver(object sender, DragEventArgs e)
         {
             e.Effects = e.Data.GetDataPresent(DataFormats.FileDrop) ? DragDropEffects.Copy : DragDropEffects.None;
