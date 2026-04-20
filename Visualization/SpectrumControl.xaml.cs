@@ -120,6 +120,18 @@ namespace QAMP.Visualization
                 }
             }
         }
+
+        /// <summary>
+        /// Обновляет цвета спектра при смене темы или цвета акцента
+        /// </summary>
+        public void RefreshColors()
+        {
+            if (SpectrumPlot == null || myBars == null || _peakBars == null) return;
+
+            ApplyColors();
+            SpectrumPlot.Refresh();
+            System.Diagnostics.Debug.WriteLine("SpectrumControl colors refreshed");
+        }
         public void UpdateSpectrum(double[] spectrumData)
         {
             if (myBars == null || _peakBars == null || spectrumData == null || spectrumData.Length == 0) return;

@@ -1,3 +1,7 @@
+(20.04.2026)V: 1.6.2
+    -Fixed a bug with updating colors in the spectrum.
+    -Fixed a bug with updating icons in Control Panel.
+    -The statistics window is now updated without re-opening the player.
 (19.04.2026)V: 1.6.1
     - The logic for adding a folder to a playlist has been fixed (probably, maybe not). 
     - Added information about memory consumption to the Settings window.

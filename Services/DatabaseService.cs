@@ -7,6 +7,9 @@ namespace QAMP.Services;
 
 public class DatabaseService
 {
+    // Событие для уведомления об изменении статистики
+    public static event Action? StatisticsChanged;
+
     // Используем AppDataManager для управления путями
     private static readonly string _connectionString = $"Data Source={AppDataManager.DatabasePath}";
 
@@ -180,6 +183,9 @@ public class DatabaseService
             System.Diagnostics.Debug.WriteLine($"[IncrementTrackPlayCount] AFTER - New PlayCount: {(newCount != null ? newCount.ToString() : "NULL")}");
 
             App.LogInfo($"Statistics: Track ID {trackId} play count incremented.");
+
+            // Уведомляем об изменении статистики
+            StatisticsChanged?.Invoke();
         }
         catch (Exception ex)
         {

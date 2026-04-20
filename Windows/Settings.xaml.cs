@@ -288,10 +288,14 @@ namespace QAMP.Windows
             {
                 // Просто оставляем текущую тему и применяем оттенок
                 ThemeManager.UpdateAccentColor(SettingsManager.Instance.Config.AccentColor);
+                // Обновляем цвета спектра
+                PlayerService.Instance.SpectrumControl?.RefreshColors();
                 return;
             }
 
             ThemeManager.ApplyTheme(theme);
+            // Обновляем цвета спектра после смены темы
+            PlayerService.Instance.SpectrumControl?.RefreshColors();
         }
         private void Format_Checked(object sender, RoutedEventArgs e)
         {
@@ -318,6 +322,8 @@ namespace QAMP.Windows
             var config = SettingsManager.Instance.Config;
             config.AccentColor = AccentColorTextBox.Text;
             ThemeManager.UpdateAccentColor(config.AccentColor);
+            // Обновляем цвета спектра при смене цвета акцента
+            PlayerService.Instance.SpectrumControl?.RefreshColors();
             UpdateColorPreview();
         }
 
@@ -410,6 +416,9 @@ namespace QAMP.Windows
                 ThemeManager.ApplyTheme(originalColorScheme);
             if (originalAccentColor != null)
                 ThemeManager.UpdateAccentColor(originalAccentColor);
+
+            // Обновляем цвета спектра при отмене настроек
+            PlayerService.Instance.SpectrumControl?.RefreshColors();
 
             ApplySavedGains();
 

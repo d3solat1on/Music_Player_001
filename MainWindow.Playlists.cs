@@ -238,6 +238,19 @@ namespace QAMP
                 {
                     UpdateFavoriteIcon(Player.CurrentTrack);
                 }
+
+                // Обновляем иконку Play/Pause в зависимости от того, 
+                // воспроизводится ли текущий плейлист
+                if (selected.Id == Library.PlayingPlaylist?.Id)
+                {
+                    // Текущий плейлист воспроизводится - показываем его реальное состояние
+                    UpdatePlayPauseIcon(Player.IsPlaying);
+                }
+                else
+                {
+                    // Другой плейлист воспроизводится - показываем Play иконку
+                    UpdatePlayPauseIcon(false);
+                }
             }
         }
 
