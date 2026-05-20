@@ -422,7 +422,14 @@
                                                         Height="25"
                                                         Background="{DynamicResource AccentBrush}"
                                                         ToolTip="Функция поиска текста использует открытые API исключительно для ознакомительных целей и личного использования"
-                                                        Margin="5"/>
+                                                        Margin="5">
+                                                        <Button.Resources>
+                                                                <Style TargetType="Border">
+                                                                        <Setter Property="CornerRadius"
+                                                                                Value="2"/>
+                                                                </Style>
+                                                        </Button.Resources>
+                                                </Button>
                                                 <TextBlock Text="Текст песни"
                                                            FontWeight="Bold"
                                                            Foreground="Gray"

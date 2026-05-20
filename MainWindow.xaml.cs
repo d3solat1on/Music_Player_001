@@ -201,6 +201,7 @@ namespace QAMP
                     CurrentTrackData.Text = $"{track.Genre} | {track.Duration} | {track.SampleRate} Hz | {track.Bitrate} kbps";
                     CurrentTrackExtension.Text = track.DisplayExtension;
                     CurrentTrackYear.Text = track.Year > 0 ? track.Year.ToString() : "Неизвестно";
+                    this.Title = $"{track.Name} - {track.Executor} | QAMP";
 
                     string totalTime = Player.Duration > 0 ? FormatTime(Player.Duration) : "Загрузка...";
                     if (Player.Duration <= 0) CheckDurationAsync();

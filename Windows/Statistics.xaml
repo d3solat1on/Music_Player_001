@@ -103,7 +103,7 @@
                                 <RowDefinition Height="Auto"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="225"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
 
@@ -139,8 +139,8 @@
                                        Margin="10,0,0,5"/>
                             <TextBlock Grid.Row="4"
                                        Text="Вес библиотеки:"
-                                       FontWeight="SemiBold"
-                                       Margin="10,0,0,5"/>
+                                       FontWeight="SemiBold"/>
+                                       <!-- Margin="10,0,0,5"/> -->
                             <TextBlock Grid.Row="4"
                                        Grid.Column="1"
                                        x:Name="TotalLibraryWeightText"

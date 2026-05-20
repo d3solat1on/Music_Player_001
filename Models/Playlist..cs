@@ -107,9 +107,9 @@ namespace QAMP.Models
                 OnPropertyChanged(nameof(CreatedDateDisplay));
             }
         }
-        public string CreatedDateDisplay => $"Дата создания: {CreatedDate:dd.MM.yyyy}";
+        public string CreatedDateDisplay => $"{CreatedDate:dd.MM.yyyy}";
 
-        public string TrackCountDisplay => $"Треков: {Tracks.Count}";
+        public string TrackCountDisplay => $"{Tracks.Count}";
 
         // Количество треков (для отображения)
         public int TrackCount => Tracks.Count;

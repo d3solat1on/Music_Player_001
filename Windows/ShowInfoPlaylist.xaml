@@ -14,9 +14,12 @@
         <converters:ByteArrayToImageConverter x:Key="ByteArrayToImageConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         <Style TargetType="ScrollViewer">
-            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
-            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto"/>
-            <Setter Property="Background" Value="Transparent"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility"
+                    Value="Disabled"/>
+            <Setter Property="ScrollViewer.VerticalScrollBarVisibility"
+                    Value="Auto"/>
+            <Setter Property="Background"
+                    Value="Transparent"/>
         </Style>
     </Window.Resources>
     <Border Background="#1E1E1E"
@@ -44,9 +47,17 @@
                         Style="{StaticResource CloseButtonStyle}"
                         Background="{DynamicResource AccentBrush}"
                         Width="30"
-                        Height="30"/>
+                        Height="30">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius"
+                                    Value="2"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
             </Grid>
-            <ScrollViewer Grid.Row="1" Margin="20">
+            <ScrollViewer Grid.Row="1"
+                    Margin="20">
                 <StackPanel>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -68,13 +79,18 @@
                                        VerticalAlignment="Center">
                                     <Image.Style>
                                         <Style TargetType="Image">
-                                            <Setter Property="Visibility" Value="Visible"/>
+                                            <Setter Property="Visibility"
+                                                    Value="Visible"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CoverImage}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                <DataTrigger Binding="{Binding CoverImage}"
+                                                        Value="{x:Null}">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding CoverImage.Length}" Value="0">
-                                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                                <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                        Value="0">
+                                                    <Setter Property="Visibility"
+                                                            Value="Collapsed"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -89,13 +105,18 @@
                                            Visibility="Collapsed">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                            <Setter Property="Visibility"
+                                                    Value="Collapsed"/>
                                             <Style.Triggers>
-                                                <DataTrigger Binding="{Binding CoverImage}" Value="{x:Null}">
-                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                <DataTrigger Binding="{Binding CoverImage}"
+                                                        Value="{x:Null}">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible"/>
                                                 </DataTrigger>
-                                                <DataTrigger Binding="{Binding CoverImage.Length}" Value="0">
-                                                    <Setter Property="Visibility" Value="Visible"/>
+                                                <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                        Value="0">
+                                                    <Setter Property="Visibility"
+                                                            Value="Visible"/>
                                                 </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
@@ -104,7 +125,8 @@
                             </Grid>
                         </Border>
 
-                        <StackPanel Grid.Column="1" Margin="25,0,0,0">
+                        <StackPanel Grid.Column="1"
+                                Margin="25,0,0,0">
                             <TextBlock Text="{Binding Name}"
                                        FontSize="28"
                                        FontWeight="Bold"
@@ -132,26 +154,82 @@
                                     <RowDefinition Height="Auto"/>
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Row="0" Grid.Column="0" Text="ID:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Id}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="0"
+                                        Grid.Column="0"
+                                        Text="ID:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="0"
+                                        Grid.Column="1"
+                                        Text="{Binding Id}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="1" Grid.Column="0" Text="Треков:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TrackCountDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="1"
+                                        Grid.Column="0"
+                                        Text="Треков:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="1"
+                                        Grid.Column="1"
+                                        Text="{Binding TrackCountDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="2" Grid.Column="0" Text="Длительность:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding TotalDurationDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="2"
+                                        Grid.Column="0"
+                                        Text="Длительность:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="2"
+                                        Grid.Column="1"
+                                        Text="{Binding TotalDurationDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="3" Grid.Column="0" Text="Создано:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding CreatedDateDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="3"
+                                        Grid.Column="0"
+                                        Text="Создано:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="3"
+                                        Grid.Column="1"
+                                        Text="{Binding CreatedDateDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="4" Grid.Column="0" Text="Закреплен:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding PinnedDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="4"
+                                        Grid.Column="0"
+                                        Text="Закреплен:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="4"
+                                        Grid.Column="1"
+                                        Text="{Binding PinnedDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="5" Grid.Column="0" Text="Системный:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="5" Grid.Column="1" Text="{Binding SystemPlaylistDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="5"
+                                        Grid.Column="0"
+                                        Text="Системный:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="5"
+                                        Grid.Column="1"
+                                        Text="{Binding SystemPlaylistDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
 
-                                <TextBlock Grid.Row="6" Grid.Column="0" Text="Сортировка:" Foreground="#888" Margin="0,4,12,4"/>
-                                <TextBlock Grid.Row="6" Grid.Column="1" Text="{Binding SortTypeDisplay}" Foreground="White" Margin="0,4,0,4"/>
+                                <TextBlock Grid.Row="6"
+                                        Grid.Column="0"
+                                        Text="Сортировка:"
+                                        Foreground="#888"
+                                        Margin="0,4,12,4"/>
+                                <TextBlock Grid.Row="6"
+                                        Grid.Column="1"
+                                        Text="{Binding SortTypeDisplay}"
+                                        Foreground="White"
+                                        Margin="0,4,0,4"/>
                             </Grid>
                         </StackPanel>
                     </Grid>

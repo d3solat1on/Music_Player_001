@@ -867,7 +867,7 @@
                                                                 <StackPanel Grid.Row="3"
                                                                             Orientation="Horizontal"
                                                                             VerticalAlignment="Bottom">
-                                                                        <TextBlock Text="{Binding CurrentPlaylist.TrackCountDisplay}"
+                                                                        <TextBlock Text="{Binding CurrentPlaylist.TrackCountDisplay, StringFormat='Треков: {0}'}"
                                                                                    Foreground="{DynamicResource CentralPanelMutedForeground}"
                                                                                    FontSize="13"/>
                                                                         <TextBlock Text=" • "

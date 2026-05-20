@@ -11,14 +11,119 @@ namespace QAMP.Models
         public int Id { get; set; }
         public string? Extension { get; set; }
         public string Path { get; set; } = string.Empty;
-        public string Name { get; set; } = "Без названия";
-        public string Executor { get; set; } = "Неизвестный исполнитель";
-        public string Album { get; set; } = "Без альбома";
-        public string Duration { get; set; } = "0:00";
-        public string Genre { get; set; } = "Неизвестно";
-        public int Bitrate { get; set; }
-        public int SampleRate { get; set; }
-        public int Year { get; set; }
+
+        private string _name = "Без названия";
+        public string Name
+        {
+            get => _name;
+            set
+            {
+                if (_name != value)
+                {
+                    _name = value;
+                    OnPropertyChanged(nameof(Name));
+                }
+            }
+        }
+
+        private string _executor = "Неизвестный исполнитель";
+        public string Executor
+        {
+            get => _executor;
+            set
+            {
+                if (_executor != value)
+                {
+                    _executor = value;
+                    OnPropertyChanged(nameof(Executor));
+                }
+            }
+        }
+
+        private string _album = "Без альбома";
+        public string Album
+        {
+            get => _album;
+            set
+            {
+                if (_album != value)
+                {
+                    _album = value;
+                    OnPropertyChanged(nameof(Album));
+                }
+            }
+        }
+
+        private string _duration = "0:00";
+        public string Duration
+        {
+            get => _duration;
+            set
+            {
+                if (_duration != value)
+                {
+                    _duration = value;
+                    OnPropertyChanged(nameof(Duration));
+                }
+            }
+        }
+
+        private string _genre = "Неизвестно";
+        public string Genre
+        {
+            get => _genre;
+            set
+            {
+                if (_genre != value)
+                {
+                    _genre = value;
+                    OnPropertyChanged(nameof(Genre));
+                }
+            }
+        }
+
+        private int _bitrate;
+        public int Bitrate
+        {
+            get => _bitrate;
+            set
+            {
+                if (_bitrate != value)
+                {
+                    _bitrate = value;
+                    OnPropertyChanged(nameof(Bitrate));
+                }
+            }
+        }
+
+        private int _sampleRate;
+        public int SampleRate
+        {
+            get => _sampleRate;
+            set
+            {
+                if (_sampleRate != value)
+                {
+                    _sampleRate = value;
+                    OnPropertyChanged(nameof(SampleRate));
+                }
+            }
+        }
+
+        private int _year;
+        public int Year
+        {
+            get => _year;
+            set
+            {
+                if (_year != value)
+                {
+                    _year = value;
+                    OnPropertyChanged(nameof(Year));
+                }
+            }
+        }
+
         public double Size
         {
             get
@@ -39,7 +144,6 @@ namespace QAMP.Models
             }
         }
 
-
         private int _playCount;
         public int PlayCount
         {
@@ -53,23 +157,119 @@ namespace QAMP.Models
                 }
             }
         }
-        public string? Comment { get; set; }
+
+        private string? _comment;
+        public string? Comment
+        {
+            get => _comment;
+            set
+            {
+                if (_comment != value)
+                {
+                    _comment = value;
+                    OnPropertyChanged(nameof(Comment));
+                }
+            }
+        }
+
         private string? _lyrics;
         public string Lyrics
         {
             get => _lyrics ?? string.Empty;
             set
             {
-                _lyrics = value;
-                OnPropertyChanged(nameof(Lyrics));
+                if (_lyrics != value)
+                {
+                    _lyrics = value;
+                    OnPropertyChanged(nameof(Lyrics));
+                }
             }
         }
-        public string? Channels { get; set; }
-        public string? Description { get; set; }
-        public int BitsPerSample { get; set; }
-        public int TrackNumber { get; set; }
-        public string? Composer { get; set; }
-        public string? AlbumArtist { get; set; }
+
+        private string? _channels;
+        public string? Channels
+        {
+            get => _channels;
+            set
+            {
+                if (_channels != value)
+                {
+                    _channels = value;
+                    OnPropertyChanged(nameof(Channels));
+                }
+            }
+        }
+
+        private string? _description;
+        public string? Description
+        {
+            get => _description;
+            set
+            {
+                if (_description != value)
+                {
+                    _description = value;
+                    OnPropertyChanged(nameof(Description));
+                }
+            }
+        }
+
+        private int _bitsPerSample;
+        public int BitsPerSample
+        {
+            get => _bitsPerSample;
+            set
+            {
+                if (_bitsPerSample != value)
+                {
+                    _bitsPerSample = value;
+                    OnPropertyChanged(nameof(BitsPerSample));
+                }
+            }
+        }
+
+        private int _trackNumber;
+        public int TrackNumber
+        {
+            get => _trackNumber;
+            set
+            {
+                if (_trackNumber != value)
+                {
+                    _trackNumber = value;
+                    OnPropertyChanged(nameof(TrackNumber));
+                }
+            }
+        }
+
+        private string? _composer;
+        public string? Composer
+        {
+            get => _composer;
+            set
+            {
+                if (_composer != value)
+                {
+                    _composer = value;
+                    OnPropertyChanged(nameof(Composer));
+                }
+            }
+        }
+
+        private string? _albumArtist;
+        public string? AlbumArtist
+        {
+            get => _albumArtist;
+            set
+            {
+                if (_albumArtist != value)
+                {
+                    _albumArtist = value;
+                    OnPropertyChanged(nameof(AlbumArtist));
+                }
+            }
+        }
+
         [JsonIgnore]
         private byte[]? _coverImage;
 

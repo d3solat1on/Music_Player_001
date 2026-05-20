@@ -68,32 +68,53 @@ namespace QAMP
                 switch (e.Key)
                 {
                     case Key.Right:
-                        _playService.SeekRelative(5);
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.SeekRelative(5);
+                            e.Handled = true;
+                        }
                         break;
                     case Key.Left:
-                        _playService.SeekRelative(-5);
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.SeekRelative(-5);
+                            e.Handled = true;
+                        }
                         break;
                     case Key.Up:
-                        _playService.Volume += 0.05;
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.Volume += 0.05;
+                            e.Handled = true;
+                        }
                         break;
                     case Key.Down:
-                        _playService.Volume -= 0.05;
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.Volume -= 0.05;
+                            e.Handled = true;
+                        }
                         break;
                     case Key.N:
-                        _playService.PlayNextTrack();
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.PlayNextTrack();
+                            e.Handled = true;
+                        }
                         break;
                     case Key.B:
-                        _playService.PlayPreviousTrack();
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            _playService.PlayPreviousTrack();
+                            e.Handled = true;
+                        }
                         break;
                     case Key.L:
-                        ViewLyricsButton_Click(null, null);
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            ViewLyricsButton_Click(null, null);
+                            e.Handled = true;
+                        }
                         break;
                     case Key.I:
                         if (Player.CurrentTrack != null)
@@ -106,7 +127,7 @@ namespace QAMP
                                 {
                                     Owner = this
                                 };
-                                infoWindow.ShowDialog();
+                                infoWindow.Show();
                             }
                             e.Handled = true;
                         }
@@ -126,8 +147,11 @@ namespace QAMP
                         }
                         break;
                     case Key.W:
-                        OpenSpectrumFullScreen();
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            OpenSpectrumFullScreen();
+                            e.Handled = true;
+                        }
                         break;
                     case Key.Tab:
                         if (PlaylistsListBox.IsFocused || PlaylistsListBox.IsKeyboardFocusWithin)
@@ -151,8 +175,11 @@ namespace QAMP
                         e.Handled = true;
                         break;
                     case Key.F:
-                        FavoriteButton_Click(null, null);
-                        e.Handled = true;
+                        if (Player.CurrentTrack != null)
+                        {
+                            FavoriteButton_Click(null, null);
+                            e.Handled = true;
+                        }
                         break;
                 }
             }
@@ -366,6 +393,7 @@ namespace QAMP
                 LyricsListBox.SelectedIndex = 0;
                 LyricsListBox.Focus();
                 LyricsListBox.ScrollIntoView(LyricsListBox.SelectedItem);
+                // Cursor = Cursors.None; // Скрываем курсор в режиме отображения текста
             }
             else
             {
@@ -375,6 +403,7 @@ namespace QAMP
                 ControlsPanel.Visibility = Visibility.Visible;
                 UpperPanel.Visibility = Visibility.Visible;
                 LyricsOverlay.Visibility = Visibility.Collapsed;
+                // Cursor = Cursors.Arrow; // Восстанавливаем курсор
             }
         }
         private static List<LrcLine> ParseLrc(string lrcText)

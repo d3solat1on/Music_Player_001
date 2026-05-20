@@ -7,7 +7,8 @@
         AllowsTransparency="True"
         WindowStyle="None"
         SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterOwner">
+        WindowStartupLocation="CenterOwner"
+        PreviewKeyDown="Window_PreviewKeyDown">
     <Border Background="#1A1A1A"
             CornerRadius="10"
             BorderBrush="#333"

@@ -2,19 +2,94 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vis="clr-namespace:QAMP.Visualization"
+        xmlns:local="clr-namespace:QAMP.Visualization"
+        xmlns:converters="clr-namespace:QAMP.Converters"
         Title="SpectrumFullWindow"
         WindowStyle="None"
         WindowState="Maximized"
-        Background="Black"
+        Background="{DynamicResource TertiaryBackgroundBrush}"
         ShowInTaskbar="False"
         KeyDown="SpectrumFullWindow_KeyDown"
         Loaded="SpectrumFullWindow_Loaded"
         Closed="SpectrumFullWindow_Closed">
-    <Grid Background="Black">
+    <Window.Resources>
+        <converters:LargeTrackImageConverter x:Key="LargeTrackImageConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Background="Transparent"
+                    Grid.Row="0"
+                    Orientation="Horizontal"
+                    Margin="40,30,40,10"
+                    VerticalAlignment="Center">
+
+            <Border x:Name="CoverBorder"
+                    Width="80"
+                    Height="80"
+                    CornerRadius="4"
+                    Background="Transparent"
+                    BorderBrush="{DynamicResource AccentBrush}"
+                    BorderThickness="1">
+                <Grid>
+                    <Path Data="{DynamicResource default_coverGeometry}"
+                          Fill="{DynamicResource AccentBrush}"
+                          Stretch="Uniform"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center"/>
+                    <Image Source="{Binding CoverImage, Converter={StaticResource LargeTrackImageConverter}}"
+                           Stretch="UniformToFill"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Setter Property="Visibility"
+                                        Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CoverImage}"
+                                                 Value="{x:Null}">
+                                        <Setter Property="Visibility"
+                                                Value="Collapsed"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding CoverImage.Length}"
+                                                 Value="0">
+                                        <Setter Property="Visibility"
+                                                Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                </Grid>
+            </Border>
+
+            <StackPanel Orientation="Vertical"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Center">
+
+                <TextBlock x:Name="TrackNameText"
+                           Text="Название трека"
+                           FontSize="24"
+                           FontWeight="Bold"
+                           Foreground="White"
+                           Margin="0,0,0,5"/>
+
+                <TextBlock x:Name="TrackArtistText"
+                           Text="Исполнитель"
+                           FontSize="16"
+                           Foreground="{DynamicResource AccentBrush}"/>
+            </StackPanel>
+        </StackPanel>
+
         <vis:SpectrumControl x:Name="FullSpectrumViewer"
+                             Background="Transparent"
+                             Grid.Row="1"
                              HorizontalAlignment="Stretch"
                              VerticalAlignment="Stretch"
-                             Margin="0"/>
+                             Margin="20,10,20,20"/>
     </Grid>
 </Window>
-    

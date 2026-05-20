@@ -257,7 +257,7 @@ public class DatabaseService
             cmd.CommandText = "PRAGMA table_info(Playlists)";
             using var reader = cmd.ExecuteReader();
             bool hasIsSystemPlaylist = false;
-            
+
             while (reader.Read())
             {
                 string columnName = reader.GetString(1);
@@ -290,7 +290,7 @@ public class DatabaseService
             var cmd = connection.CreateCommand();
             cmd.CommandText = $"PRAGMA table_info({tableName})";
             using var reader = cmd.ExecuteReader();
-            
+
             while (reader.Read())
             {
                 string name = reader.GetString(1);
@@ -428,7 +428,7 @@ public class DatabaseService
             {
                 // Проверяем наличие колонки IsSystemPlaylist
                 bool hasIsSystemPlaylist = ColumnExists(connection, "Playlists", "IsSystemPlaylist");
-                
+
                 string selectQuery = hasIsSystemPlaylist
                     ? "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType, IsSystemPlaylist FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC"
                     : "SELECT Id, Name, Description, CoverImage, IsPinned, SortOrder, CreatedDate, SortType FROM Playlists ORDER BY IsPinned DESC, SortOrder ASC, Name ASC";
@@ -1138,7 +1138,7 @@ public class DatabaseService
             string name = reader.IsDBNull(0) ? "Без названия" : reader.GetString(0);
             string executor = reader.IsDBNull(1) ? "Неизвестен" : reader.GetString(1);
             int bitrate = reader.IsDBNull(2) ? 0 : reader.GetInt32(2);
-            return $" {name} by {executor} - Битрейт: {bitrate} kbps";
+            return $"{name} by {executor} - Битрейт: {bitrate} kbps";
         }
         else
         {
@@ -1334,5 +1334,30 @@ public class DatabaseService
         return string.Join("\n", tracks);
 
     }
-    
+
+    public static void UpdateTrackMetadata(Track track)
+    {
+        using var connection = new SqliteConnection(_connectionString);
+        connection.Open();
+        var cmd = connection.CreateCommand();
+        cmd.CommandText = @"
+        UPDATE Tracks
+        SET Name = $name,
+            Executor = $exec,
+            Album = $album,
+            Genre = $genre,
+            Year = $year,
+            TrackNumber = $trackNum
+        WHERE Path = $path";
+        cmd.Parameters.AddWithValue("$name", (object)track.Name ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$exec", (object)track.Executor ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$album", (object)track.Album ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$genre", (object)track.Genre ?? DBNull.Value);
+        cmd.Parameters.AddWithValue("$year", track.Year > 0 ? track.Year : DBNull.Value);
+        cmd.Parameters.AddWithValue("$trackNum", track.TrackNumber);
+        cmd.Parameters.AddWithValue("$path", track.Path);
+        cmd.ExecuteNonQuery();
+    }
+
+
 }

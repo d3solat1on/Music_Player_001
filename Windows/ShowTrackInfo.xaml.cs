@@ -20,11 +20,11 @@ namespace QAMP.Windows
             _track = track;
             DataContext = track;
             Loaded += ShowTrackInfo_Loaded;
-            this.KeyDown += (s, e) =>
+            KeyDown += (s, e) =>
             {
-                if (e.Key == Key.I || e.Key == Key.Escape && Keyboard.Modifiers == ModifierKeys.Control)
+                if (e.Key == Key.I && Keyboard.Modifiers == ModifierKeys.Control)
                 {
-                    this.Close();
+                    Close();
                 }
             };
         }
@@ -92,6 +92,7 @@ namespace QAMP.Windows
                     file.Tag.Comment = _track.Comment;
                     file.Tag.Lyrics = _track.Lyrics;
                     file.Tag.Composers = [_track.Composer];
+                    file.Tag.Track = (uint)_track.TrackNumber;
 
                     // if (uint.TryParse(_track.TrackNumber.ToString(), out uint trackNum))
                     //     file.Tag.TrackNumber = trackNum;
@@ -104,6 +105,8 @@ namespace QAMP.Windows
 
                     file.Save();
                 }
+
+                Services.DatabaseService.UpdateTrackMetadata(_track); // <-- дополнительно
 
                 NotificationWindow.Show("Теги сохранены!", this);
 
@@ -303,6 +306,16 @@ namespace QAMP.Windows
         private void Close_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            if (Owner != null && Owner.IsVisible)
+            {
+                Owner.Focus();
+                Owner.Activate();
+            }
         }
     }
 }

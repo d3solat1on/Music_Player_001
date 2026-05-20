@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Input;
 namespace QAMP.Dialogs
 {
     public partial class NotificationWindow : Window
@@ -49,6 +50,24 @@ namespace QAMP.Dialogs
         {
             _isAnimating = false;
         }
+
+        private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key != Key.Escape && e.Key != Key.Enter)
+                return;
+
+            e.Handled = true;
+            try
+            {
+                DialogResult = e.Key == Key.Enter;
+            }
+            catch (InvalidOperationException)
+            {
+                // Если окно не было открыто как диалог, просто игнорируем
+            }
+            Close();
+        }
+
         private void Ok_Click(object sender, RoutedEventArgs e)
         {
             try

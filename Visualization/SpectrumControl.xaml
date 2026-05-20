@@ -6,9 +6,10 @@
              xmlns:sp="clr-namespace:ScottPlot.WPF;assembly=ScottPlot.WPF"
              mc:Ignorable="d"
              d:DesignHeight="*"
-        d:DesignWidth="*">
+             d:DesignWidth="*"
+             Background="{DynamicResource TertiaryBackgroundBrush}">
     <Grid>
         <sp:WpfPlot Name="SpectrumPlot"
-                BorderThickness="1"/>
+                    BorderThickness="1"/>
     </Grid>
 </UserControl>

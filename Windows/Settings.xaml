@@ -329,7 +329,14 @@
                                         Background="{DynamicResource AccentBrush}"
                                         Foreground="Black"
                                         BorderBrush="{DynamicResource BorderBrush}"
-                                        FontWeight="Bold"/>
+                                        FontWeight="Bold">
+                                    <Button.Resources>
+                                        <Style TargetType="{x:Type Border}">
+                                            <Setter Property="CornerRadius"
+                                                    Value="2"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
                             </StackPanel>
 
                             <ScrollViewer VerticalScrollBarVisibility="Hidden"
@@ -554,7 +561,7 @@
                         Content="Сохранить"
                         Width="100"
                         Height="35"
-                        Margin="0,0,10,0"
+                        Margin="5,0,0,0"
                         Click="SaveButton_Click"
                         Background="{DynamicResource AccentBrush}"
                         Foreground="Black"
